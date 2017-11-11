@@ -4,6 +4,7 @@ using static DotNetCross.Sorting.Swapper;
 
 namespace DotNetCross.Sorting
 {
+    // TODO: Make possible to inject pivot selector...
     public struct HoarePartitioner : IPartitioner
     {
         public int LeftEndOffset => 0;

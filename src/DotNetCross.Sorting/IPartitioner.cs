@@ -10,6 +10,7 @@ namespace DotNetCross.Sorting
     {
         int LeftEndOffset { get; }
 
+        // index returned will NOT always be the index of the pivot, see Hoares.
         int Partition<T, TComparer>(ref T a, int lo, int hi, TComparer comparer)
             where TComparer : IComparer<T>;
     }
