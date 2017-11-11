@@ -4,25 +4,6 @@ using System.Runtime.CompilerServices;
 
 namespace DotNetCross.Sorting
 {
-    //
-    // API
-    //
-    //public static void Sort<T>(this Span<T> span);
-
-    //public static void Sort<T, TComparer>(this Span<T> span, TComparer comparer)
-    //   where TComparer : IComparer<T>;
-
-    //public static void Sort<T>(this Span<T> span, System.Comparison<T> comparison);
-
-    //public static void Sort<TKey, TValue>(this Span<TKey> keys, Span<TValue> items);
-
-    //public static void Sort<TKey, TValue, TComparer>(this Span<TKey> keys,
-    //   Span<TValue> items, TComparer comparer)
-    //   where TComparer : IComparer<TKey>;
-
-    //public static void Sort<TKey, TValue>(this Span<TKey> keys,
-    //   Span<TValue> items, System.Comparison<TKey> comparison);
-
     public static class InsertionSort
     {
         public static void Sort<T, TComparer>(this Span<T> span, TComparer comparer)
@@ -32,7 +13,7 @@ namespace DotNetCross.Sorting
             Sort(ref span.DangerousGetPinnableReference(), span.Length, comparer, ref s);
         }
 
-        // TODO: Extend to IntPtr
+        // TODO: Extend to IntPtr length(s)
         public static TSortStats Sort<T, TComparer, TSortStats>(ref T a, int length, TComparer comparer, ref TSortStats sortStats)
            where TComparer : IComparer<T>
         {
