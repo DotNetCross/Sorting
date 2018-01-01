@@ -319,10 +319,35 @@ namespace System
                 //SwapIfGreater(ref keys, comparer, middle, hi); // swap the middle with the high
 
                 T pivot = miRef; //Unsafe.Add(ref keys, middle);
-                // Swap in different way
+                                 // Swap in different way
+                                 //IntPtr left = new IntPtr(lo);
+                                 //IntPtr right = new IntPtr(hi - 1);  // We already partitioned lo and hi and put the pivot in hi - 1.  And we pre-increment & decrement below.
+                                 //Swap(ref miRef, ref Unsafe.Add(ref keys, right)); //Swap(ref keys, middle, hi - 1);
+
+                //while (left < right)
+                //{
+                //    // TODO: Would be good to update local ref here
+                //    while (comparer.Compare(Unsafe.Add(ref keys, ++left), pivot) < 0) ;
+                //    // TODO: Would be good to update local ref here
+                //    while (comparer.Compare(pivot, Unsafe.Add(ref keys, --right)) < 0) ;
+
+                //    if (left >= right)
+                //        break;
+
+                //    // Indeces cannot be equal here
+                //    Swap(ref keys, left, right);
+                //}
+
+                //// Put pivot in the right location.
+                //right = (hi - 1);
+                //if (left != right)
+                //{
+                //    Swap(ref keys, left, right);
+                //}
+
                 int left = lo, right = hi - 1;  // We already partitioned lo and hi and put the pivot in hi - 1.  And we pre-increment & decrement below.
                 Swap(ref miRef, ref Unsafe.Add(ref keys, right)); //Swap(ref keys, middle, hi - 1);
-                
+
                 while (left < right)
                 {
                     // TODO: Would be good to update local ref here
@@ -486,25 +511,32 @@ namespace System
 
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private static void SwapIfGreater(ref T start, TComparer comparer, int i, int j)
+            private static void SwapIfGreater(ref T keys, TComparer comparer, int i, int j)
             {
                 Debug.Assert(i != j);
                 // Check moved to the one case actually needing it, not all!
                 //if (i != j)
                 {
-                    ref var iElement = ref Unsafe.Add(ref start, i);
-                    ref var jElement = ref Unsafe.Add(ref start, j);
-                    if (comparer.Compare(iElement, jElement) > 0)
-                    {
-                        T temp = iElement;
-                        iElement = jElement;
-                        jElement = temp;
-                    }
+                    ref var iElement = ref Unsafe.Add(ref keys, i);
+                    ref var jElement = ref Unsafe.Add(ref keys, j);
+                    SwapIfGreater(ref iElement, ref jElement, comparer);
                 }
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private static void Swap(ref T start, int i, int j)
+            private static void SwapIfGreater(ref T a, ref T b, in TComparer comparer)
+            {
+                if (comparer.Compare(a, b) > 0)
+                {
+                    T temp = a;
+                    a = b;
+                    b = temp;
+                }
+            }
+
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private static void Swap(ref T keys, int i, int j)
             {
                 // TODO: Is the i!=j check necessary? Most cases not needed?
                 // Only in one case it seems, REFACTOR
@@ -512,8 +544,8 @@ namespace System
                 // No place needs this it seems
                 //if (i != j)
                 {
-                    ref var iElement = ref Unsafe.Add(ref start, i);
-                    ref var jElement = ref Unsafe.Add(ref start, j);
+                    ref var iElement = ref Unsafe.Add(ref keys, i);
+                    ref var jElement = ref Unsafe.Add(ref keys, j);
                     Swap(ref iElement, ref jElement);
                 }
             }
