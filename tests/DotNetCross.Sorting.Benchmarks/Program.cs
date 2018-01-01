@@ -6,17 +6,21 @@ using BenchmarkDotNet.Running;
 
 namespace DotNetCross.Sorting.Benchmarks
 {
-    [DisassemblyDiagnoser(printAsm: true, printSource: true)]
-    [SimpleJob(RunStrategy.Monitoring, launchCount: 1, warmupCount: 2, targetCount: 3)]
-    [RyuJitX64Job]
+    [SimpleJob(RunStrategy.Monitoring, launchCount: 1, warmupCount: 2, targetCount: 11)]
+    //[DisassemblyDiagnoser(printAsm: true, printSource: true)]
+    //[RyuJitX64Job()]
     public class RandomSort
     {
         const int Length = 1000000;
-        int[] _random = CreateRandomArray<int>(Length, i => i);
+        static readonly int[] _random = CreateRandomArray<int>(Length, i => i);
         int[] _work = new int[Length];
 
         [IterationSetup]
-        public void IterationSetup() => Array.Copy(_random, _work, Length);
+        public void IterationSetup()
+        {
+            //Console.WriteLine(nameof(IterationSetup));
+            Array.Copy(_random, _work, Length);
+        }
 
         [Benchmark(Baseline = true)]
         public void ArraySort()
