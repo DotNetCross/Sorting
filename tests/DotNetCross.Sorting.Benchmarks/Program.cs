@@ -6,12 +6,12 @@ using BenchmarkDotNet.Running;
 
 namespace DotNetCross.Sorting.Benchmarks
 {
+    [DisassemblyDiagnoser(printAsm: true, printSource: true)]
     [SimpleJob(RunStrategy.Monitoring, launchCount: 1, warmupCount: 2, targetCount: 11)]
-    //[DisassemblyDiagnoser(printAsm: true, printSource: true)]
     //[RyuJitX64Job()]
     public class RandomSort
     {
-        const int Length = 1000000;
+        const int Length = 2000000;
         static readonly int[] _random = CreateRandomArray<int>(Length, i => i);
         int[] _work = new int[Length];
 
