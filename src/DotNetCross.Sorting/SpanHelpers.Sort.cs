@@ -88,6 +88,9 @@ namespace System
             }
         }
 
+        internal class SpanSortHelper
+        {
+        }
 
         internal class SpanSortHelper<T, TComparer> : ISpanSortHelper<T, TComparer>
             where TComparer : IComparer<T>
@@ -305,16 +308,21 @@ namespace System
                 //       `int middle = lo + ((hi - lo) >> 1);`
                 int middle = (int)(((uint)hi + (uint)lo) >> 1);
 
+                ref T loRef = ref Unsafe.Add(ref keys, lo);
+                ref T miRef = ref Unsafe.Add(ref keys, middle);
+                ref T hiRef = ref Unsafe.Add(ref keys, hi);
+                Sort3(ref loRef, ref miRef, ref hiRef, comparer);
+
                 // Sort lo, mid and hi appropriately, then pick mid as the pivot.
-                SwapIfGreater(ref keys, comparer, lo, middle);  // swap the low with the mid point
-                SwapIfGreater(ref keys, comparer, lo, hi);   // swap the low with the high
-                SwapIfGreater(ref keys, comparer, middle, hi); // swap the middle with the high
+                //SwapIfGreater(ref keys, comparer, lo, middle);  // swap the low with the mid point
+                //SwapIfGreater(ref keys, comparer, lo, hi);   // swap the low with the high
+                //SwapIfGreater(ref keys, comparer, middle, hi); // swap the middle with the high
 
-                T pivot = Unsafe.Add(ref keys, middle);
+                T pivot = miRef; //Unsafe.Add(ref keys, middle);
                 // Swap in different way
-                Swap(ref keys, middle, hi - 1);
                 int left = lo, right = hi - 1;  // We already partitioned lo and hi and put the pivot in hi - 1.  And we pre-increment & decrement below.
-
+                Swap(ref miRef, ref Unsafe.Add(ref keys, right)); //Swap(ref keys, middle, hi - 1);
+                
                 while (left < right)
                 {
                     // TODO: Would be good to update local ref here
@@ -436,6 +444,48 @@ namespace System
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            internal static void Sort3(ref T r0, ref T r1, ref T r2, in TComparer comparer)
+            {
+                if (comparer.Compare(r0, r1) < 0) //r0 < r1)
+                {
+                    if (comparer.Compare(r1, r2) < 0) //(r1 < r2)
+                    {
+                        return;
+                    }
+                    else if (comparer.Compare(r0, r2) < 0) //(r0 < r2)
+                    {
+                        Swap(ref r1, ref r2); //std::swap(r1, r2);
+                    }
+                    else
+                    {
+                        T tmp = r0;
+                        r0 = r2;
+                        r2 = r1;
+                        r1 = tmp;
+                    }
+                }
+                else
+                {
+                    if (comparer.Compare(r0, r2) < 0) //(r0 < r2)
+                    {
+                        Swap(ref r0, ref r1); //std::swap(r0, r1);
+                    }
+                    else if (comparer.Compare(r2, r1) < 0) //(r2 < r1)
+                    {
+                        Swap(ref r0, ref r2); //std::swap(r0, r2);
+                    }
+                    else
+                    {
+                        T tmp = r0;
+                        r0 = r1;
+                        r1 = r2;
+                        r2 = tmp;
+                    }
+                }
+            }
+
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private static void SwapIfGreater(ref T start, TComparer comparer, int i, int j)
             {
                 Debug.Assert(i != j);
@@ -464,10 +514,16 @@ namespace System
                 {
                     ref var iElement = ref Unsafe.Add(ref start, i);
                     ref var jElement = ref Unsafe.Add(ref start, j);
-                    T temp = iElement;
-                    iElement = jElement;
-                    jElement = temp;
+                    Swap(ref iElement, ref jElement);
                 }
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private static void Swap(ref T a, ref T b)
+            {
+                T temp = a;
+                a = b;
+                b = temp;
             }
         }
 

@@ -6,7 +6,7 @@ using BenchmarkDotNet.Running;
 
 namespace DotNetCross.Sorting.Benchmarks
 {
-    [DisassemblyDiagnoser(printAsm: true, printSource: true, recursiveDepth: 7)]
+    [DisassemblyDiagnoser(printAsm: true, printSource: true, recursiveDepth: 6)]
     [SimpleJob(RunStrategy.Monitoring, launchCount: 1, warmupCount: 2, targetCount: 11)]
     //[RyuJitX64Job()]
     public class RandomSort
@@ -53,6 +53,12 @@ namespace DotNetCross.Sorting.Benchmarks
         static void Main(string[] args)
         {
             var summary = BenchmarkRunner.Run<RandomSort>();
+            //var sut = new RandomSort();
+            //for (int i = 0; i < 150; i++)
+            //{
+            //    sut.IterationSetup();
+            //    sut.SpanSort();
+            //}
         }
     }
 }
