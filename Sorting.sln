@@ -9,6 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNetCross.Sorting.Tests",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotNetCross.Sorting.Benchmarks", "tests\DotNetCross.Sorting.Benchmarks\DotNetCross.Sorting.Benchmarks.csproj", "{A833DC17-F62F-473C-9A0A-B2B231297F98}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotNetCross.Sorting.Sequences", "src\DotNetCross.Sorting.Sequences\DotNetCross.Sorting.Sequences.csproj", "{AF9702D1-23F2-45DB-8DC0-BD31DD9C6BCF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{A833DC17-F62F-473C-9A0A-B2B231297F98}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A833DC17-F62F-473C-9A0A-B2B231297F98}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A833DC17-F62F-473C-9A0A-B2B231297F98}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AF9702D1-23F2-45DB-8DC0-BD31DD9C6BCF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AF9702D1-23F2-45DB-8DC0-BD31DD9C6BCF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AF9702D1-23F2-45DB-8DC0-BD31DD9C6BCF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AF9702D1-23F2-45DB-8DC0-BD31DD9C6BCF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
