@@ -7,7 +7,7 @@ using BenchmarkDotNet.Running;
 namespace DotNetCross.Sorting.Benchmarks
 {
     [DisassemblyDiagnoser(printAsm: true, printSource: true, recursiveDepth: 3)]
-    [SimpleJob(RunStrategy.Monitoring, launchCount: 1, warmupCount: 2, targetCount: 11)]
+    [SimpleJob(RunStrategy.Monitoring, launchCount: 1, warmupCount: 2, targetCount: 7)]
     public class MedianOfThreeKillerSort
     {
         const int Length = 2000000;
@@ -49,10 +49,9 @@ namespace DotNetCross.Sorting.Benchmarks
         public void ArraySort()
         {
             Array.Sort(_work);
-
         }
 
-        //[Benchmark]
+        [Benchmark]
         public void SpanSort()
         {
             new Span<int>(_work).Sort();

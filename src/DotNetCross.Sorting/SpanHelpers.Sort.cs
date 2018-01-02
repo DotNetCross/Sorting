@@ -403,10 +403,10 @@ namespace System
                 //{
                 //    child = 2 * i;
                 //    //if (child < n && comparer(keys[lo + child - 1], keys[lo + child]) < 0)
-                //    if (child < n && comparer.Compare(Unsafe.Add(ref keys, lo + child - 1), 
+                //    if (child < n && comparer.Compare(Unsafe.Add(ref keys, lo + child - 1),
                 //        Unsafe.Add(ref keys, lo + child)) < 0)
                 //    {
-                //            child++;
+                //        child++;
                 //    }
                 //    //if (!(comparer(d, keys[lo + child - 1]) < 0))
                 //    if (!(comparer.Compare(d, Unsafe.Add(ref keys, lo + child - 1)) < 0))
@@ -418,31 +418,33 @@ namespace System
                 ////keys[lo + i - 1] = d;
                 //Unsafe.Add(ref keys, lo + i - 1) = d;
 
-
-                ref T d = ref Unsafe.Add(ref keys, lo + i - 1);
-                T v = d;
-                int child;
-                while (i <= n / 2)
+                //T d = keys[lo + i - 1];
+                ref T refLo = ref Unsafe.Add(ref keys, lo);
+                ref T refLoMinus1 = ref Unsafe.Subtract(ref refLo, 1);
+                T d = Unsafe.Add(ref refLoMinus1, i);
+                var nHalf = n / 2;
+                while (i <= nHalf)
                 {
-                    child = 2 * i;
-                    // TODO: Local ref updates needed
-                    //ref var l = ref Unsafe.Add(ref keys, lo + child - 1);
-                    //ref var r = ref Unsafe.Add(ref keys, lo + child);
-                    if (child < n &&
-                        comparer.Compare(Unsafe.Add(ref keys, lo + child - 1),
-                            Unsafe.Add(ref keys, lo + child)) < 0)
+                    int child = i << 1;
+
+                    //if (child < n && comparer(keys[lo + child - 1], keys[lo + child]) < 0)
+                    if (child < n && 
+                        comparer.Compare(Unsafe.Add(ref refLoMinus1, child), Unsafe.Add(ref refLo, child)) < 0)
                     {
-                        child++;
+                        ++child;
                     }
-                    ref T c = ref Unsafe.Add(ref keys, lo + child - 1);
-                    if (!(comparer.Compare(v, c) < 0))
+
+                    //if (!(comparer(d, keys[lo + child - 1]) < 0))
+                    if (!(comparer.Compare(d, Unsafe.Add(ref refLoMinus1, child)) < 0))
                         break;
-                    //keys[lo + i - 1] = keys[lo + child - 1];
-                    d = c;
+
+                    // keys[lo + i - 1] = keys[lo + child - 1]
+                    Unsafe.Add(ref refLoMinus1, i) = Unsafe.Add(ref refLoMinus1, child);
+
                     i = child;
                 }
                 //keys[lo + i - 1] = d;
-                d = v;
+                Unsafe.Add(ref keys, lo + i - 1) = d;
             }
 
             private static void InsertionSort(ref T keys, int lo, int hi, in TComparer comparer)
