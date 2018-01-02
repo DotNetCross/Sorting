@@ -5,7 +5,7 @@ namespace DotNetCross.Sorting
 {
     public static class QuickSort
     {
-        public static void Sort<T, TComparer>(this Span<T> span, TComparer comparer)
+        public static void Sort<T, TComparer>(Span<T> span, TComparer comparer)
            where TComparer : IComparer<T>
         {
             if (span.IsEmpty) { return; }
@@ -14,7 +14,7 @@ namespace DotNetCross.Sorting
                 new HoarePartitioner(), comparer, ref s);
         }
 
-        public static void Sort<T, TPartioner, TComparer>(this Span<T> span, TPartioner partioner, TComparer comparer)
+        public static void Sort<T, TPartioner, TComparer>(Span<T> span, TPartioner partioner, TComparer comparer)
            where TPartioner : IPartitioner
            where TComparer : IComparer<T>
         {

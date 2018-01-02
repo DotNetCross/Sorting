@@ -6,7 +6,7 @@ namespace DotNetCross.Sorting
 {
     public static class InsertionSort
     {
-        public static void Sort<T, TComparer>(this Span<T> span, TComparer comparer)
+        public static void Sort<T, TComparer>(Span<T> span, TComparer comparer)
            where TComparer : IComparer<T>
         {
             int s = 0;
