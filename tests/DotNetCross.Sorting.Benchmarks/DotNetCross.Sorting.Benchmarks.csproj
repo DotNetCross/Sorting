@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\DotNetCross.Sorting\DotNetCross.Sorting.csproj" />
+    <ProjectReference Include="..\..\src\DotNetCross.Sorting.Sequences\DotNetCross.Sorting.Sequences.csproj" />
   </ItemGroup>
 
 </Project>

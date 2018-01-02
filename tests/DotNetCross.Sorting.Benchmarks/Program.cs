@@ -1,4 +1,5 @@
 ﻿using BenchmarkDotNet.Running;
+using DotNetCross.Sorting.Sequences;
 
 namespace DotNetCross.Sorting.Benchmarks
 {
@@ -6,9 +7,10 @@ namespace DotNetCross.Sorting.Benchmarks
     {
         static void Main(string[] args)
         {
-            BenchmarkRunner.Run<MedianOfThreeKillerSort>();
+            //BenchmarkRunner.Run<NewRandomSort>();
             BenchmarkRunner.Run<RandomSort>();
-            BenchmarkRunner.Run<CompareAsm>();
+            //BenchmarkRunner.Run<MedianOfThreeKillerSort>();
+            //BenchmarkRunner.Run<CompareAsm>();
 
             //var sut = new RandomSort();
             //for (int i = 0; i < 150; i++)
