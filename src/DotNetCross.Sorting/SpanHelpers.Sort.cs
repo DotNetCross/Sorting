@@ -348,6 +348,10 @@ namespace System
                 int left = lo, right = hi - 1;  // We already partitioned lo and hi and put the pivot in hi - 1.  And we pre-increment & decrement below.
                 Swap(ref miRef, ref Unsafe.Add(ref keys, right)); //Swap(ref keys, middle, hi - 1);
 
+#if USE_INT_LOOP
+                //
+                // Unsafe int based loop
+                //
                 while (left < right)
                 {
                     // TODO: Would be good to update local ref here
@@ -361,7 +365,6 @@ namespace System
                     // Indeces cannot be equal here
                     Swap(ref keys, left, right);
                 }
-
                 // Put pivot in the right location.
                 right = (hi - 1);
                 if (left != right)
@@ -369,6 +372,37 @@ namespace System
                     Swap(ref keys, left, right);
                 }
                 return left;
+#else
+                //
+                // Unsafe IntPtr based loop
+                //
+                IntPtr leftBytes = new IntPtr(left).Multiply(Unsafe.SizeOf<T>());
+                IntPtr rightBytes = new IntPtr(right).Multiply(Unsafe.SizeOf<T>());
+
+                while (leftBytes.LessThan(rightBytes))
+                {
+                    // TODO: Would be good to update local ref here
+                    while (comparer.Compare(Unsafe.AddByteOffset(ref keys, IntPtrHelper.Add(ref leftBytes, Unsafe.SizeOf<T>())), pivot) < 0) ;
+                    // TODO: Would be good to update local ref here
+                    while (comparer.Compare(pivot, Unsafe.AddByteOffset(ref keys, IntPtrHelper.Subtract(ref rightBytes, Unsafe.SizeOf<T>()))) < 0) ;
+
+                    if (leftBytes.GreaterThanEqual(rightBytes))
+                        break;
+
+                    // Indeces cannot be equal here
+                    //Swap(ref keys, left, right);
+                    Swap(ref Unsafe.AddByteOffset(ref keys, leftBytes), ref Unsafe.AddByteOffset(ref keys, rightBytes));
+                }
+                // Put pivot in the right location.
+                //right = (hi - 1);
+                rightBytes = new IntPtr(hi - 1).Multiply(Unsafe.SizeOf<T>());
+                if (leftBytes != rightBytes)
+                {
+                    //Swap(ref keys, left, right);
+                    Swap(ref Unsafe.AddByteOffset(ref keys, leftBytes), ref Unsafe.AddByteOffset(ref keys, rightBytes));
+                }
+                return (int)leftBytes.Divide(Unsafe.SizeOf<T>());
+#endif
             }
 
             private static void HeapSort(ref T keys, int lo, int hi, in TComparer comparer)

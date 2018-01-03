@@ -21,7 +21,7 @@ namespace DotNetCross.Sorting.Tests
             ( new int[] { 5, 4 }, new int[] { 4, 5 }, 0 ),
         };
 
-        public static void Test((int[] unpartioned, int[] partitioned, int index)[] cases, Func<int[], Comparer<int>, int> partition)
+        static void Test((int[] unpartioned, int[] partitioned, int index)[] cases, Func<int[], Comparer<int>, int> partition)
         {
             foreach (var c in cases)
             {

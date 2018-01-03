@@ -22,8 +22,10 @@ namespace DotNetCross.Sorting.Benchmarks
                 
                 //Accuracy = { MaxStdErrRelative = 0.01 }
             });
-            Add(DisassemblyDiagnoser.Create(
-                new DisassemblyDiagnoserConfig(printAsm: true, printPrologAndEpilog: true, printSource: true, recursiveDepth: 3)));
+            //Add(DisassemblyDiagnoser.Create(
+            //    new DisassemblyDiagnoserConfig(printAsm: true, printPrologAndEpilog: true, recursiveDepth: 3)));
+            //Add(DisassemblyDiagnoser.Create(
+            //    new DisassemblyDiagnoserConfig(printAsm: true, printPrologAndEpilog: true, printSource: true, recursiveDepth: 3)));
 
         }
     }
