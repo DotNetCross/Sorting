@@ -9,11 +9,11 @@ namespace DotNetCross.Sorting.Benchmarks
         {
             //BenchmarkRunner.Run<IntPtrHelperBenchmark>();
             //BenchmarkRunner.Run<NewRandomSort>();
-            //BenchmarkRunner.Run<RandomSort>();
+            BenchmarkRunner.Run<RandomSort>();
             //BenchmarkRunner.Run<MedianOfThreeKillerSort>();
             //BenchmarkRunner.Run<CompareAsm>();
 
-            SomeMethod();
+            //SomeMethod();
             //var sut = new RandomSort();
             //for (int i = 0; i < 150; i++)
             //{
