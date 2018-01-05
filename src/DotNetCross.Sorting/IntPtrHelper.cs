@@ -7,23 +7,6 @@ namespace System
     public static class IntPtrHelper
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static ref IntPtr Add(ref IntPtr a, int b)
-        {
-            a = (sizeof(IntPtr) == sizeof(int))
-                ? new IntPtr((int)a + b)
-                : new IntPtr((long)a + b);
-            return ref a;
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static ref IntPtr Subtract(ref IntPtr a, int b)
-        {
-            a = (sizeof(IntPtr) == sizeof(int))
-                ? new IntPtr((int)a - b)
-                : new IntPtr((long)a - b);
-            return ref a;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public unsafe static IntPtr Multiply(this IntPtr a, int factor)
         {
             return (sizeof(IntPtr) == sizeof(int))

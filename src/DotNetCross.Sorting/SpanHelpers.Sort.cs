@@ -382,9 +382,17 @@ namespace System
                 while (leftBytes.LessThan(rightBytes))
                 {
                     // TODO: Would be good to update local ref here
-                    while (comparer.Compare(Unsafe.AddByteOffset(ref keys, IntPtrHelper.Add(ref leftBytes, Unsafe.SizeOf<T>())), pivot) < 0) ;
+                    do
+                    {
+                        leftBytes += Unsafe.SizeOf<T>();
+                    }
+                    while (comparer.Compare(Unsafe.AddByteOffset(ref keys, leftBytes), pivot) < 0) ;
                     // TODO: Would be good to update local ref here
-                    while (comparer.Compare(pivot, Unsafe.AddByteOffset(ref keys, IntPtrHelper.Subtract(ref rightBytes, Unsafe.SizeOf<T>()))) < 0) ;
+                    do
+                    {
+                        rightBytes -= Unsafe.SizeOf<T>();
+                    }
+                    while (comparer.Compare(pivot, Unsafe.AddByteOffset(ref keys, rightBytes)) < 0) ;
 
                     if (leftBytes.GreaterThanEqual(rightBytes))
                         break;
