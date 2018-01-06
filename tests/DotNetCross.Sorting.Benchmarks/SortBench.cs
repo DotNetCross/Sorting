@@ -24,7 +24,7 @@ namespace DotNetCross.Sorting.Benchmarks
         [ParamsSource(nameof(Lengths))]
         public int Length { get; set; }
 
-        public IEnumerable<int> Lengths => new[] { 3, 10, 100, 10000, 1000000 };
+        public IEnumerable<int> Lengths => new[] { 2, 3, 10, 100, 10000, 1000000 };
 
         [IterationSetup]
         public void IterationSetup()
