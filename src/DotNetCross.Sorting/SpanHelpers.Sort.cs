@@ -190,8 +190,9 @@ namespace System
                 //IntroSort(keys, left, length + left - 1, 2 * IntrospectiveSortUtilities.FloorLog2PlusOne(keys.Length), comparer);
                 var depthLimit = 2 * IntrospectiveSortUtilities.FloorLog2PlusOne(length);
                 IntroSort(ref spanStart, 0, length - 1, depthLimit, comparer);
+                //IntroSort(ref spanStart, length - 1, depthLimit, comparer);
             }
-
+            
             private static void IntroSort(ref T keys, int lo, int hi, int depthLimit, in TComparer comparer)
             {
                 Debug.Assert(comparer != null);
@@ -238,6 +239,70 @@ namespace System
                     int p = PickPivotAndPartitionIntPtrByteOffsets(ref keys, lo, hi, comparer);
                     // Note we've already partitioned around the pivot and do not have to move the pivot again.
                     IntroSort(ref keys, p + 1, hi, depthLimit, comparer);
+                    hi = p - 1;
+                }
+            }
+
+            private static void IntroSort(ref T keys, int hi, int depthLimit, in TComparer comparer)
+            {
+                Debug.Assert(comparer != null);
+                //Debug.Assert(lo >= 0);
+                const int lo = 0;
+                while (hi > lo)
+                {
+                    int partitionSize = hi - lo + 1;
+                    if (partitionSize <= IntrospectiveSortUtilities.IntrosortSizeThreshold)
+                    {
+                        if (partitionSize == 1)
+                        {
+                            return;
+                        }
+
+                        if (partitionSize == 2)
+                        {
+                            //ref T loRef = ref Unsafe.Add(ref keys, lo);
+                            //ref T hiRef = ref Unsafe.Add(ref keys, hi);
+                            //SwapIfGreater(ref loRef, ref hiRef, comparer);
+                            // No indeces equal here!
+                            SwapIfGreater(ref keys, comparer, lo, hi);
+                            return;
+                        }
+                        if (partitionSize == 3)
+                        {
+                            ref T loRef = ref Unsafe.Add(ref keys, lo);
+                            ref T hiMinusOneRef = ref Unsafe.Add(ref keys, hi - 1);
+                            ref T hiRef = ref Unsafe.Add(ref keys, hi);
+                            //ref T hiMinusOneRef = ref Unsafe.SubtractByteOffset(ref hiRef, new IntPtr(Unsafe.SizeOf<T>()));
+                            Sort3(ref loRef, ref hiMinusOneRef, ref hiRef, comparer);
+                            //// No indeces equal here! Many indeces can be reused here...
+                            //SwapIfGreater(ref loRef, ref hiMinusOneRef, comparer);
+                            //SwapIfGreater(ref loRef, ref hiRef, comparer);
+                            //SwapIfGreater(ref hiMinusOneRef, ref hiRef, comparer);
+                            //SwapIfGreater(ref keys, comparer, lo, hi - 1);
+                            //SwapIfGreater(ref keys, comparer, lo, hi);
+                            //SwapIfGreater(ref keys, comparer, hi - 1, hi);
+                            return;
+                        }
+
+                        InsertionSort(ref keys, lo, hi, comparer);
+                        return;
+                    }
+
+                    if (depthLimit == 0)
+                    {
+                        HeapSort(ref keys, lo, hi, comparer);
+                        return;
+                    }
+                    depthLimit--;
+
+                    // We should never reach here, unless > 3 elements due to partition size
+                    //ref var keysAtLo = ref Unsafe.Add(ref keys, lo);
+                    //int p = PickPivotAndPartitionIntIndeces(ref keys, lo, hi, comparer);
+                    //int p = PickPivotAndPartitionIntPtrIndeces(ref keys, lo, hi, comparer);
+                    int p = PickPivotAndPartitionIntPtrByteOffsets(ref keys, lo, hi, comparer);
+                    // Note we've already partitioned around the pivot and do not have to move the pivot again.
+                    ref var afterPivot = ref Unsafe.Add(ref keys, p + 1);
+                    IntroSort(ref afterPivot, hi - (p + 1), depthLimit, comparer);
                     hi = p - 1;
                 }
             }
@@ -507,24 +572,23 @@ namespace System
                 Unsafe.Add(ref keys, lo + i - 1) = d;
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private static void InsertionSort(ref T keys, int lo, int hi, in TComparer comparer)
             {
                 Debug.Assert(keys != null);
                 Debug.Assert(lo >= 0);
                 Debug.Assert(hi >= lo);
 
-                int i, j;
-                T t;
-                for (i = lo; i < hi; i++)
+                for (int i = lo; i < hi; i++)
                 {
-                    j = i;
                     //t = keys[i + 1];
-                    t = Unsafe.Add(ref keys, i + 1);
-                    // Need local ref that can be updated
+                    var t = Unsafe.Add(ref keys, i + 1);
+                    // Need local ref that can be updated!
+                    int j = i;
                     while (j >= lo && comparer.Compare(t, Unsafe.Add(ref keys, j)) < 0)
                     {
                         Unsafe.Add(ref keys, j + 1) = Unsafe.Add(ref keys, j);
-                        j--;
+                        --j;
                     }
                     Unsafe.Add(ref keys, j + 1) = t;
                 }
