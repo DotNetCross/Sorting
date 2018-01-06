@@ -31,15 +31,8 @@ namespace System
 
         internal struct IntLessThanComparer : ILessThanComparer<int>
         {
-            public int Compare(int x, int y)
-            {
-                return x.CompareTo(y);
-            }
-
-            public bool LessThan(int x, int y)
-            {
-                return x < y;
-            }
+            public int Compare(int x, int y) => x.CompareTo(y);
+            public bool LessThan(int x, int y) => x < y;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

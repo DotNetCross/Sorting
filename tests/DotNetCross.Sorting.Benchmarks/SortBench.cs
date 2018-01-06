@@ -7,18 +7,18 @@ using DotNetCross.Sorting.Sequences;
 namespace DotNetCross.Sorting.Benchmarks
 {
     [Config(typeof(SortBenchmarkConfig))]
-    public class SortBench
+    public class SortBench<T>
     {
         readonly int _maxLength;
-        readonly int[] _filled;
-        readonly int[] _work;
+        readonly T[] _filled;
+        readonly T[] _work;
 
-        public SortBench(int maxLength, ISpanFiller filler)
+        public SortBench(int maxLength, ISpanFiller filler, Func<int, T> toValue)
         {
             _maxLength = maxLength;
-            _filled = new int[_maxLength];
-            filler.Fill(_filled, i => i);
-            _work = new int[_maxLength];
+            _filled = new T[_maxLength];
+            filler.Fill(_filled, toValue);
+            _work = new T[_maxLength];
         }
 
         [ParamsSource(nameof(Lengths))]
@@ -46,7 +46,7 @@ namespace DotNetCross.Sorting.Benchmarks
         {
             for (int i = 0; i <= _maxLength - Length; i += Length)
             {
-                new Span<int>(_work, i, Length).Sort();
+                new Span<T>(_work, i, Length).Sort();
             }
         }
 

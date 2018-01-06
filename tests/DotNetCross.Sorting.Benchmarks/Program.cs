@@ -4,50 +4,50 @@ using DotNetCross.Sorting.Sequences;
 
 namespace DotNetCross.Sorting.Benchmarks
 {
-    public class RandomSortBench : SortBench
+    public class RandomSortBench : SortBench<int>
     {
         const int Seed = 213718398;
 
         public RandomSortBench()
-            : base(maxLength: 3000000, new RandomSpanFiller(Seed))
+            : base(maxLength: 3000000, new RandomSpanFiller(Seed), i => i)
         { }
     }
 
-    public class RandomShuffleSortBench : SortBench
+    public class RandomShuffleSortBench : SortBench<int>
     {
         const double Fraction = 0.1;
         const int Seed = 931712983;
         public RandomShuffleSortBench()
             : base(maxLength: 3000000,
-                  new PartialRandomShuffleSpanFiller(new IncrementingSpanFiller(), Fraction, Seed))
+                  new PartialRandomShuffleSpanFiller(new IncrementingSpanFiller(), Fraction, Seed), i => i)
         { }
     }
 
-    public class MedianOfThreeSortBench : SortBench
+    public class MedianOfThreeSortBench : SortBench<int>
     {
         public MedianOfThreeSortBench()
-            : base(maxLength: 6000000, new MedianOfThreeKillerSpanFiller())
+            : base(maxLength: 6000000, new MedianOfThreeKillerSpanFiller(), i => i)
         { }
     }
 
-    public class IncrementingSortBench : SortBench
+    public class IncrementingSortBench : SortBench<int>
     {
         public IncrementingSortBench()
-            : base(maxLength: 6000000, new IncrementingSpanFiller())
+            : base(maxLength: 6000000, new IncrementingSpanFiller(), i => i)
         { }
     }
 
-    public class DecrementingSortBench : SortBench
+    public class DecrementingSortBench : SortBench<int>
     {
         public DecrementingSortBench()
-            : base(maxLength: 6000000, new DecrementingSpanFiller())
+            : base(maxLength: 6000000, new DecrementingSpanFiller(), i => i)
         { }
     }
 
-    public class ConstantSortBench : SortBench
+    public class ConstantSortBench : SortBench<int>
     {
         public ConstantSortBench()
-            : base(maxLength: 6000000, new ConstantSpanFiller(42))
+            : base(maxLength: 6000000, new ConstantSpanFiller(42), i => i)
         { }
     }
 
