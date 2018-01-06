@@ -49,9 +49,21 @@ namespace System.SpanTests
         [Trait("MyTrait", "MyTraitValue")]
         public static void Sort_Reverse_Int()
         {
-            for (int count = 1; count <= 1024 * 1024; count <<= 1)
+            for (int count = 1; count <= 256 * 1024; count <<= 1)
             {
                 var unsorted = Enumerable.Range(0, count).Reverse().ToArray();
+                TestSortOverloads(unsorted);
+            }
+        }
+
+        // TODO: OuterLoop
+        [Fact]
+        [Trait("MyTrait", "MyTraitValue")]
+        public static void Sort_AlreadySorted_Int()
+        {
+            for (int count = 1; count <= 256 * 1024; count <<= 1)
+            {
+                var unsorted = Enumerable.Range(0, count).ToArray();
                 TestSortOverloads(unsorted);
             }
         }
