@@ -143,6 +143,7 @@ namespace System.SpanTests
         {
             TestSpan(array);
             TestComparerSpan(array);
+            TestComparisonSpan(array);
         }
 
         private static void TestSpan<T>(T[] array)
