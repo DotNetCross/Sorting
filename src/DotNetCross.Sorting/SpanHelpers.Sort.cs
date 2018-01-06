@@ -21,11 +21,24 @@ namespace System
             {
                 //ref var intRef = ref Unsafe.As<T, int>(ref MemoryManager.GetReference(span));
                 ref var intRef = ref Unsafe.As<T, int>(ref span.DangerousGetPinnableReference());
-                SpanSortHelper<int, ComparableComparer<int>>.Sort(ref intRef, span.Length, new ComparableComparer<int>());
+                SpanSortHelper<int, IntLessThanComparer>.Sort(ref intRef, span.Length, new IntLessThanComparer());
             }
             else
             {
                 Sort(span, Comparer<T>.Default);
+            }
+        }
+
+        internal struct IntLessThanComparer : ILessThanComparer<int>
+        {
+            public int Compare(int x, int y)
+            {
+                return x.CompareTo(y);
+            }
+
+            public bool LessThan(int x, int y)
+            {
+                return x < y;
             }
         }
 
@@ -34,15 +47,41 @@ namespace System
             this Span<T> span, TComparer comparer)
             where TComparer : IComparer<T>
         {
-            SpanSortHelper<T, TComparer>.s_default.Sort(span, comparer);
+            SpanSortHelper<T, LessThanComparer<T, TComparer>>.s_default.Sort(span, 
+                new LessThanComparer<T, TComparer>(comparer));
+        }
+
+        public interface ILessThanComparer<T> : IComparer<T>
+        {
+            bool LessThan(T x, T y);
         }
 
         // Helper to allow sharing all code via IComparer<T> inlineable
-        internal struct ComparableComparer<T> : IComparer<T>
+        internal struct LessThanComparer<T, TComparer> : ILessThanComparer<T>
+            where TComparer : IComparer<T>
+        {
+            readonly TComparer _comparer;
+
+            public LessThanComparer(TComparer comparer)
+            {
+                _comparer = comparer;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public int Compare(T x, T y) => _comparer.Compare(x, y);
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool LessThan(T x, T y) => _comparer.Compare(x, y) < 0;
+        }
+        // Helper to allow sharing all code via IComparer<T> inlineable
+        internal struct ComparableComparer<T> : ILessThanComparer<T>
             where T : IComparable<T>
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public int Compare(T x, T y) => x.CompareTo(y);
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool LessThan(T x, T y) => x.CompareTo(y) < 0;
         }
         // Helper to allow sharing all code via IComparer<T> inlineable
         internal struct ComparisonComparer<T> : IComparer<T>
@@ -56,6 +95,9 @@ namespace System
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public int Compare(T x, T y) => m_comparison(x, y);
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool LessThan(T x, T y) => m_comparison(x, y) < 0;
         }
 
         // https://github.com/dotnet/coreclr/blob/master/src/mscorlib/src/System/Collections/Generic/ArraySortHelper.cs
@@ -109,7 +151,7 @@ namespace System
         }
 
         internal class SpanSortHelper<T, TComparer> : ISpanSortHelper<T, TComparer>
-            where TComparer : IComparer<T>
+            where TComparer : ILessThanComparer<T>
         {
             //private static volatile ISpanSortHelper<T, TComparer> defaultArraySortHelper;
 
@@ -156,9 +198,9 @@ namespace System
                 {
                     if (typeof(TComparer) == typeof(IComparer<T>) && comparer == null)
                     {
-                        SpanSortHelper<T, IComparer<T>>.Sort(
+                        SpanSortHelper<T, LessThanComparer<T, IComparer<T>>>.Sort(
                             ref keys.DangerousGetPinnableReference(), keys.Length, 
-                            Comparer<T>.Default);
+                             new LessThanComparer<T, IComparer<T>>(Comparer<T>.Default));
                     }
                     else
                     {
@@ -210,15 +252,20 @@ namespace System
                         if (partitionSize == 2)
                         {
                             // No indeces equal here!
-                            SwapIfGreater(ref keys, comparer, lo, hi);
+                            SwapIfGreater(ref keys, lo, hi, comparer);
                             return;
                         }
                         if (partitionSize == 3)
                         {
+                            ref T loRef = ref Unsafe.Add(ref keys, lo);
+                            ref T hiMinusOneRef = ref Unsafe.Add(ref keys, hi - 1);
+                            ref T hiRef = ref Unsafe.Add(ref keys, hi);
+                            //ref T hiMinusOneRef = ref Unsafe.SubtractByteOffset(ref hiRef, new IntPtr(Unsafe.SizeOf<T>()));
+                            Sort3(ref loRef, ref hiMinusOneRef, ref hiRef, comparer);
                             // No indeces equal here! Many indeces can be reused here...
-                            SwapIfGreater(ref keys, comparer, lo, hi - 1);
-                            SwapIfGreater(ref keys, comparer, lo, hi);
-                            SwapIfGreater(ref keys, comparer, hi - 1, hi);
+                            //SwapIfGreater(ref keys, comparer, lo, hi - 1);
+                            //SwapIfGreater(ref keys, comparer, lo, hi);
+                            //SwapIfGreater(ref keys, comparer, hi - 1, hi);
                             return;
                         }
 
@@ -264,7 +311,7 @@ namespace System
                             //ref T hiRef = ref Unsafe.Add(ref keys, hi);
                             //SwapIfGreater(ref loRef, ref hiRef, comparer);
                             // No indeces equal here!
-                            SwapIfGreater(ref keys, comparer, lo, hi);
+                            SwapIfGreater(ref keys, lo, hi, comparer);
                             return;
                         }
                         if (partitionSize == 3)
@@ -340,9 +387,9 @@ namespace System
                 while (left < right)
                 {
                     // TODO: Would be good to update local ref here
-                    while (comparer.Compare(Unsafe.Add(ref keys, ++left), pivot) < 0) ;
+                    while (comparer.LessThan(Unsafe.Add(ref keys, ++left), pivot)) ;
                     // TODO: Would be good to update local ref here
-                    while (comparer.Compare(pivot, Unsafe.Add(ref keys, --right)) < 0) ;
+                    while (comparer.LessThan(pivot, Unsafe.Add(ref keys, --right))) ;
 
                     if (left >= right)
                         break;
@@ -470,13 +517,13 @@ namespace System
                     {
                         leftBytes += Unsafe.SizeOf<T>();
                     }
-                    while (comparer.Compare(Unsafe.AddByteOffset(ref keys, leftBytes), pivot) < 0) ;
+                    while (comparer.LessThan(Unsafe.AddByteOffset(ref keys, leftBytes), pivot)) ;
                     // TODO: Would be good to update local ref here
                     do
                     {
                         rightBytes -= Unsafe.SizeOf<T>();
                     }
-                    while (comparer.Compare(pivot, Unsafe.AddByteOffset(ref keys, rightBytes)) < 0) ;
+                    while (comparer.LessThan(pivot, Unsafe.AddByteOffset(ref keys, rightBytes))) ;
 
                     if (leftBytes.GreaterThanEqual(rightBytes))
                         break;
@@ -554,13 +601,13 @@ namespace System
 
                     //if (child < n && comparer(keys[lo + child - 1], keys[lo + child]) < 0)
                     if (child < n && 
-                        comparer.Compare(Unsafe.Add(ref refLoMinus1, child), Unsafe.Add(ref refLo, child)) < 0)
+                        comparer.LessThan(Unsafe.Add(ref refLoMinus1, child), Unsafe.Add(ref refLo, child)))
                     {
                         ++child;
                     }
 
                     //if (!(comparer(d, keys[lo + child - 1]) < 0))
-                    if (!(comparer.Compare(d, Unsafe.Add(ref refLoMinus1, child)) < 0))
+                    if (!(comparer.LessThan(d, Unsafe.Add(ref refLoMinus1, child))))
                         break;
 
                     // keys[lo + i - 1] = keys[lo + child - 1]
@@ -585,7 +632,7 @@ namespace System
                     var t = Unsafe.Add(ref keys, i + 1);
                     // Need local ref that can be updated!
                     int j = i;
-                    while (j >= lo && comparer.Compare(t, Unsafe.Add(ref keys, j)) < 0)
+                    while (j >= lo && comparer.LessThan(t, Unsafe.Add(ref keys, j)))
                     {
                         Unsafe.Add(ref keys, j + 1) = Unsafe.Add(ref keys, j);
                         --j;
@@ -597,13 +644,13 @@ namespace System
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             internal static void Sort3(ref T r0, ref T r1, ref T r2, in TComparer comparer)
             {
-                if (comparer.Compare(r0, r1) < 0) //r0 < r1)
+                if (comparer.LessThan(r0, r1)) //r0 < r1)
                 {
-                    if (comparer.Compare(r1, r2) < 0) //(r1 < r2)
+                    if (comparer.LessThan(r1, r2)) //(r1 < r2)
                     {
                         return;
                     }
-                    else if (comparer.Compare(r0, r2) < 0) //(r0 < r2)
+                    else if (comparer.LessThan(r0, r2)) //(r0 < r2)
                     {
                         Swap(ref r1, ref r2); //std::swap(r1, r2);
                     }
@@ -617,11 +664,11 @@ namespace System
                 }
                 else
                 {
-                    if (comparer.Compare(r0, r2) < 0) //(r0 < r2)
+                    if (comparer.LessThan(r0, r2)) //(r0 < r2)
                     {
                         Swap(ref r0, ref r1); //std::swap(r0, r1);
                     }
-                    else if (comparer.Compare(r2, r1) < 0) //(r2 < r1)
+                    else if (comparer.LessThan(r2, r1)) //(r2 < r1)
                     {
                         Swap(ref r0, ref r2); //std::swap(r0, r2);
                     }
@@ -637,7 +684,7 @@ namespace System
 
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private static void SwapIfGreater(ref T keys, TComparer comparer, int i, int j)
+            private static void SwapIfGreater(ref T keys, int i, int j, TComparer comparer)
             {
                 Debug.Assert(i != j);
                 // Check moved to the one case actually needing it, not all!
@@ -652,7 +699,8 @@ namespace System
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private static void SwapIfGreater(ref T a, ref T b, in TComparer comparer)
             {
-                if (comparer.Compare(a, b) > 0)
+                //if (comparer.Compare(a, b) > 0)
+                if (comparer.LessThan(b, a))
                 {
                     T temp = a;
                     a = b;
@@ -721,9 +769,9 @@ namespace System
                     }
                     else
                     {
-                        SpanSortHelper<T, TComparer>.Sort(
+                        SpanSortHelper<T, LessThanComparer<T, TComparer>>.Sort(
                             ref keys.DangerousGetPinnableReference(), keys.Length,
-                            comparer);
+                            new LessThanComparer<T, TComparer>(comparer));
                     }
                 }
                 catch (IndexOutOfRangeException)
