@@ -218,75 +218,6 @@ namespace System
                             SwapIfGreater(ref keys, comparer, lo, hi - 1);
                             SwapIfGreater(ref keys, comparer, lo, hi);
                             SwapIfGreater(ref keys, comparer, hi - 1, hi);
-                            // Replace with optimal 3 element sort
-                            // if a[0] < a[1]:
-                            //    if a[1] > a[2]:
-                            //        if a[0] < a[2]:
-                            //            temp = a[1]
-                            //            a[1] = a[2]
-                            //            a[2] = temp
-                            //        else:
-                            //            temp = a[0]
-                            //            a[0] = a[2]
-                            //            a[2] = a[1]
-                            //            a[1] = temp
-                            //    else:
-                            //        # do nothing
-                            //else:
-                            //    if a[1] < a[2]:
-                            //        if a[0] < a[2]:
-                            //            temp = a[0]
-                            //            a[0] = a[1]
-                            //            a[1] = temp
-                            //        else:
-                            //            temp = a[0]
-                            //            a[0] = a[1]
-                            //            a[1] = a[2]
-                            //            a[2] = temp
-                            //    else:
-                            //        temp = a[0]
-                            //        a[0] = a[2]
-                            //        a[2] = temp
-                            //template < typename T >
-                            //void sort3(T(&a)[3])
-                            //{
-                            //    if (a[0] < a[1])
-                            //    {
-                            //        if (a[1] < a[2])
-                            //        {
-                            //            return;
-                            //        }
-                            //        else if (a[0] < a[2])
-                            //        {
-                            //            std::swap(a[1], a[2]);
-                            //        }
-                            //        else
-                            //        {
-                            //            T tmp = std::move(a[0]);
-                            //            a[0] = std::move(a[2]);
-                            //            a[2] = std::move(a[1]);
-                            //            a[1] = std::move(tmp);
-                            //        }
-                            //    }
-                            //    else
-                            //    {
-                            //        if (a[0] < a[2])
-                            //        {
-                            //            std::swap(a[0], a[1]);
-                            //        }
-                            //        else if (a[2] < a[1])
-                            //        {
-                            //            std::swap(a[0], a[2]);
-                            //        }
-                            //        else
-                            //        {
-                            //            T tmp = std::move(a[0]);
-                            //            a[0] = std::move(a[1]);
-                            //            a[1] = std::move(a[2]);
-                            //            a[2] = std::move(tmp);
-                            //        }
-                            //    }
-                            //}
                             return;
                         }
 
@@ -302,20 +233,23 @@ namespace System
                     depthLimit--;
 
                     // We should never reach here, unless > 3 elements due to partition size
-                    int p = PickPivotAndPartition(ref keys, lo, hi, comparer);
+                    //int p = PickPivotAndPartitionIntIndeces(ref keys, lo, hi, comparer);
+                    //int p = PickPivotAndPartitionIntPtrIndeces(ref keys, lo, hi, comparer);
+                    int p = PickPivotAndPartitionIntPtrByteOffsets(ref keys, lo, hi, comparer);
                     // Note we've already partitioned around the pivot and do not have to move the pivot again.
                     IntroSort(ref keys, p + 1, hi, depthLimit, comparer);
                     hi = p - 1;
                 }
             }
 
-            private static int PickPivotAndPartition(ref T keys, int lo, int hi, in TComparer comparer)
+            private static int PickPivotAndPartitionIntIndeces(ref T keys, int lo, int hi, in TComparer comparer)
             {
                 Debug.Assert(comparer != null);
                 Debug.Assert(lo >= 0);
                 Debug.Assert(hi > lo);
 
                 // Compute median-of-three.  But also partition them, since we've done the comparison.
+
                 // PERF: `lo` or `hi` will never be negative inside the loop,
                 //       so computing median using uints is safe since we know 
                 //       `length <= int.MaxValue`, and indices are >= 0
@@ -324,50 +258,20 @@ namespace System
                 //       `int middle = lo + ((hi - lo) >> 1);`
                 int middle = (int)(((uint)hi + (uint)lo) >> 1);
 
+                // Sort lo, mid and hi appropriately, then pick mid as the pivot.
                 ref T loRef = ref Unsafe.Add(ref keys, lo);
                 ref T miRef = ref Unsafe.Add(ref keys, middle);
                 ref T hiRef = ref Unsafe.Add(ref keys, hi);
                 Sort3(ref loRef, ref miRef, ref hiRef, comparer);
-
-                // Sort lo, mid and hi appropriately, then pick mid as the pivot.
                 //SwapIfGreater(ref keys, comparer, lo, middle);  // swap the low with the mid point
                 //SwapIfGreater(ref keys, comparer, lo, hi);   // swap the low with the high
                 //SwapIfGreater(ref keys, comparer, middle, hi); // swap the middle with the high
 
-                T pivot = miRef; //Unsafe.Add(ref keys, middle);
-                                 // Swap in different way
-                                 //IntPtr left = new IntPtr(lo);
-                                 //IntPtr right = new IntPtr(hi - 1);  // We already partitioned lo and hi and put the pivot in hi - 1.  And we pre-increment & decrement below.
-                                 //Swap(ref miRef, ref Unsafe.Add(ref keys, right)); //Swap(ref keys, middle, hi - 1);
-
-                //while (left < right)
-                //{
-                //    // TODO: Would be good to update local ref here
-                //    while (comparer.Compare(Unsafe.Add(ref keys, ++left), pivot) < 0) ;
-                //    // TODO: Would be good to update local ref here
-                //    while (comparer.Compare(pivot, Unsafe.Add(ref keys, --right)) < 0) ;
-
-                //    if (left >= right)
-                //        break;
-
-                //    // Indeces cannot be equal here
-                //    Swap(ref keys, left, right);
-                //}
-
-                //// Put pivot in the right location.
-                //right = (hi - 1);
-                //if (left != right)
-                //{
-                //    Swap(ref keys, left, right);
-                //}
+                T pivot = miRef;
 
                 int left = lo, right = hi - 1;  // We already partitioned lo and hi and put the pivot in hi - 1.  And we pre-increment & decrement below.
-                Swap(ref miRef, ref Unsafe.Add(ref keys, right)); //Swap(ref keys, middle, hi - 1);
+                Swap(ref miRef, ref Unsafe.Add(ref keys, right));
 
-//#if USE_INT_LOOP
-                //
-                // Unsafe int based loop
-                //
                 while (left < right)
                 {
                     // TODO: Would be good to update local ref here
@@ -388,13 +292,111 @@ namespace System
                     Swap(ref keys, left, right);
                 }
                 return left;
-                //#else
-#if USE_INTPTR_LOOP
-                //
-                // Unsafe IntPtr based loop
-                //
-                IntPtr leftBytes = new IntPtr(left).Multiply(Unsafe.SizeOf<T>());
-                IntPtr rightBytes = new IntPtr(right).Multiply(Unsafe.SizeOf<T>());
+            }
+
+            private static int PickPivotAndPartitionIntPtrIndeces(ref T keys, int lo, int hi, in TComparer comparer)
+            {
+                Debug.Assert(comparer != null);
+                Debug.Assert(lo >= 0);
+                Debug.Assert(hi > lo);
+
+                // Compute median-of-three.  But also partition them, since we've done the comparison.
+
+                // PERF: `lo` or `hi` will never be negative inside the loop,
+                //       so computing median using uints is safe since we know 
+                //       `length <= int.MaxValue`, and indices are >= 0
+                //       and thus cannot overflow an uint. 
+                //       Saves one subtraction per loop compared to 
+                //       `int middle = lo + ((hi - lo) >> 1);`
+                var middle = new IntPtr((int)(((uint)hi + (uint)lo) >> 1));
+
+                var low = new IntPtr(lo);
+                var high = new IntPtr(hi);
+
+                // Sort lo, mid and hi appropriately, then pick mid as the pivot.
+                ref T loRef = ref Unsafe.Add(ref keys, low);
+                ref T miRef = ref Unsafe.Add(ref keys, middle);
+                ref T hiRef = ref Unsafe.Add(ref keys, high);
+                Sort3(ref loRef, ref miRef, ref hiRef, comparer);
+                //SwapIfGreater(ref keys, comparer, lo, middle);  // swap the low with the mid point
+                //SwapIfGreater(ref keys, comparer, lo, hi);   // swap the low with the high
+                //SwapIfGreater(ref keys, comparer, middle, hi); // swap the middle with the high
+                T pivot = miRef;
+
+                // Put pivot in the right location.
+                IntPtr left = low;
+                IntPtr right = high - 1;  // We already partitioned lo and hi and put the pivot in hi - 1.  And we pre-increment & decrement below.
+                Swap(ref miRef, ref Unsafe.Add(ref keys, right));
+
+                while (left.LessThan(right))
+                {
+                    // TODO: Would be good to update local ref here
+                    do
+                    {
+                        left += 1;
+                    }
+                    while (comparer.Compare(Unsafe.Add(ref keys, left), pivot) < 0);
+                    //while (comparer.Compare(pivot, Unsafe.Add(ref keys, left)) >= 0) ;
+                    // TODO: Would be good to update local ref here
+                    do
+                    {
+                        right -= 1;
+                    }
+                    while (comparer.Compare(pivot, Unsafe.Add(ref keys, right)) < 0);
+
+                    //if (left >= right)
+                    //if (left.GreaterThanEqual(right))
+                    if (right.LessThan(left))
+                        break;
+
+                    // Indeces cannot be equal here
+                    Swap(ref keys, left, right);
+                }
+                // Put pivot in the right location.
+                right = high - 1;
+                if (left != right)
+                {
+                    Swap(ref keys, left, right);
+                }
+                return (int)left;
+            }
+
+            private static int PickPivotAndPartitionIntPtrByteOffsets(ref T keys, int lo, int hi, in TComparer comparer)
+            {
+                Debug.Assert(comparer != null);
+                Debug.Assert(lo >= 0);
+                Debug.Assert(hi > lo);
+
+                // Compute median-of-three.  But also partition them, since we've done the comparison.
+
+                // PERF: `lo` or `hi` will never be negative inside the loop,
+                //       so computing median using uints is safe since we know 
+                //       `length <= int.MaxValue`, and indices are >= 0
+                //       and thus cannot overflow an uint. 
+                //       Saves one subtraction per loop compared to 
+                //       `int middle = lo + ((hi - lo) >> 1);`
+                var middle = new IntPtr((int)(((uint)hi + (uint)lo) >> 1));
+                var low = new IntPtr(lo);
+                var high = new IntPtr(hi);
+
+                // Sort lo, mid and hi appropriately, then pick mid as the pivot.
+                ref T loRef = ref Unsafe.Add(ref keys, low);
+                ref T miRef = ref Unsafe.Add(ref keys, middle);
+                ref T hiRef = ref Unsafe.Add(ref keys, high);
+                Sort3(ref loRef, ref miRef, ref hiRef, comparer);
+                //SwapIfGreater(ref keys, comparer, lo, middle);  // swap the low with the mid point
+                //SwapIfGreater(ref keys, comparer, lo, hi);   // swap the low with the high
+                //SwapIfGreater(ref keys, comparer, middle, hi); // swap the middle with the high
+
+                T pivot = miRef;
+                
+                // Put pivot in the right location.
+                IntPtr left = low;
+                IntPtr right = high - 1;  // We already partitioned lo and hi and put the pivot in hi - 1.  And we pre-increment & decrement below.
+                Swap(ref miRef, ref Unsafe.Add(ref keys, right));
+
+                IntPtr leftBytes = left.Multiply(Unsafe.SizeOf<T>());
+                IntPtr rightBytes = right.Multiply(Unsafe.SizeOf<T>());
 
                 while (leftBytes.LessThan(rightBytes))
                 {
@@ -427,7 +429,6 @@ namespace System
                     Swap(ref Unsafe.AddByteOffset(ref keys, leftBytes), ref Unsafe.AddByteOffset(ref keys, rightBytes));
                 }
                 return (int)leftBytes.Divide(Unsafe.SizeOf<T>());
-#endif
             }
 
             private static void HeapSort(ref T keys, int lo, int hi, in TComparer comparer)
@@ -598,6 +599,20 @@ namespace System
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private static void Swap(ref T keys, int i, int j)
+            {
+                // TODO: Is the i!=j check necessary? Most cases not needed?
+                // Only in one case it seems, REFACTOR
+                Debug.Assert(i != j);
+                // No place needs this it seems
+                //if (i != j)
+                {
+                    ref var iElement = ref Unsafe.Add(ref keys, i);
+                    ref var jElement = ref Unsafe.Add(ref keys, j);
+                    Swap(ref iElement, ref jElement);
+                }
+            }
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private static void Swap(ref T keys, IntPtr i, IntPtr j)
             {
                 // TODO: Is the i!=j check necessary? Most cases not needed?
                 // Only in one case it seems, REFACTOR

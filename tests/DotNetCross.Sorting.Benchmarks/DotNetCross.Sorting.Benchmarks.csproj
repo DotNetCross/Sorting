@@ -11,8 +11,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="BenchmarkDotNet" Version="0.10.11.374" />
-    <PackageReference Include="BenchmarkDotNet.Diagnostics.Windows" Version="0.10.11.374" />
+    <PackageReference Include="BenchmarkDotNet" Version="0.10.11-develop" />
+    <PackageReference Include="BenchmarkDotNet.Core" Version="0.10.11-develop" />
+    <PackageReference Include="BenchmarkDotNet.Diagnostics.Windows" Version="0.10.11-develop" />
+    <PackageReference Include="BenchmarkDotNet.Toolchains.Roslyn" Version="0.10.11-develop" />
     <PackageReference Include="System.Memory" Version="4.4.0-preview2-25405-01" />
   </ItemGroup>
 

@@ -8,9 +8,9 @@ using BenchmarkDotNet.Running;
 namespace DotNetCross.Sorting.Benchmarks
 {
     //
-    [DisassemblyDiagnoser(printAsm: true, printSource: true, recursiveDepth: 2)]
+    [DisassemblyDiagnoser(printAsm: true, printSource: true, recursiveDepth: 4)]
     //[DisassemblyDiagnoser(recursiveDepth: 2)]
-    [SimpleJob(RunStrategy.Monitoring, launchCount: 1, warmupCount: 2, targetCount: 11)]
+    [SimpleJob(RunStrategy.Monitoring, launchCount: 1, warmupCount: 2, targetCount: 13)]
     //[RyuJitX64Job()]
     public class RandomSort
     {
