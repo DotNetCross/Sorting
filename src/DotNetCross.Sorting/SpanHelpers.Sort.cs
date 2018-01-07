@@ -17,14 +17,75 @@ namespace System
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static void Sort<T>(this Span<T> span)
         {
-            if (typeof(T) == typeof(int))
+            var length = span.Length;
+            // Type unfolding adopted from https://github.com/dotnet/coreclr/blob/master/src/classlibnative/bcltype/arrayhelpers.cpp#L268
+            if (typeof(T) == typeof(sbyte))
             {
-                //ref var intRef = ref Unsafe.As<T, int>(ref MemoryManager.GetReference(span));
-                ref var intRef = ref Unsafe.As<T, int>(ref span.DangerousGetPinnableReference());
-                SpanSortHelper.Sort(ref intRef, span.Length, new IntLessThanComparer());
+                ref var keys = ref Unsafe.As<T, sbyte>(ref span.DangerousGetPinnableReference());//ref MemoryManager.GetReference(span));
+                SpanSortHelper.Sort(ref keys, length, new SByteLessThanComparer());
+            }
+            else if (typeof(T) == typeof(byte) ||
+                     typeof(T) == typeof(bool)) // Use byte for bools to reduce code size
+            {
+                ref var keys = ref Unsafe.As<T, byte>(ref span.DangerousGetPinnableReference());//ref MemoryManager.GetReference(span));
+                SpanSortHelper.Sort(ref keys, length, new ByteLessThanComparer());
+            }
+            else if (typeof(T) == typeof(short) ||
+                     typeof(T) == typeof(char)) // Use short for chars to reduce code size
+            {
+                ref var keys = ref Unsafe.As<T, short>(ref span.DangerousGetPinnableReference());//ref MemoryManager.GetReference(span));
+                SpanSortHelper.Sort(ref keys, length, new Int16LessThanComparer());
+            }
+            else if (typeof(T) == typeof(ushort))
+            {
+                ref var keys = ref Unsafe.As<T, ushort>(ref span.DangerousGetPinnableReference());//ref MemoryManager.GetReference(span));
+                SpanSortHelper.Sort(ref keys, length, new UInt16LessThanComparer());
+            }
+            else if (typeof(T) == typeof(int))
+            {
+                ref var keys = ref Unsafe.As<T, int>(ref span.DangerousGetPinnableReference());//ref MemoryManager.GetReference(span));
+                SpanSortHelper.Sort(ref keys, length, new Int32LessThanComparer());
+            }
+            else if (typeof(T) == typeof(uint))
+            {
+                ref var keys = ref Unsafe.As<T, uint>(ref span.DangerousGetPinnableReference());//ref MemoryManager.GetReference(span));
+                SpanSortHelper.Sort(ref keys, length, new UInt32LessThanComparer());
+            }
+            else if (typeof(T) == typeof(long))
+            {
+                ref var keys = ref Unsafe.As<T, long>(ref span.DangerousGetPinnableReference());//ref MemoryManager.GetReference(span));
+                SpanSortHelper.Sort(ref keys, length, new Int64LessThanComparer());
+            }
+            else if (typeof(T) == typeof(ulong))
+            {
+                ref var keys = ref Unsafe.As<T, ulong>(ref span.DangerousGetPinnableReference());//ref MemoryManager.GetReference(span));
+                SpanSortHelper.Sort(ref keys, length, new UInt64LessThanComparer());
+            }
+            else if (typeof(T) == typeof(float))
+            {
+                ref var keys = ref Unsafe.As<T, float>(ref span.DangerousGetPinnableReference());//ref MemoryManager.GetReference(span));
+
+                // Comparison to NaN is always false, so do a linear pass 
+                // and swap all NaNs to the front of the array
+                var left = SpanSortHelper.NaNPrepass(ref keys, length, new SingleIsNaN());
+
+                ref var afterNaNsKeys = ref Unsafe.Add(ref keys, left);
+                SpanSortHelper.Sort(ref afterNaNsKeys, length - left, new SingleLessThanComparer());
+            }
+            else if (typeof(T) == typeof(double))
+            {
+                ref var keys = ref Unsafe.As<T, double>(ref span.DangerousGetPinnableReference());//ref MemoryManager.GetReference(span));
+
+                // Comparison to NaN is always false, so do a linear pass 
+                // and swap all NaNs to the front of the array
+                var left = SpanSortHelper.NaNPrepass(ref keys, length, new DoubleIsNaN());
+
+                ref var afterNaNsKeys = ref Unsafe.Add(ref keys, left);
+                SpanSortHelper.Sort(ref afterNaNsKeys, length - left, new DoubleLessThanComparer());
             }
             else
             {
+                // TODO: This creates a new instance everytime it seems... cache it
                 Sort(span, Comparer<T>.Default);
             }
         }
@@ -37,18 +98,55 @@ namespace System
             DefaultSpanSortHelper<T, TComparer>.s_default.Sort(span, comparer);
         }
 
-        internal interface ILessThanComparer<T> //: IComparer<T>
+        internal interface ILessThanComparer<T>
         {
             bool LessThan(T x, T y);
         }
-
-        internal struct IntLessThanComparer : ILessThanComparer<int>
+        //
+        // Type specific LessThanComparer(s) to ensure optimal code-gen
+        //
+        internal struct SByteLessThanComparer : ILessThanComparer<sbyte>
         {
-            //public int Compare(int x, int y) => x.CompareTo(y);
+            public bool LessThan(sbyte x, sbyte y) => x < y;
+        }
+        internal struct ByteLessThanComparer : ILessThanComparer<byte>
+        {
+            public bool LessThan(byte x, byte y) => x < y;
+        }
+        internal struct Int16LessThanComparer : ILessThanComparer<short>
+        {
+            public bool LessThan(short x, short y) => x < y;
+        }
+        internal struct UInt16LessThanComparer : ILessThanComparer<ushort>
+        {
+            public bool LessThan(ushort x, ushort y) => x < y;
+        }
+        internal struct Int32LessThanComparer : ILessThanComparer<int>
+        {
             public bool LessThan(int x, int y) => x < y;
         }
+        internal struct UInt32LessThanComparer : ILessThanComparer<uint>
+        {
+            public bool LessThan(uint x, uint y) => x < y;
+        }
+        internal struct Int64LessThanComparer : ILessThanComparer<long>
+        {
+            public bool LessThan(long x, long y) => x < y;
+        }
+        internal struct UInt64LessThanComparer : ILessThanComparer<ulong>
+        {
+            public bool LessThan(ulong x, ulong y) => x < y;
+        }
+        internal struct SingleLessThanComparer : ILessThanComparer<float>
+        {
+            public bool LessThan(float x, float y) => x < y;
+        }
+        internal struct DoubleLessThanComparer : ILessThanComparer<double>
+        {
+            public bool LessThan(double x, double y) => x < y;
+        }
 
-        // Helper to allow sharing all code via IComparer<T> inlineable
+        // Helper to allow sharing all code via inlineable functor for IComparer<T>
         internal struct ComparerLessThanComparer<T, TComparer> : ILessThanComparer<T>
             where TComparer : IComparer<T>
         {
@@ -59,19 +157,13 @@ namespace System
                 _comparer = comparer;
             }
 
-            //[MethodImpl(MethodImplOptions.AggressiveInlining)]
-            //public int Compare(T x, T y) => _comparer.Compare(x, y);
-
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool LessThan(T x, T y) => _comparer.Compare(x, y) < 0;
         }
-        // Helper to allow sharing all code via IComparer<T> inlineable
+        // Helper to allow sharing all code via inlineable functor for IComparable<T>
         internal struct ComparableLessThanComparer<T> : ILessThanComparer<T>//, IComparer<T>
             where T : IComparable<T>
         {
-            //[MethodImpl(MethodImplOptions.AggressiveInlining)]
-            //public int Compare(T x, T y) => x.CompareTo(y);
-
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool LessThan(T x, T y) => x.CompareTo(y) < 0;
         }
@@ -101,6 +193,19 @@ namespace System
             void Sort(Span<TKey> keys, in TComparer comparer);
         }
 
+        internal interface IIsNaN<T>
+        {
+            bool IsNaN(T value);
+        }
+        internal struct SingleIsNaN : IIsNaN<float>
+        {
+            public bool IsNaN(float value) => float.IsNaN(value);
+        }
+        internal struct DoubleIsNaN : IIsNaN<double>
+        {
+            public bool IsNaN(double value) => double.IsNaN(value);
+        }
+
         internal static class SpanSortHelper
         {
             // https://github.com/dotnet/coreclr/blob/master/src/mscorlib/src/System/Collections/Generic/ArraySortHelper.cs
@@ -111,18 +216,39 @@ namespace System
             // Large value types may benefit from a smaller number.
             internal const int IntrosortSizeThreshold = 16;
 
+            // For sorting, move all NaN instances to front of the input array
+            internal static int NaNPrepass<T, TIsNaN>(ref T keys, int length, in TIsNaN isNaN)
+                where TIsNaN : struct, IIsNaN<T>
+            {
+                int left = 0;
+                for (int i = 0; i <= length; i++)
+                {
+                    ref T current = ref Unsafe.Add(ref keys, i);
+                    if (isNaN.IsNaN(current))
+                    {
+                        ref T previous = ref Unsafe.Add(ref keys, left);
+
+                        Swap(ref previous, ref current);
+
+                        ++left;
+                    }
+                }
+                return left;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             internal static void Sort<T, TComparer>(ref T keys, int length, in TComparer comparer)
                 where TComparer : ILessThanComparer<T>
             {
+                if (length < 2)
+                    return;
+
                 IntrospectiveSort(ref keys, length, comparer);
             }
 
             private static void IntrospectiveSort<T, TComparer>(ref T keys, int length, in TComparer comparer)
                 where TComparer : ILessThanComparer<T>
             {
-                if (length < 2)
-                    return;
-
                 // Note how old used the full length of keys array to limit, seems like a bug!
                 //IntroSort(keys, left, length + left - 1, 2 * IntrospectiveSortUtilities.FloorLog2PlusOne(keys.Length), comparer);
                 var depthLimit = 2 * FloorLog2PlusOne(length);
