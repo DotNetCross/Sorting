@@ -21,7 +21,7 @@ namespace System
             {
                 //ref var intRef = ref Unsafe.As<T, int>(ref MemoryManager.GetReference(span));
                 ref var intRef = ref Unsafe.As<T, int>(ref span.DangerousGetPinnableReference());
-                SpanSortHelper<int, IntLessThanComparer>.Sort(ref intRef, span.Length, new IntLessThanComparer());
+                SpanSortHelper.Sort(ref intRef, span.Length, new IntLessThanComparer());
             }
             else
             {
@@ -29,53 +29,54 @@ namespace System
             }
         }
 
-        internal struct IntLessThanComparer : ILessThanComparer<int>
-        {
-            public int Compare(int x, int y) => x.CompareTo(y);
-            public bool LessThan(int x, int y) => x < y;
-        }
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static void Sort<T, TComparer>(
             this Span<T> span, TComparer comparer)
             where TComparer : IComparer<T>
         {
-            SpanSortHelper<T, LessThanComparer<T, TComparer>>.s_default.Sort(span, 
-                new LessThanComparer<T, TComparer>(comparer));
+            DefaultSpanSortHelper<T, TComparer>.s_default.Sort(span, comparer);
         }
 
-        public interface ILessThanComparer<T> : IComparer<T>
+        internal interface ILessThanComparer<T> //: IComparer<T>
         {
             bool LessThan(T x, T y);
         }
 
+        internal struct IntLessThanComparer : ILessThanComparer<int>
+        {
+            //public int Compare(int x, int y) => x.CompareTo(y);
+            public bool LessThan(int x, int y) => x < y;
+        }
+
         // Helper to allow sharing all code via IComparer<T> inlineable
-        internal struct LessThanComparer<T, TComparer> : ILessThanComparer<T>
+        internal struct ComparerLessThanComparer<T, TComparer> : ILessThanComparer<T>
             where TComparer : IComparer<T>
         {
             readonly TComparer _comparer;
 
-            public LessThanComparer(TComparer comparer)
+            public ComparerLessThanComparer(TComparer comparer)
             {
                 _comparer = comparer;
             }
 
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public int Compare(T x, T y) => _comparer.Compare(x, y);
+            //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+            //public int Compare(T x, T y) => _comparer.Compare(x, y);
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool LessThan(T x, T y) => _comparer.Compare(x, y) < 0;
         }
         // Helper to allow sharing all code via IComparer<T> inlineable
-        internal struct ComparableComparer<T> : ILessThanComparer<T>
+        internal struct ComparableLessThanComparer<T> : ILessThanComparer<T>//, IComparer<T>
             where T : IComparable<T>
         {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public int Compare(T x, T y) => x.CompareTo(y);
+            //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+            //public int Compare(T x, T y) => x.CompareTo(y);
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool LessThan(T x, T y) => x.CompareTo(y) < 0;
         }
+
+
         // Helper to allow sharing all code via IComparer<T> inlineable
         internal struct ComparisonComparer<T> : IComparer<T>
         {
@@ -89,8 +90,8 @@ namespace System
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public int Compare(T x, T y) => m_comparison(x, y);
 
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public bool LessThan(T x, T y) => m_comparison(x, y) < 0;
+            //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+            //public bool LessThan(T x, T y) => m_comparison(x, y) < 0;
         }
 
         // https://github.com/dotnet/coreclr/blob/master/src/mscorlib/src/System/Collections/Generic/ArraySortHelper.cs
@@ -98,10 +99,9 @@ namespace System
             where TComparer : IComparer<TKey>
         {
             void Sort(Span<TKey> keys, in TComparer comparer);
-            //int BinarySearch(Span<TKey> keys, TKey value, IComparer<TKey> comparer);
         }
 
-        internal static class IntrospectiveSortUtilities
+        internal static class SpanSortHelper
         {
             // https://github.com/dotnet/coreclr/blob/master/src/mscorlib/src/System/Collections/Generic/ArraySortHelper.cs
             // https://github.com/dotnet/coreclr/blob/master/src/classlibnative/bcltype/arrayhelpers.cpp
@@ -111,7 +111,26 @@ namespace System
             // Large value types may benefit from a smaller number.
             internal const int IntrosortSizeThreshold = 16;
 
-            internal static int FloorLog2PlusOne(int n)
+            internal static void Sort<T, TComparer>(ref T keys, int length, in TComparer comparer)
+                where TComparer : ILessThanComparer<T>
+            {
+                IntrospectiveSort(ref keys, length, comparer);
+            }
+
+            private static void IntrospectiveSort<T, TComparer>(ref T keys, int length, in TComparer comparer)
+                where TComparer : ILessThanComparer<T>
+            {
+                if (length < 2)
+                    return;
+
+                // Note how old used the full length of keys array to limit, seems like a bug!
+                //IntroSort(keys, left, length + left - 1, 2 * IntrospectiveSortUtilities.FloorLog2PlusOne(keys.Length), comparer);
+                var depthLimit = 2 * FloorLog2PlusOne(length);
+                IntroSort(ref keys, 0, length - 1, depthLimit, comparer);
+                //IntroSort(ref keys, length - 1, depthLimit, comparer);
+            }
+
+            private static int FloorLog2PlusOne(int n)
             {
                 int result = 0;
                 while (n >= 1)
@@ -120,115 +139,28 @@ namespace System
                     n = n / 2;
                 }
                 return result;
-            }
-            // https://stackoverflow.com/questions/11376288/fast-computing-of-log2-for-64-bit-integers
-            //const int tab32[32] = {
-            //     0,  9,  1, 10, 13, 21,  2, 29,
-            //    11, 14, 16, 18, 22, 25,  3, 30,
-            //     8, 12, 20, 28, 15, 17, 24,  7,
-            //    19, 27, 23,  6, 26,  5,  4, 31};
 
-            //int log2_32(uint32_t value)
-            //{
-            //    value |= value >> 1;
-            //    value |= value >> 2;
-            //    value |= value >> 4;
-            //    value |= value >> 8;
-            //    value |= value >> 16;
-            //    return tab32[(uint32_t)(value * 0x07C4ACDD) >> 27];
-            //}
-        }
+                // Could be computed as below, but overhead for small lengths probably too big
+                // https://stackoverflow.com/questions/11376288/fast-computing-of-log2-for-64-bit-integers
+                //const int tab32[32] = {
+                //     0,  9,  1, 10, 13, 21,  2, 29,
+                //    11, 14, 16, 18, 22, 25,  3, 30,
+                //     8, 12, 20, 28, 15, 17, 24,  7,
+                //    19, 27, 23,  6, 26,  5,  4, 31};
 
-        internal class SpanSortHelper
-        {
-        }
-
-        internal class SpanSortHelper<T, TComparer> : ISpanSortHelper<T, TComparer>
-            where TComparer : ILessThanComparer<T>
-        {
-            //private static volatile ISpanSortHelper<T, TComparer> defaultArraySortHelper;
-
-            //public static ISpanSortHelper<T, TComparer> Default
-            //{
-            //    get
-            //    {
-            //        ISpanSortHelper<T, TComparer> sorter = defaultArraySortHelper;
-            //        if (sorter == null)
-            //            sorter = CreateArraySortHelper();
-
-            //        return sorter;
-            //    }
-            //}
-            internal static readonly ISpanSortHelper<T, TComparer> s_default = CreateSortHelper();
-
-            private static ISpanSortHelper<T, TComparer> CreateSortHelper()
-            {
-                if (typeof(IComparable<T>).IsAssignableFrom(typeof(T)))
-                {
-                    // TODO: Is there a faster way?
-                    var ctor = typeof(ComparableSpanSortHelper<,>)
-                        .MakeGenericType(new Type[] { typeof(T), typeof(TComparer) })
-                        .GetConstructor(Array.Empty<Type>());
-
-                    return (ISpanSortHelper<T, TComparer>)ctor.Invoke(Array.Empty<object>());
-                    // coreclr does the following:
-                    //return (IArraySortHelper<T, TComparer>)
-                    //    RuntimeTypeHandle.Allocate(
-                    //        .TypeHandle.Instantiate());
-                }
-                else
-                {
-                    return new SpanSortHelper<T, TComparer>();
-                }
+                //int log2_32(uint32_t value)
+                //{
+                //    value |= value >> 1;
+                //    value |= value >> 2;
+                //    value |= value >> 4;
+                //    value |= value >> 8;
+                //    value |= value >> 16;
+                //    return tab32[(uint32_t)(value * 0x07C4ACDD) >> 27];
+                //}
             }
 
-            public void Sort(Span<T> keys, in TComparer comparer)
-            {
-                // Add a try block here to detect IComparers (or their
-                // underlying IComparables, etc) that are bogus.
-                // TODO: Do we need the try/catch?? Only when using default comparer?
-                try
-                {
-                    if (typeof(TComparer) == typeof(IComparer<T>) && comparer == null)
-                    {
-                        SpanSortHelper<T, LessThanComparer<T, IComparer<T>>>.Sort(
-                            ref keys.DangerousGetPinnableReference(), keys.Length, 
-                             new LessThanComparer<T, IComparer<T>>(Comparer<T>.Default));
-                    }
-                    else
-                    {
-                        Sort(ref keys.DangerousGetPinnableReference(), keys.Length, comparer);
-                    }
-                }
-                catch (IndexOutOfRangeException)
-                {
-                    //IntrospectiveSortUtilities.ThrowOrIgnoreBadComparer(comparer);
-                }
-                catch (Exception e)
-                {
-                    throw e;
-                    //throw new InvalidOperationException(SR.InvalidOperation_IComparerFailed, e);
-                }
-            }
-
-            internal static void Sort(ref T spanStart, int length, in TComparer comparer)
-            {
-                IntrospectiveSort(ref spanStart, length, comparer);
-            }
-
-            private static void IntrospectiveSort(ref T spanStart, int length, in TComparer comparer)
-            {
-                if (length < 2)
-                    return;
-
-                // Note how old used the full length of keys array to limit,
-                //IntroSort(keys, left, length + left - 1, 2 * IntrospectiveSortUtilities.FloorLog2PlusOne(keys.Length), comparer);
-                var depthLimit = 2 * IntrospectiveSortUtilities.FloorLog2PlusOne(length);
-                IntroSort(ref spanStart, 0, length - 1, depthLimit, comparer);
-                //IntroSort(ref spanStart, length - 1, depthLimit, comparer);
-            }
-            
-            private static void IntroSort(ref T keys, int lo, int hi, int depthLimit, in TComparer comparer)
+            private static void IntroSort<T, TComparer>(ref T keys, int lo, int hi, int depthLimit, in TComparer comparer)
+                where TComparer : ILessThanComparer<T>
             {
                 Debug.Assert(comparer != null);
                 Debug.Assert(lo >= 0);
@@ -236,7 +168,7 @@ namespace System
                 while (hi > lo)
                 {
                     int partitionSize = hi - lo + 1;
-                    if (partitionSize <= IntrospectiveSortUtilities.IntrosortSizeThreshold)
+                    if (partitionSize <= IntrosortSizeThreshold)
                     {
                         if (partitionSize == 1)
                         {
@@ -283,7 +215,8 @@ namespace System
                 }
             }
 
-            private static void IntroSort(ref T keys, int hi, int depthLimit, in TComparer comparer)
+            private static void IntroSort<T, TComparer>(ref T keys, int hi, int depthLimit, in TComparer comparer)
+                where TComparer : ILessThanComparer<T>
             {
                 Debug.Assert(comparer != null);
                 //Debug.Assert(lo >= 0);
@@ -291,7 +224,7 @@ namespace System
                 while (hi > lo)
                 {
                     int partitionSize = hi - lo + 1;
-                    if (partitionSize <= IntrospectiveSortUtilities.IntrosortSizeThreshold)
+                    if (partitionSize <= IntrosortSizeThreshold)
                     {
                         if (partitionSize == 1)
                         {
@@ -347,7 +280,8 @@ namespace System
                 }
             }
 
-            private static int PickPivotAndPartitionIntIndeces(ref T keys, int lo, int hi, in TComparer comparer)
+            private static int PickPivotAndPartitionIntIndeces<T, TComparer>(ref T keys, int lo, int hi, in TComparer comparer)
+                where TComparer : ILessThanComparer<T>
             {
                 Debug.Assert(comparer != null);
                 Debug.Assert(lo >= 0);
@@ -399,7 +333,8 @@ namespace System
                 return left;
             }
 
-            private static int PickPivotAndPartitionIntPtrIndeces(ref T keys, int lo, int hi, in TComparer comparer)
+            private static int PickPivotAndPartitionIntPtrIndeces<T, TComparer>(ref T keys, int lo, int hi, in TComparer comparer)
+                where TComparer : ILessThanComparer<T>
             {
                 Debug.Assert(comparer != null);
                 Debug.Assert(lo >= 0);
@@ -440,14 +375,14 @@ namespace System
                     {
                         left += 1;
                     }
-                    while (comparer.Compare(Unsafe.Add(ref keys, left), pivot) < 0);
+                    while (comparer.LessThan(Unsafe.Add(ref keys, left), pivot));
                     //while (comparer.Compare(pivot, Unsafe.Add(ref keys, left)) >= 0) ;
                     // TODO: Would be good to update local ref here
                     do
                     {
                         right -= 1;
                     }
-                    while (comparer.Compare(pivot, Unsafe.Add(ref keys, right)) < 0);
+                    while (comparer.LessThan(pivot, Unsafe.Add(ref keys, right)));
 
                     //if (left >= right)
                     //if (left.GreaterThanEqual(right))
@@ -466,7 +401,8 @@ namespace System
                 return (int)left;
             }
 
-            private static int PickPivotAndPartitionIntPtrByteOffsets(ref T keys, int lo, int hi, in TComparer comparer)
+            private static int PickPivotAndPartitionIntPtrByteOffsets<T, TComparer>(ref T keys, int lo, int hi, in TComparer comparer)
+                where TComparer : ILessThanComparer<T>
             {
                 Debug.Assert(comparer != null);
                 Debug.Assert(lo >= 0);
@@ -494,7 +430,7 @@ namespace System
                 //SwapIfGreater(ref keys, comparer, middle, hi); // swap the middle with the high
 
                 T pivot = miRef;
-                
+
                 // Put pivot in the right location.
                 IntPtr left = low;
                 IntPtr right = high - 1;  // We already partitioned lo and hi and put the pivot in hi - 1.  And we pre-increment & decrement below.
@@ -510,13 +446,13 @@ namespace System
                     {
                         leftBytes += Unsafe.SizeOf<T>();
                     }
-                    while (comparer.LessThan(Unsafe.AddByteOffset(ref keys, leftBytes), pivot)) ;
+                    while (comparer.LessThan(Unsafe.AddByteOffset(ref keys, leftBytes), pivot));
                     // TODO: Would be good to update local ref here
                     do
                     {
                         rightBytes -= Unsafe.SizeOf<T>();
                     }
-                    while (comparer.LessThan(pivot, Unsafe.AddByteOffset(ref keys, rightBytes))) ;
+                    while (comparer.LessThan(pivot, Unsafe.AddByteOffset(ref keys, rightBytes)));
 
                     if (leftBytes.GreaterThanEqual(rightBytes))
                         break;
@@ -536,7 +472,8 @@ namespace System
                 return (int)leftBytes.Divide(Unsafe.SizeOf<T>());
             }
 
-            private static void HeapSort(ref T keys, int lo, int hi, in TComparer comparer)
+            private static void HeapSort<T, TComparer>(ref T keys, int lo, int hi, in TComparer comparer)
+                where TComparer : ILessThanComparer<T>
             {
                 Debug.Assert(keys != null);
                 Debug.Assert(comparer != null);
@@ -555,7 +492,8 @@ namespace System
                 }
             }
 
-            private static void DownHeap(ref T keys, int i, int n, int lo, in TComparer comparer)
+            private static void DownHeap<T, TComparer>(ref T keys, int i, int n, int lo, in TComparer comparer)
+                where TComparer : ILessThanComparer<T>
             {
                 Debug.Assert(keys != null);
                 Debug.Assert(comparer != null);
@@ -593,7 +531,7 @@ namespace System
                     int child = i << 1;
 
                     //if (child < n && comparer(keys[lo + child - 1], keys[lo + child]) < 0)
-                    if (child < n && 
+                    if (child < n &&
                         comparer.LessThan(Unsafe.Add(ref refLoMinus1, child), Unsafe.Add(ref refLo, child)))
                     {
                         ++child;
@@ -613,7 +551,8 @@ namespace System
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private static void InsertionSort(ref T keys, int lo, int hi, in TComparer comparer)
+            private static void InsertionSort<T, TComparer>(ref T keys, int lo, int hi, in TComparer comparer)
+                where TComparer : ILessThanComparer<T>
             {
                 Debug.Assert(keys != null);
                 Debug.Assert(lo >= 0);
@@ -635,7 +574,8 @@ namespace System
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            internal static void Sort3(ref T r0, ref T r1, ref T r2, in TComparer comparer)
+            internal static void Sort3<T, TComparer>(ref T r0, ref T r1, ref T r2, in TComparer comparer)
+                where TComparer : ILessThanComparer<T>
             {
                 if (comparer.LessThan(r0, r1)) //r0 < r1)
                 {
@@ -677,7 +617,8 @@ namespace System
 
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private static void SwapIfGreater(ref T keys, int i, int j, TComparer comparer)
+            private static void SwapIfGreater<T, TComparer>(ref T keys, int i, int j, TComparer comparer)
+                where TComparer : ILessThanComparer<T>
             {
                 Debug.Assert(i != j);
                 // Check moved to the one case actually needing it, not all!
@@ -690,7 +631,8 @@ namespace System
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private static void SwapIfGreater(ref T a, ref T b, in TComparer comparer)
+            private static void SwapIfGreater<T, TComparer>(ref T a, ref T b, in TComparer comparer)
+                where TComparer : ILessThanComparer<T>
             {
                 //if (comparer.Compare(a, b) > 0)
                 if (comparer.LessThan(b, a))
@@ -701,38 +643,35 @@ namespace System
                 }
             }
 
-
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private static void Swap(ref T keys, int i, int j)
+            private static void Swap<T>(ref T items, int i, int j)
             {
                 // TODO: Is the i!=j check necessary? Most cases not needed?
                 // Only in one case it seems, REFACTOR
                 Debug.Assert(i != j);
-                // No place needs this it seems
+                // No place needs this anymore
                 //if (i != j)
                 {
-                    ref var iElement = ref Unsafe.Add(ref keys, i);
-                    ref var jElement = ref Unsafe.Add(ref keys, j);
+                    ref var iElement = ref Unsafe.Add(ref items, i);
+                    ref var jElement = ref Unsafe.Add(ref items, j);
                     Swap(ref iElement, ref jElement);
                 }
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private static void Swap(ref T keys, IntPtr i, IntPtr j)
+            private static void Swap<T>(ref T items, IntPtr i, IntPtr j)
             {
-                // TODO: Is the i!=j check necessary? Most cases not needed?
-                // Only in one case it seems, REFACTOR
                 Debug.Assert(i != j);
-                // No place needs this it seems
+                // No place needs this anymore
                 //if (i != j)
                 {
-                    ref var iElement = ref Unsafe.Add(ref keys, i);
-                    ref var jElement = ref Unsafe.Add(ref keys, j);
+                    ref var iElement = ref Unsafe.Add(ref items, i);
+                    ref var jElement = ref Unsafe.Add(ref items, j);
                     Swap(ref iElement, ref jElement);
                 }
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private static void Swap(ref T a, ref T b)
+            private static void Swap<T>(ref T a, ref T b)
             {
                 T temp = a;
                 a = b;
@@ -740,31 +679,68 @@ namespace System
             }
         }
 
-        internal class ComparableSpanSortHelper<T, TComparer>
-        : ISpanSortHelper<T, TComparer>
-        where T : IComparable<T>
-        where TComparer : IComparer<T>
+        internal static class DefaultSpanSortHelper<T, TComparer>
+            where TComparer : IComparer<T>
         {
-            // Do not add a constructor to this class because SpanSortHelper<T>.CreateSortHelper will not execute it
+            //private static volatile ISpanSortHelper<T, TComparer> defaultArraySortHelper;
 
+            //public static ISpanSortHelper<T, TComparer> Default
+            //{
+            //    get
+            //    {
+            //        ISpanSortHelper<T, TComparer> sorter = defaultArraySortHelper;
+            //        if (sorter == null)
+            //            sorter = CreateArraySortHelper();
+
+            //        return sorter;
+            //    }
+            //}
+            internal static readonly ISpanSortHelper<T, TComparer> s_default = CreateSortHelper();
+
+            private static ISpanSortHelper<T, TComparer> CreateSortHelper()
+            {
+                if (typeof(IComparable<T>).IsAssignableFrom(typeof(T)))
+                {
+                    // TODO: Is there a faster way?
+                    var ctor = typeof(ComparableSpanSortHelper<,>)
+                        .MakeGenericType(new Type[] { typeof(T), typeof(TComparer) })
+                        .GetConstructor(Array.Empty<Type>());
+
+                    return (ISpanSortHelper<T, TComparer>)ctor.Invoke(Array.Empty<object>());
+                    // coreclr does the following:
+                    //return (IArraySortHelper<T, TComparer>)
+                    //    RuntimeTypeHandle.Allocate(
+                    //        .TypeHandle.Instantiate());
+                }
+                else
+                {
+                    return new SpanSortHelper<T, TComparer>();
+                }
+            }
+        }
+
+        internal class SpanSortHelper<T, TComparer> : ISpanSortHelper<T, TComparer>
+            where TComparer : IComparer<T>
+        {
             public void Sort(Span<T> keys, in TComparer comparer)
             {
+                // Add a try block here to detect IComparers (or their
+                // underlying IComparables, etc) that are bogus.
+                //
+                // TODO: Do we need the try/catch?? Only when using default comparer?
                 try
                 {
-                    if (comparer == null ||
-                        // Cache this in generic traits helper class perhaps
-                        (!typeof(TComparer).IsValueType &&
-                         object.ReferenceEquals(comparer, Comparer<T>.Default)))
+                    if (typeof(TComparer) == typeof(IComparer<T>) && comparer == null)
                     {
-                        SpanSortHelper<T, ComparableComparer<T>>.Sort(
-                            ref keys.DangerousGetPinnableReference(), keys.Length,
-                            new ComparableComparer<T>());
+                        SpanSortHelper.Sort(
+                            ref keys.DangerousGetPinnableReference(), keys.Length, 
+                            new ComparerLessThanComparer<T, IComparer<T>>(Comparer<T>.Default));
                     }
                     else
                     {
-                        SpanSortHelper<T, LessThanComparer<T, TComparer>>.Sort(
+                        SpanSortHelper.Sort(
                             ref keys.DangerousGetPinnableReference(), keys.Length,
-                            new LessThanComparer<T, TComparer>(comparer));
+                            new ComparerLessThanComparer<T, IComparer<T>>(comparer));
                     }
                 }
                 catch (IndexOutOfRangeException)
@@ -777,79 +753,43 @@ namespace System
                     //throw new InvalidOperationException(SR.InvalidOperation_IComparerFailed, e);
                 }
             }
+        }
 
-            //internal class ArraySortHelper<T, TComparer>
-            //    : ISpanSortHelper<T, TComparer>
-            //    where TComparer : IComparer<T>
-            //{
-
-            //public int BinarySearch(Span<T> array, T value, TComparer comparer)
-            //{
-            //    try
-            //    {
-            //        if (comparer == null)
-            //        {
-            //            comparer = Comparer<T>.Default;
-            //        }
-
-            //        return InternalBinarySearch(array, index, length, value, comparer);
-            //    }
-            //    catch (Exception e)
-            //    {
-            //        throw new InvalidOperationException(SR.InvalidOperation_IComparerFailed, e);
-            //    }
-            //}
-
-            //internal static void Sort(Span<T> keys, Comparison<T> comparer)
-            //{
-            //    Debug.Assert(keys != null, "Check the arguments in the caller!");
-            //    Debug.Assert(index >= 0 && length >= 0 && (keys.Length - index >= length), "Check the arguments in the caller!");
-            //    Debug.Assert(comparer != null, "Check the arguments in the caller!");
-
-            //    // Add a try block here to detect bogus comparisons
-            //    try
-            //    {
-            //        IntrospectiveSort(keys, index, length, comparer);
-            //    }
-            //    catch (IndexOutOfRangeException)
-            //    {
-            //        IntrospectiveSortUtilities.ThrowOrIgnoreBadComparer(comparer);
-            //    }
-            //    catch (Exception e)
-            //    {
-            //        throw new InvalidOperationException(SR.InvalidOperation_IComparerFailed, e);
-            //    }
-            //}
-
-            //internal static int InternalBinarySearch(T[] array, int index, int length, T value, IComparer<T> comparer)
-            //{
-            //    Debug.Assert(array != null, "Check the arguments in the caller!");
-            //    Debug.Assert(index >= 0 && length >= 0 && (array.Length - index >= length), "Check the arguments in the caller!");
-
-            //    int lo = index;
-            //    int hi = index + length - 1;
-            //    while (lo <= hi)
-            //    {
-            //        int i = lo + ((hi - lo) >> 1);
-            //        int order = comparer.Compare(array[i], value);
-
-            //        if (order == 0)
-            //            return i;
-            //        if (order < 0)
-            //        {
-            //            lo = i + 1;
-            //        }
-            //        else
-            //        {
-            //            hi = i - 1;
-            //        }
-            //    }
-
-            //    return ~lo;
-            //}
-
-            //}
-
+        internal class ComparableSpanSortHelper<T, TComparer>
+            : ISpanSortHelper<T, TComparer>
+            where T : IComparable<T>
+            where TComparer : IComparer<T>
+        {
+            public void Sort(Span<T> keys, in TComparer comparer)
+            {
+                try
+                {
+                    if (comparer == null ||
+                        // Cache this in generic traits helper class perhaps
+                        (!typeof(TComparer).IsValueType &&
+                         object.ReferenceEquals(comparer, Comparer<T>.Default)))
+                    {
+                        SpanSortHelper.Sort(
+                            ref keys.DangerousGetPinnableReference(), keys.Length,
+                            new ComparableLessThanComparer<T>());
+                    }
+                    else
+                    {
+                        SpanSortHelper.Sort(
+                            ref keys.DangerousGetPinnableReference(), keys.Length,
+                            new ComparerLessThanComparer<T, TComparer>(comparer));
+                    }
+                }
+                catch (IndexOutOfRangeException)
+                {
+                    //IntrospectiveSortUtilities.ThrowOrIgnoreBadComparer(comparer);
+                }
+                catch (Exception e)
+                {
+                    throw e;
+                    //throw new InvalidOperationException(SR.InvalidOperation_IComparerFailed, e);
+                }
+            }
         }
     }
 }

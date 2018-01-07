@@ -44,6 +44,36 @@ namespace System.SpanTests
             }
         }
 
+        [Theory]
+        [Trait("MyTrait", "MyTraitValue")]
+        [InlineData(17, 1024)]
+        [InlineData(42, 1024)]
+        [InlineData(1873318, 1024)]
+        public static void Sort_Random_Float(int seed, int maxCount)
+        {
+            var random = new Random(seed);
+            for (int count = 0; count < maxCount; count++)
+            {
+                var unsorted = Enumerable.Range(0, count).Select(i => (float)random.Next()).ToArray();
+                TestSortOverloads(unsorted);
+            }
+        }
+
+        [Theory]
+        [Trait("MyTrait", "MyTraitValue")]
+        [InlineData(17, 512)]
+        [InlineData(42, 512)]
+        [InlineData(1873318, 512)]
+        public static void Sort_Random_String(int seed, int maxCount)
+        {
+            var random = new Random(seed);
+            for (int count = 0; count < maxCount; count++)
+            {
+                var unsorted = Enumerable.Range(0, count).Select(i => random.Next().ToString("D9")).ToArray();
+                TestSortOverloads(unsorted);
+            }
+        }
+
         // TODO: OuterLoop
         [Fact]
         [Trait("MyTrait", "MyTraitValue")]
