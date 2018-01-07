@@ -140,6 +140,29 @@ namespace System
             public bool IsNaN(double value) => double.IsNaN(value);
         }
 
+        //internal interface ISwapper
+        //{
+        //    void Swap(int i, int j);
+        //}
+        //
+        //// https://github.com/dotnet/roslyn/issues/20226
+        //internal ref struct Swapper<T> : ISwapper // DAMN!!! ref structs can't inherit interfaces!!!
+        //{
+        //    Span<T> _items;
+        //
+        //    public Swapper(Span<T> items)
+        //    {
+        //        _items = items;
+        //    }
+        //
+        //    public void Swap(int i, int j)
+        //    {
+        //        ref T start = ref _items.DangerousGetPinnableReference();
+        //        SpanSortHelper.Swap(ref Unsafe.Add(ref start, i),
+        //                            ref Unsafe.Add(ref start, j));
+        //    }
+        //}
+
         internal static class SpanSortHelper
         {
             // https://github.com/dotnet/coreclr/blob/master/src/mscorlib/src/System/Collections/Generic/ArraySortHelper.cs
@@ -826,7 +849,7 @@ namespace System
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private static void Swap<T>(ref T a, ref T b)
+            internal static void Swap<T>(ref T a, ref T b)
             {
                 T temp = a;
                 a = b;
