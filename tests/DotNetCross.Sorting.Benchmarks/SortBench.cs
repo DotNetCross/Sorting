@@ -6,7 +6,7 @@ using DotNetCross.Sorting.Sequences;
 
 namespace DotNetCross.Sorting.Benchmarks
 {
-    [Config(typeof(SortBenchmarkConfig))]
+    [Config(typeof(SortBenchConfig))]
     public class SortBench<T>
     {
         readonly int _maxLength;

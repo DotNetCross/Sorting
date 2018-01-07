@@ -7,9 +7,9 @@ using BenchmarkDotNet.Toolchains.InProcess;
 
 namespace DotNetCross.Sorting.Benchmarks
 {
-    public class SortBenchmarkConfig : ManualConfig
+    public class SortBenchConfig : ManualConfig
     {
-        public SortBenchmarkConfig()
+        public SortBenchConfig()
         {
             var runMode = new BenchmarkDotNet.Jobs.RunMode() { LaunchCount = 1, WarmupCount = 3, TargetCount = 11, RunStrategy = RunStrategy.Monitoring };
             var envModes = new[] {
@@ -22,8 +22,8 @@ namespace DotNetCross.Sorting.Benchmarks
             foreach (var envMode in envModes)
             {
                 Add(new Job(envMode, Job.Dry, runMode)
-                    .With(InProcessToolchain.Instance))
-                    ;
+                    .With(InProcessToolchain.Instance)
+                    );
             }
             //Add(DisassemblyDiagnoser.Create(
             //    new DisassemblyDiagnoserConfig(printAsm: true, printSource: true, recursiveDepth: 3)));

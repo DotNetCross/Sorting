@@ -13,7 +13,7 @@ namespace DotNetCross.Sorting.Benchmarks
     //[DisassemblyDiagnoser(recursiveDepth: 2)]
     //[SimpleJob(RunStrategy.Monitoring, launchCount: 1, warmupCount: 3, targetCount: 11)]
     //[RyuJitX64Job()]
-    [Config(typeof(SortBenchmarkConfig))]
+    [Config(typeof(SortBenchConfig))]
     public class RandomSort
     {
         const int MaxLength = 3 * 1000 * 1000;
