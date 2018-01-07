@@ -219,7 +219,7 @@ namespace System
 
                     // Comparison to NaN is always false, so do a linear pass 
                     // and swap all NaNs to the front of the array
-                    var left = SpanSortHelper.NaNPrepass(ref keys, length, new SingleIsNaN());
+                    var left = NaNPrepass(ref keys, length, new SingleIsNaN());
 
                     ref var afterNaNsKeys = ref Unsafe.Add(ref keys, left);
                     Sort(ref afterNaNsKeys, length - left, new SingleLessThanComparer());
@@ -232,7 +232,7 @@ namespace System
 
                     // Comparison to NaN is always false, so do a linear pass 
                     // and swap all NaNs to the front of the array
-                    var left = SpanSortHelper.NaNPrepass(ref keys, length, new DoubleIsNaN());
+                    var left = NaNPrepass(ref keys, length, new DoubleIsNaN());
 
                     ref var afterNaNsKeys = ref Unsafe.Add(ref keys, left);
                     Sort(ref afterNaNsKeys, length - left, new DoubleLessThanComparer());
