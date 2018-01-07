@@ -246,7 +246,7 @@ namespace System
             }
 
             // For sorting, move all NaN instances to front of the input array
-            internal static int NaNPrepass<T, TIsNaN>(ref T keys, int length, in TIsNaN isNaN)
+            private static int NaNPrepass<T, TIsNaN>(ref T keys, int length, in TIsNaN isNaN)
                 where TIsNaN : struct, IIsNaN<T>
             {
                 int left = 0;
