@@ -882,9 +882,9 @@ namespace System
                 // Add a try block here to detect IComparers (or their
                 // underlying IComparables, etc) that are bogus.
                 //
-                // TODO: Do we need the try/catch?? Only when using default comparer?
-                try
-                {
+                // TODO: Do we need the try/catch? Just let it triggle up...
+                //try
+                //{
                     if (typeof(TComparer) == typeof(IComparer<T>) && comparer == null)
                     {
                         SpanSortHelper.Sort(
@@ -897,16 +897,17 @@ namespace System
                             ref keys.DangerousGetPinnableReference(), keys.Length,
                             new ComparerLessThanComparer<T, IComparer<T>>(comparer));
                     }
-                }
-                catch (IndexOutOfRangeException)
-                {
-                    //IntrospectiveSortUtilities.ThrowOrIgnoreBadComparer(comparer);
-                }
-                catch (Exception e)
-                {
-                    throw e;
-                    //throw new InvalidOperationException(SR.InvalidOperation_IComparerFailed, e);
-                }
+                //}
+                //catch (IndexOutOfRangeException e)
+                //{
+                //    throw e;
+                //    //IntrospectiveSortUtilities.ThrowOrIgnoreBadComparer(comparer);
+                //}
+                //catch (Exception e)
+                //{
+                //    throw e;
+                //    //throw new InvalidOperationException(SR.InvalidOperation_IComparerFailed, e);
+                //}
             }
         }
 
@@ -917,12 +918,16 @@ namespace System
         {
             public void Sort(Span<T> keys, in TComparer comparer)
             {
-                try
-                {
+                // Add a try block here to detect IComparers (or their
+                // underlying IComparables, etc) that are bogus.
+                //
+                // TODO: Do we need the try/catch? Just let it triggle up...
+                //try
+                //{
                     if (comparer == null ||
                         // Cache this in generic traits helper class perhaps
                         (!typeof(TComparer).IsValueType &&
-                         object.ReferenceEquals(comparer, Comparer<T>.Default)))
+                         object.ReferenceEquals(comparer, Comparer<T>.Default))) // Or "=="?
                     {
                         if (!SpanSortHelper.TrySortSpecialized(keys))
                         {
@@ -937,16 +942,17 @@ namespace System
                             ref keys.DangerousGetPinnableReference(), keys.Length,
                             new ComparerLessThanComparer<T, TComparer>(comparer));
                     }
-                }
-                catch (IndexOutOfRangeException)
-                {
-                    //IntrospectiveSortUtilities.ThrowOrIgnoreBadComparer(comparer);
-                }
-                catch (Exception e)
-                {
-                    throw e;
-                    //throw new InvalidOperationException(SR.InvalidOperation_IComparerFailed, e);
-                }
+                //}
+                //catch (IndexOutOfRangeException e)
+                //{
+                //    throw e;
+                //    //IntrospectiveSortUtilities.ThrowOrIgnoreBadComparer(comparer);
+                //}
+                //catch (Exception e)
+                //{
+                //    throw e;
+                //    //throw new InvalidOperationException(SR.InvalidOperation_IComparerFailed, e);
+                //}
             }
         }
     }

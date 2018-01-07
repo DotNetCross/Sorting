@@ -10,10 +10,42 @@ namespace System.SpanTests
 {
     public static partial class SpanTests
     {
+        // Existing coreclr tests seem to be in here:
+        // https://github.com/dotnet/coreclr/tree/master/tests/src/CoreMangLib/cti/system/array
+        // E.g. arraysort1.cs etc.
+
         //public static readonly TheoryData<uint[]> s_sortCasesUInt =
-            //new TheoryData<uint[]> {
-            //    ,
-            //};
+        //new TheoryData<uint[]> {
+        //    ,
+        //};
+
+        // How do we create a not comparable? I.e. something Comparer<T>.Default fails on?
+        //struct NotComparable { int i; string s; IntPtr p; }
+        //[Fact]
+        //[Trait("MyTrait", "MyTraitValue")]
+        //public static void Sort_NotComparableThrows()
+        //{
+        //    var comparer = Comparer<NotComparable>.Default;
+        //    Assert.Throws<ArgumentNullException>(() => new Span<NotComparable>(new NotComparable[16])
+        //        .Sort());
+        //    Assert.Throws<ArgumentNullException>(() => new Span<NotComparable>(new NotComparable[16])
+        //        .Sort(comparer));
+        //}
+
+        [Fact]
+        [Trait("MyTrait", "MyTraitValue")]
+        public static void Sort_NullComparerDoesNotThrow()
+        {
+            new Span<int>(new int[] { 3 }).Sort((IComparer<int>)null);
+        }
+
+        [Fact]
+        [Trait("MyTrait", "MyTraitValue")]
+        public static void Sort_NullComparisonThrows()
+        {
+            Assert.Throws<ArgumentNullException>(() => new Span<int>(new int[] { }).Sort((Comparison<int>)null));
+            Assert.Throws<ArgumentNullException>(() => new Span<string>(new string[] { }).Sort((Comparison<string>)null));
+        }
 
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
