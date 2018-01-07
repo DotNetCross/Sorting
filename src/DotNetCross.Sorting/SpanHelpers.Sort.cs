@@ -17,75 +17,9 @@ namespace System
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static void Sort<T>(this Span<T> span)
         {
-            var length = span.Length;
-            // Type unfolding adopted from https://github.com/dotnet/coreclr/blob/master/src/classlibnative/bcltype/arrayhelpers.cpp#L268
-            if (typeof(T) == typeof(sbyte))
+            // PERF: Try specialized here for optimal performance
+            if (!SpanSortHelper.TrySortSpecialized(span))
             {
-                ref var keys = ref Unsafe.As<T, sbyte>(ref span.DangerousGetPinnableReference());//ref MemoryManager.GetReference(span));
-                SpanSortHelper.Sort(ref keys, length, new SByteLessThanComparer());
-            }
-            else if (typeof(T) == typeof(byte) ||
-                     typeof(T) == typeof(bool)) // Use byte for bools to reduce code size
-            {
-                ref var keys = ref Unsafe.As<T, byte>(ref span.DangerousGetPinnableReference());//ref MemoryManager.GetReference(span));
-                SpanSortHelper.Sort(ref keys, length, new ByteLessThanComparer());
-            }
-            else if (typeof(T) == typeof(short) ||
-                     typeof(T) == typeof(char)) // Use short for chars to reduce code size
-            {
-                ref var keys = ref Unsafe.As<T, short>(ref span.DangerousGetPinnableReference());//ref MemoryManager.GetReference(span));
-                SpanSortHelper.Sort(ref keys, length, new Int16LessThanComparer());
-            }
-            else if (typeof(T) == typeof(ushort))
-            {
-                ref var keys = ref Unsafe.As<T, ushort>(ref span.DangerousGetPinnableReference());//ref MemoryManager.GetReference(span));
-                SpanSortHelper.Sort(ref keys, length, new UInt16LessThanComparer());
-            }
-            else if (typeof(T) == typeof(int))
-            {
-                ref var keys = ref Unsafe.As<T, int>(ref span.DangerousGetPinnableReference());//ref MemoryManager.GetReference(span));
-                SpanSortHelper.Sort(ref keys, length, new Int32LessThanComparer());
-            }
-            else if (typeof(T) == typeof(uint))
-            {
-                ref var keys = ref Unsafe.As<T, uint>(ref span.DangerousGetPinnableReference());//ref MemoryManager.GetReference(span));
-                SpanSortHelper.Sort(ref keys, length, new UInt32LessThanComparer());
-            }
-            else if (typeof(T) == typeof(long))
-            {
-                ref var keys = ref Unsafe.As<T, long>(ref span.DangerousGetPinnableReference());//ref MemoryManager.GetReference(span));
-                SpanSortHelper.Sort(ref keys, length, new Int64LessThanComparer());
-            }
-            else if (typeof(T) == typeof(ulong))
-            {
-                ref var keys = ref Unsafe.As<T, ulong>(ref span.DangerousGetPinnableReference());//ref MemoryManager.GetReference(span));
-                SpanSortHelper.Sort(ref keys, length, new UInt64LessThanComparer());
-            }
-            else if (typeof(T) == typeof(float))
-            {
-                ref var keys = ref Unsafe.As<T, float>(ref span.DangerousGetPinnableReference());//ref MemoryManager.GetReference(span));
-
-                // Comparison to NaN is always false, so do a linear pass 
-                // and swap all NaNs to the front of the array
-                var left = SpanSortHelper.NaNPrepass(ref keys, length, new SingleIsNaN());
-
-                ref var afterNaNsKeys = ref Unsafe.Add(ref keys, left);
-                SpanSortHelper.Sort(ref afterNaNsKeys, length - left, new SingleLessThanComparer());
-            }
-            else if (typeof(T) == typeof(double))
-            {
-                ref var keys = ref Unsafe.As<T, double>(ref span.DangerousGetPinnableReference());//ref MemoryManager.GetReference(span));
-
-                // Comparison to NaN is always false, so do a linear pass 
-                // and swap all NaNs to the front of the array
-                var left = SpanSortHelper.NaNPrepass(ref keys, length, new DoubleIsNaN());
-
-                ref var afterNaNsKeys = ref Unsafe.Add(ref keys, left);
-                SpanSortHelper.Sort(ref afterNaNsKeys, length - left, new DoubleLessThanComparer());
-            }
-            else
-            {
-                // TODO: This creates a new instance everytime it seems... cache it
                 Sort(span, Comparer<T>.Default);
             }
         }
@@ -215,6 +149,101 @@ namespace System
             // Empirically, 16 seems to speed up most cases without slowing down others, at least for integers.
             // Large value types may benefit from a smaller number.
             internal const int IntrosortSizeThreshold = 16;
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            internal static bool TrySortSpecialized<T>(Span<T> span)
+            {
+                int length = span.Length;
+                // Type unfolding adopted from https://github.com/dotnet/coreclr/blob/master/src/classlibnative/bcltype/arrayhelpers.cpp#L268
+                if (typeof(T) == typeof(sbyte))
+                {
+                    ref var keys = ref Unsafe.As<T, sbyte>(ref span.DangerousGetPinnableReference());//ref MemoryManager.GetReference(span));
+                    Sort(ref keys, length, new SByteLessThanComparer());
+
+                    return true;
+                }
+                else if (typeof(T) == typeof(byte) ||
+                         typeof(T) == typeof(bool)) // Use byte for bools to reduce code size
+                {
+                    ref var keys = ref Unsafe.As<T, byte>(ref span.DangerousGetPinnableReference());//ref MemoryManager.GetReference(span));
+                    Sort(ref keys, length, new ByteLessThanComparer());
+
+                    return true;
+                }
+                else if (typeof(T) == typeof(short) ||
+                         typeof(T) == typeof(char)) // Use short for chars to reduce code size
+                {
+                    ref var keys = ref Unsafe.As<T, short>(ref span.DangerousGetPinnableReference());//ref MemoryManager.GetReference(span));
+                    Sort(ref keys, length, new Int16LessThanComparer());
+
+                    return true;
+                }
+                else if (typeof(T) == typeof(ushort))
+                {
+                    ref var keys = ref Unsafe.As<T, ushort>(ref span.DangerousGetPinnableReference());//ref MemoryManager.GetReference(span));
+                    Sort(ref keys, length, new UInt16LessThanComparer());
+
+                    return true;
+                }
+                else if (typeof(T) == typeof(int))
+                {
+                    ref var keys = ref Unsafe.As<T, int>(ref span.DangerousGetPinnableReference());//ref MemoryManager.GetReference(span));
+                    Sort(ref keys, length, new Int32LessThanComparer());
+
+                    return true;
+                }
+                else if (typeof(T) == typeof(uint))
+                {
+                    ref var keys = ref Unsafe.As<T, uint>(ref span.DangerousGetPinnableReference());//ref MemoryManager.GetReference(span));
+                    Sort(ref keys, length, new UInt32LessThanComparer());
+
+                    return true;
+                }
+                else if (typeof(T) == typeof(long))
+                {
+                    ref var keys = ref Unsafe.As<T, long>(ref span.DangerousGetPinnableReference());//ref MemoryManager.GetReference(span));
+                    Sort(ref keys, length, new Int64LessThanComparer());
+
+                    return true;
+                }
+                else if (typeof(T) == typeof(ulong))
+                {
+                    ref var keys = ref Unsafe.As<T, ulong>(ref span.DangerousGetPinnableReference());//ref MemoryManager.GetReference(span));
+                    Sort(ref keys, length, new UInt64LessThanComparer());
+
+                    return true;
+                }
+                else if (typeof(T) == typeof(float))
+                {
+                    ref var keys = ref Unsafe.As<T, float>(ref span.DangerousGetPinnableReference());//ref MemoryManager.GetReference(span));
+
+                    // Comparison to NaN is always false, so do a linear pass 
+                    // and swap all NaNs to the front of the array
+                    var left = SpanSortHelper.NaNPrepass(ref keys, length, new SingleIsNaN());
+
+                    ref var afterNaNsKeys = ref Unsafe.Add(ref keys, left);
+                    Sort(ref afterNaNsKeys, length - left, new SingleLessThanComparer());
+
+                    return true;
+                }
+                else if (typeof(T) == typeof(double))
+                {
+                    ref var keys = ref Unsafe.As<T, double>(ref span.DangerousGetPinnableReference());//ref MemoryManager.GetReference(span));
+
+                    // Comparison to NaN is always false, so do a linear pass 
+                    // and swap all NaNs to the front of the array
+                    var left = SpanSortHelper.NaNPrepass(ref keys, length, new DoubleIsNaN());
+
+                    ref var afterNaNsKeys = ref Unsafe.Add(ref keys, left);
+                    Sort(ref afterNaNsKeys, length - left, new DoubleLessThanComparer());
+
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
 
             // For sorting, move all NaN instances to front of the input array
             internal static int NaNPrepass<T, TIsNaN>(ref T keys, int length, in TIsNaN isNaN)
@@ -895,9 +924,12 @@ namespace System
                         (!typeof(TComparer).IsValueType &&
                          object.ReferenceEquals(comparer, Comparer<T>.Default)))
                     {
-                        SpanSortHelper.Sort(
-                            ref keys.DangerousGetPinnableReference(), keys.Length,
-                            new ComparableLessThanComparer<T>());
+                        if (!SpanSortHelper.TrySortSpecialized(keys))
+                        {
+                            SpanSortHelper.Sort(
+                                ref keys.DangerousGetPinnableReference(), keys.Length,
+                                new ComparableLessThanComparer<T>());
+                        }
                     }
                     else
                     {
