@@ -13,17 +13,22 @@ namespace DotNetCross.Sorting.Benchmarks
     //[DisassemblyDiagnoser(recursiveDepth: 2)]
     //[SimpleJob(RunStrategy.Monitoring, launchCount: 1, warmupCount: 3, targetCount: 11)]
     //[RyuJitX64Job()]
-    [Config(typeof(SortBenchConfig))]
+    [Config(typeof(SortDisassemblerBenchConfig))]
     public class RandomSort
     {
         const int MaxLength = 3 * 1000 * 1000;
         static readonly int[] _random = CreateRandomArray<int>(MaxLength, i => i);
         int[] _work = new int[MaxLength];
 
-        [ParamsSource(nameof(Lengths))]
+        public RandomSort()
+        {
+            Length = 1000000;
+        }
+
+        //[ParamsSource(nameof(Lengths))]
         public int Length { get; set; }
 
-        public IEnumerable<int> Lengths => new[] { 1, 10, 100, 10000, 1000000 };
+        //public IEnumerable<int> Lengths => new[] { 1000000 }; //1, 10, 100, 10000, 
 
         [IterationSetup]
         public void IterationSetup()

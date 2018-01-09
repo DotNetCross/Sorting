@@ -19,6 +19,7 @@ namespace System
         {
             Span<int> values = default;
             // PERF: Try specialized here for optimal performance
+            // Code-gen is weird unless used in loop outside
             if (!SpanSortHelper.TrySortSpecialized(span, ref values.DangerousGetPinnableReference()))
             {
                 Sort(span, Comparer<T>.Default);

@@ -69,11 +69,24 @@ namespace DotNetCross.Sorting.Benchmarks
         { }
     }
 
+    public class Int32SortDisassemblerBenchNotWorking : SortDisassemblerBench//<int>
+    {
+        public Int32SortDisassemblerBenchNotWorking()
+            : base(length: 1024 * 1024, i => i)
+        { }
+    }
+
     class Program
     {
         static void Main(string[] args)
         {
-            BenchmarkRunner.Run<Int32SortBench>();
+            //BenchmarkRunner.Run<Int32SortDisassemblerBenchNotWorking>(); // Fails?!
+            BenchmarkRunner.Run<Int32SortDisassemblerBench>(); // Dissassembly isn't full...
+
+            //BenchmarkRunner.Run<RandomSort>();
+
+            //BenchmarkRunner.Run<Int32SortBench>();
+
             //BenchmarkRunner.Run<RandomShuffleSortBench>();
             //BenchmarkRunner.Run<RandomSortBench>();
             //BenchmarkRunner.Run<MedianOfThreeSortBench>();
@@ -82,7 +95,6 @@ namespace DotNetCross.Sorting.Benchmarks
             //BenchmarkRunner.Run<ConstantSortBench>();
 
             //BenchmarkRunner.Run<IntPtrHelperBenchmark>();
-            //BenchmarkRunner.Run<RandomSort>();
             //BenchmarkRunner.Run<CompareAsm>();
 
             //SomeMethod();
@@ -97,7 +109,7 @@ namespace DotNetCross.Sorting.Benchmarks
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static void SomeMethod()
         {
-            var s = new RandomSort();
+            var s = new Int32SortDisassemblerBench();
             s.SpanSort();
         }
     }
