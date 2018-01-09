@@ -15,24 +15,25 @@ namespace System
     internal static partial class SpanHelpers
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void Sort<T>(this Span<T> span)
+        internal static void Sort<T>(this Span<T> keys)
         {
-            Span<int> values = default;
             // PERF: Try specialized here for optimal performance
             // Code-gen is weird unless used in loop outside
-            if (!SpanSortHelper.TrySortSpecialized(span, ref values.DangerousGetPinnableReference()))
+            if (!SpanSortHelper.TrySortSpecialized(
+                ref keys.DangerousGetPinnableReference(), keys.Length))
             {
-                Sort(span, Comparer<T>.Default);
+                Sort(keys, Comparer<T>.Default);
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static void Sort<T, TComparer>(
-            this Span<T> span, TComparer comparer)
+            this Span<T> keys, TComparer comparer)
             where TComparer : IComparer<T>
         {
             Span<int> values = default;
-            DefaultSpanSortHelper<T, TComparer>.s_default.Sort(span, ref values.DangerousGetPinnableReference(), comparer);
+            DefaultSpanSortHelper<T, TComparer>.s_default.Sort(
+                keys, ref values.DangerousGetPinnableReference(), comparer);
         }
 
         internal interface ILessThanComparer<T>
@@ -42,6 +43,15 @@ namespace System
         //
         // Type specific LessThanComparer(s) to ensure optimal code-gen
         //
+
+        // Could this be done better by simply casting? and being generic?
+        // This way we do not need special casing for TValue...
+        internal struct GenericSByteLessThanComparer<T> : ILessThanComparer<T>
+        {
+            // Does this trick work for this as well?
+            public bool LessThan(T x, T y) => ((sbyte)(object)x) < ((sbyte)(object)y);
+        }
+
         internal struct SByteLessThanComparer : ILessThanComparer<sbyte>
         {
             public bool LessThan(sbyte x, sbyte y) => x < y;
@@ -166,6 +176,7 @@ namespace System
         //    }
         //}
 
+
         internal static class SpanSortHelper
         {
             // https://github.com/dotnet/coreclr/blob/master/src/mscorlib/src/System/Collections/Generic/ArraySortHelper.cs
@@ -176,92 +187,264 @@ namespace System
             // Large value types may benefit from a smaller number.
             internal const int IntrosortSizeThreshold = 16;
 
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            internal static bool TrySortSpecialized<T>(Span<T> span, ref int values)
+            internal struct Void { }
+
+            // Could move TKey generic type to the methods, would avoid the need to unfold specialized sort twice...
+            internal interface ISwapper<TKey>
             {
-                int length = span.Length;
-                // Type unfolding adopted from https://github.com/dotnet/coreclr/blob/master/src/classlibnative/bcltype/arrayhelpers.cpp#L268
-                if (typeof(T) == typeof(sbyte))
+                bool NeedsValues { get; }
+
+                void Swap<TValue>(ref TKey keys, ref TValue values, int i, int j);
+                void Copy<TValue>(ref TKey keys, ref TValue values, int sourceIndex, int destinationIndex);
+                void Write<TValue>(TKey key, TValue value, int index, ref TKey keys, ref TValue values);
+            }
+            internal struct KeysSwapper<TKey> : ISwapper<TKey>
+            {
+                public bool NeedsValues
                 {
-                    ref var keys = ref Unsafe.As<T, sbyte>(ref span.DangerousGetPinnableReference());//ref MemoryManager.GetReference(span));
-                    Sort(ref keys, ref values, length, new SByteLessThanComparer());
+                    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                    get => false;
+                }
+
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                public void Swap<TValue>(ref TKey keys, ref TValue _, int i, int j)
+                {
+                    ref var a = ref Unsafe.Add(ref keys, i);
+                    ref var b = ref Unsafe.Add(ref keys, j);
+                    TKey temp = a;
+                    a = b;
+                    b = temp;
+                }
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                public void Copy<TValue>(ref TKey keys, ref TValue values, int sourceIndex, int destinationIndex)
+                {
+                    Unsafe.Add(ref keys, destinationIndex) = Unsafe.Add(ref keys, sourceIndex);
+                }
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                public void Write<TValue>(TKey key, TValue value, int index, ref TKey keys, ref TValue values)
+                {
+                    Unsafe.Add(ref keys, index) = key;
+                }
+            }
+            internal struct KeysValuesSwapper<TKey> : ISwapper<TKey>
+            {
+                public bool NeedsValues
+                {
+                    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                    get => true;
+                }
+
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                public void Swap<TValue>(ref TKey keys, ref TValue values, int i, int j)
+                {
+                    ref var keyA = ref Unsafe.Add(ref keys, i);
+                    ref var keyB = ref Unsafe.Add(ref keys, j);
+                    TKey keyTemp = keyA;
+                    keyA = keyB;
+                    keyB = keyTemp;
+
+                    ref var valueA = ref Unsafe.Add(ref values, i);
+                    ref var valueB = ref Unsafe.Add(ref values, j);
+                    TValue valueTemp = valueA;
+                    valueA = valueB;
+                    valueB = valueTemp;
+                }
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                public void Copy<TValue>(ref TKey keys, ref TValue values, int sourceIndex, int destinationIndex)
+                {
+                    Unsafe.Add(ref keys, destinationIndex) = Unsafe.Add(ref keys, sourceIndex);
+                    Unsafe.Add(ref values, destinationIndex) = Unsafe.Add(ref values, sourceIndex);
+                }
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                public void Write<TValue>(TKey key, TValue value, int index, ref TKey keys, ref TValue values)
+                {
+                    Unsafe.Add(ref keys, index) = key;
+                    Unsafe.Add(ref values, index) = value;
+                }
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            internal static bool TrySortSpecialized<TKey>(ref TKey keys, int length)
+            {
+                Void values;
+                // Types unfolded adopted from https://github.com/dotnet/coreclr/blob/master/src/classlibnative/bcltype/arrayhelpers.cpp#L268
+                if (typeof(TKey) == typeof(sbyte))
+                {
+                    ref var specificKeys = ref Unsafe.As<TKey, sbyte>(ref keys);
+                    Sort(ref specificKeys, ref values, length, new SByteLessThanComparer(), new KeysSwapper<sbyte>());
+                    return true;
+                }
+                else if (typeof(TKey) == typeof(byte) ||
+                         typeof(TKey) == typeof(bool)) // Use byte for bools to reduce code size
+                {
+                    ref var specificKeys = ref Unsafe.As<TKey, byte>(ref keys);
+                    Sort(ref specificKeys, ref values, length, new ByteLessThanComparer(), new KeysSwapper<byte>());
 
                     return true;
                 }
-                else if (typeof(T) == typeof(byte) ||
-                         typeof(T) == typeof(bool)) // Use byte for bools to reduce code size
+                else if (typeof(TKey) == typeof(short) ||
+                         typeof(TKey) == typeof(char)) // Use short for chars to reduce code size
                 {
-                    ref var keys = ref Unsafe.As<T, byte>(ref span.DangerousGetPinnableReference());//ref MemoryManager.GetReference(span));
-                    Sort(ref keys, ref values, length, new ByteLessThanComparer());
+                    ref var specificKeys = ref Unsafe.As<TKey, short>(ref keys);
+                    Sort(ref specificKeys, ref values, length, new Int16LessThanComparer(), new KeysSwapper<short>());
 
                     return true;
                 }
-                else if (typeof(T) == typeof(short) ||
-                         typeof(T) == typeof(char)) // Use short for chars to reduce code size
+                else if (typeof(TKey) == typeof(ushort))
                 {
-                    ref var keys = ref Unsafe.As<T, short>(ref span.DangerousGetPinnableReference());//ref MemoryManager.GetReference(span));
-                    Sort(ref keys, ref values, length, new Int16LessThanComparer());
+                    ref var specificKeys = ref Unsafe.As<TKey, ushort>(ref keys);
+                    Sort(ref specificKeys, ref values, length, new UInt16LessThanComparer(), new KeysSwapper<ushort>());
 
                     return true;
                 }
-                else if (typeof(T) == typeof(ushort))
+                else if (typeof(TKey) == typeof(int))
                 {
-                    ref var keys = ref Unsafe.As<T, ushort>(ref span.DangerousGetPinnableReference());//ref MemoryManager.GetReference(span));
-                    Sort(ref keys, ref values, length, new UInt16LessThanComparer());
+                    ref var specificKeys = ref Unsafe.As<TKey, int>(ref keys);
+                    Sort(ref specificKeys, ref values, length, new Int32LessThanComparer(), new KeysSwapper<int>());
 
                     return true;
                 }
-                else if (typeof(T) == typeof(int))
+                else if (typeof(TKey) == typeof(uint))
                 {
-                    ref var keys = ref Unsafe.As<T, int>(ref span.DangerousGetPinnableReference());//ref MemoryManager.GetReference(span));
-                    Sort(ref keys, ref values, length, new Int32LessThanComparer());
+                    ref var specificKeys = ref Unsafe.As<TKey, uint>(ref keys);
+                    Sort(ref specificKeys, ref values, length, new UInt32LessThanComparer(), new KeysSwapper<uint>());
 
                     return true;
                 }
-                else if (typeof(T) == typeof(uint))
+                else if (typeof(TKey) == typeof(long))
                 {
-                    ref var keys = ref Unsafe.As<T, uint>(ref span.DangerousGetPinnableReference());//ref MemoryManager.GetReference(span));
-                    Sort(ref keys, ref values, length, new UInt32LessThanComparer());
+                    ref var specificKeys = ref Unsafe.As<TKey, long>(ref keys);
+                    Sort(ref specificKeys, ref values, length, new Int64LessThanComparer(), new KeysSwapper<long>());
 
                     return true;
                 }
-                else if (typeof(T) == typeof(long))
+                else if (typeof(TKey) == typeof(ulong))
                 {
-                    ref var keys = ref Unsafe.As<T, long>(ref span.DangerousGetPinnableReference());//ref MemoryManager.GetReference(span));
-                    Sort(ref keys, ref values, length, new Int64LessThanComparer());
+                    ref var specificKeys = ref Unsafe.As<TKey, ulong>(ref keys);
+                    Sort(ref specificKeys, ref values, length, new UInt64LessThanComparer(), new KeysSwapper<ulong>());
 
                     return true;
                 }
-                else if (typeof(T) == typeof(ulong))
+                else if (typeof(TKey) == typeof(float))
                 {
-                    ref var keys = ref Unsafe.As<T, ulong>(ref span.DangerousGetPinnableReference());//ref MemoryManager.GetReference(span));
-                    Sort(ref keys, ref values, length, new UInt64LessThanComparer());
-
-                    return true;
-                }
-                else if (typeof(T) == typeof(float))
-                {
-                    ref var keys = ref Unsafe.As<T, float>(ref span.DangerousGetPinnableReference());//ref MemoryManager.GetReference(span));
+                    ref var specificKeys = ref Unsafe.As<TKey, float>(ref keys);
 
                     // Comparison to NaN is always false, so do a linear pass 
                     // and swap all NaNs to the front of the array
-                    var left = NaNPrepass(ref keys, ref values, length, new SingleIsNaN());
+                    var left = NaNPrepass(ref specificKeys, ref values, length, new SingleIsNaN());
 
-                    ref var afterNaNsKeys = ref Unsafe.Add(ref keys, left);
-                    Sort(ref afterNaNsKeys, ref values, length - left, new SingleLessThanComparer());
+                    ref var afterNaNsKeys = ref Unsafe.Add(ref specificKeys, left);
+                    ref var afterNaNsValues = ref Unsafe.Add(ref values, left);
+                    Sort(ref afterNaNsKeys, ref afterNaNsValues, length - left, new SingleLessThanComparer(), new KeysSwapper<float>());
 
                     return true;
                 }
-                else if (typeof(T) == typeof(double))
+                else if (typeof(TKey) == typeof(double))
                 {
-                    ref var keys = ref Unsafe.As<T, double>(ref span.DangerousGetPinnableReference());//ref MemoryManager.GetReference(span));
+                    ref var specificKeys = ref Unsafe.As<TKey, double>(ref keys);
 
                     // Comparison to NaN is always false, so do a linear pass 
                     // and swap all NaNs to the front of the array
-                    var left = NaNPrepass(ref keys, ref values, length, new DoubleIsNaN());
+                    var left = NaNPrepass(ref specificKeys, ref values, length, new DoubleIsNaN());
 
-                    ref var afterNaNsKeys = ref Unsafe.Add(ref keys, left);
-                    Sort(ref afterNaNsKeys, ref values, length - left, new DoubleLessThanComparer());
+                    ref var afterNaNsKeys = ref Unsafe.Add(ref specificKeys, left);
+                    ref var afterNaNsValues = ref Unsafe.Add(ref values, left);
+                    Sort(ref afterNaNsKeys, ref afterNaNsValues, length - left, new DoubleLessThanComparer(), new KeysSwapper<double>());
+
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            internal static bool TrySortSpecialized<TKey, TValue>(ref TKey keys, ref TValue values, int length)
+            {
+                // Types unfolded adopted from https://github.com/dotnet/coreclr/blob/master/src/classlibnative/bcltype/arrayhelpers.cpp#L268
+                if (typeof(TKey) == typeof(sbyte))
+                {
+                    ref var specificKeys = ref Unsafe.As<TKey, sbyte>(ref keys);
+                    Sort(ref specificKeys, ref values, length, new SByteLessThanComparer(), new KeysValuesSwapper<sbyte>());
+                    return true;
+                }
+                else if (typeof(TKey) == typeof(byte) ||
+                         typeof(TKey) == typeof(bool)) // Use byte for bools to reduce code size
+                {
+                    ref var specificKeys = ref Unsafe.As<TKey, byte>(ref keys);
+                    Sort(ref specificKeys, ref values, length, new ByteLessThanComparer(), new KeysValuesSwapper<byte>());
+
+                    return true;
+                }
+                else if (typeof(TKey) == typeof(short) ||
+                         typeof(TKey) == typeof(char)) // Use short for chars to reduce code size
+                {
+                    ref var specificKeys = ref Unsafe.As<TKey, short>(ref keys);
+                    Sort(ref specificKeys, ref values, length, new Int16LessThanComparer(), new KeysValuesSwapper<short>());
+
+                    return true;
+                }
+                else if (typeof(TKey) == typeof(ushort))
+                {
+                    ref var specificKeys = ref Unsafe.As<TKey, ushort>(ref keys);
+                    Sort(ref specificKeys, ref values, length, new UInt16LessThanComparer(), new KeysValuesSwapper<ushort>());
+
+                    return true;
+                }
+                else if (typeof(TKey) == typeof(int))
+                {
+                    ref var specificKeys = ref Unsafe.As<TKey, int>(ref keys);
+                    Sort(ref specificKeys, ref values, length, new Int32LessThanComparer(), new KeysValuesSwapper<int>());
+
+                    return true;
+                }
+                else if (typeof(TKey) == typeof(uint))
+                {
+                    ref var specificKeys = ref Unsafe.As<TKey, uint>(ref keys);
+                    Sort(ref specificKeys, ref values, length, new UInt32LessThanComparer(), new KeysValuesSwapper<uint>());
+
+                    return true;
+                }
+                else if (typeof(TKey) == typeof(long))
+                {
+                    ref var specificKeys = ref Unsafe.As<TKey, long>(ref keys);
+                    Sort(ref specificKeys, ref values, length, new Int64LessThanComparer(), new KeysValuesSwapper<long>());
+
+                    return true;
+                }
+                else if (typeof(TKey) == typeof(ulong))
+                {
+                    ref var specificKeys = ref Unsafe.As<TKey, ulong>(ref keys);
+                    Sort(ref specificKeys, ref values, length, new UInt64LessThanComparer(), new KeysValuesSwapper<ulong>());
+
+                    return true;
+                }
+                else if (typeof(TKey) == typeof(float))
+                {
+                    ref var specificKeys = ref Unsafe.As<TKey, float>(ref keys);
+
+                    // Comparison to NaN is always false, so do a linear pass 
+                    // and swap all NaNs to the front of the array
+                    var left = NaNPrepass(ref specificKeys, ref values, length, new SingleIsNaN());
+
+                    ref var afterNaNsKeys = ref Unsafe.Add(ref specificKeys, left);
+                    ref var afterNaNsValues = ref Unsafe.Add(ref values, left);
+                    Sort(ref afterNaNsKeys, ref afterNaNsValues, length - left, new SingleLessThanComparer(), new KeysValuesSwapper<float>());
+
+                    return true;
+                }
+                else if (typeof(TKey) == typeof(double))
+                {
+                    ref var specificKeys = ref Unsafe.As<TKey, double>(ref keys);
+
+                    // Comparison to NaN is always false, so do a linear pass 
+                    // and swap all NaNs to the front of the array
+                    var left = NaNPrepass(ref specificKeys, ref values, length, new DoubleIsNaN());
+
+                    ref var afterNaNsKeys = ref Unsafe.Add(ref specificKeys, left);
+                    ref var afterNaNsValues = ref Unsafe.Add(ref values, left);
+                    Sort(ref afterNaNsKeys, ref afterNaNsValues, length - left, new DoubleLessThanComparer(), new KeysValuesSwapper<double>());
 
                     return true;
                 }
@@ -272,16 +455,18 @@ namespace System
             }
 
             // For sorting, move all NaN instances to front of the input array
-            private static int NaNPrepass<T, TIsNaN>(ref T keys, ref int values, int length, in TIsNaN isNaN)
-                where TIsNaN : struct, IIsNaN<T>
+            private static int NaNPrepass<TKey, TValue, TIsNaN>(
+                ref TKey keys, ref TValue values, int length, 
+                TIsNaN isNaN)
+                where TIsNaN : struct, IIsNaN<TKey>
             {
                 int left = 0;
                 for (int i = 0; i <= length; i++)
                 {
-                    ref T current = ref Unsafe.Add(ref keys, i);
+                    ref TKey current = ref Unsafe.Add(ref keys, i);
                     if (isNaN.IsNaN(current))
                     {
-                        ref T previous = ref Unsafe.Add(ref keys, left);
+                        ref TKey previous = ref Unsafe.Add(ref keys, left);
 
                         Swap(ref previous, ref current);
 
@@ -292,24 +477,30 @@ namespace System
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            internal static void Sort<T, TComparer>(ref T keys, ref int values, int length, in TComparer comparer)
-                where TComparer : ILessThanComparer<T>
+            internal static void Sort<TKey, TValue, TComparer, TSwapper>(
+                ref TKey keys, ref TValue values, int length, 
+                TComparer comparer, TSwapper swapper)
+                where TComparer : ILessThanComparer<TKey>
+                where TSwapper : ISwapper<TKey>
             {
                 if (length < 2)
                     return;
 
-                IntrospectiveSort(ref keys, ref values, length, comparer);
+                IntrospectiveSort(ref keys, ref values, length, comparer, swapper);
             }
 
-            private static void IntrospectiveSort<T, TComparer>(ref T keys, ref int values, int length, in TComparer comparer)
-                where TComparer : ILessThanComparer<T>
+            private static void IntrospectiveSort<TKey, TValue, TComparer, TSwapper>(
+                ref TKey keys, ref TValue values, int length, 
+                TComparer comparer, TSwapper swapper)
+                where TComparer : ILessThanComparer<TKey>
+                where TSwapper : ISwapper<TKey>
             {
                 // Note how old used the full length of keys array to limit, seems like a bug!
                 //IntroSort(keys, left, length + left - 1, 2 * IntrospectiveSortUtilities.FloorLog2PlusOne(keys.Length), comparer);
                 // In native code this is done right, so only for when using managed code:
                 // https://github.com/dotnet/coreclr/blob/master/src/classlibnative/bcltype/arrayhelpers.h#L139
                 var depthLimit = 2 * FloorLog2PlusOne(length);
-                IntroSort(ref keys, ref values, 0, length - 1, depthLimit, comparer);
+                IntroSort(ref keys, ref values, 0, length - 1, depthLimit, comparer, swapper);
                 //IntroSort(ref keys, length - 1, depthLimit, comparer);
             }
 
@@ -342,8 +533,12 @@ namespace System
                 //}
             }
 
-            private static void IntroSort<T, TComparer>(ref T keys, ref int values, int lo, int hi, int depthLimit, in TComparer comparer)
-                where TComparer : ILessThanComparer<T>
+            private static void IntroSort<TKey, TValue, TComparer, TSwapper>(
+                ref TKey keys, ref TValue values, 
+                int lo, int hi, int depthLimit, 
+                TComparer comparer, TSwapper swapper)
+                where TComparer : ILessThanComparer<TKey>
+                where TSwapper : ISwapper<TKey>
             {
                 Debug.Assert(comparer != null);
                 Debug.Assert(lo >= 0);
@@ -364,15 +559,15 @@ namespace System
                         }
                         if (partitionSize == 3)
                         {
-                            ref T loRef = ref Unsafe.Add(ref keys, lo);
-                            ref T miRef = ref Unsafe.Add(ref keys, hi - 1);
-                            ref T hiRef = ref Unsafe.Add(ref keys, hi);
+                            ref TKey loRef = ref Unsafe.Add(ref keys, lo);
+                            ref TKey miRef = ref Unsafe.Add(ref keys, hi - 1);
+                            ref TKey hiRef = ref Unsafe.Add(ref keys, hi);
                             //ref T miRef = ref Unsafe.SubtractByteOffset(ref hiRef, new IntPtr(Unsafe.SizeOf<T>()));
                             Sort3(ref loRef, ref miRef, ref hiRef, comparer);
                             return;
                         }
 
-                        InsertionSort(ref keys, ref values, lo, hi, comparer);
+                        InsertionSort(ref keys, ref values, lo, hi, comparer, swapper);
                         return;
                     }
 
@@ -393,8 +588,11 @@ namespace System
                 }
             }
 
-            private static void IntroSort<T, TComparer>(ref T keys, ref int values, int hi, int depthLimit, in TComparer comparer)
-                where TComparer : ILessThanComparer<T>
+            private static void IntroSort<TKey, TValue, TComparer, TSwapper>(
+                ref TKey keys, ref TValue values, int hi, int depthLimit, 
+                TComparer comparer, TSwapper swapper)
+                where TComparer : ILessThanComparer<TKey>
+                where TSwapper : ISwapper<TKey>
             {
                 Debug.Assert(comparer != null);
                 //Debug.Assert(lo >= 0);
@@ -416,9 +614,9 @@ namespace System
                         }
                         if (partitionSize == 3)
                         {
-                            ref T loRef = ref Unsafe.Add(ref keys, lo);
-                            ref T miRef = ref Unsafe.Add(ref keys, hi - 1);
-                            ref T hiRef = ref Unsafe.Add(ref keys, hi);
+                            ref TKey loRef = ref Unsafe.Add(ref keys, lo);
+                            ref TKey miRef = ref Unsafe.Add(ref keys, hi - 1);
+                            ref TKey hiRef = ref Unsafe.Add(ref keys, hi);
                             Sort3(ref loRef, ref miRef, ref hiRef, comparer);
                             return;
                         }
@@ -436,9 +634,9 @@ namespace System
 
                     // We should never reach here, unless > 3 elements due to partition size
                     //ref var keysAtLo = ref Unsafe.Add(ref keys, lo);
-                    //int p = PickPivotAndPartitionIntIndeces(ref keys, lo, hi, comparer);
+                    int p = PickPivotAndPartitionIntIndeces(ref keys, lo, hi, comparer);
                     //int p = PickPivotAndPartitionIntPtrIndeces(ref keys, lo, hi, comparer);
-                    int p = PickPivotAndPartitionIntPtrByteOffsets(ref keys, ref values, lo, hi, comparer);
+                    //int p = PickPivotAndPartitionIntPtrByteOffsets(ref keys, ref values, lo, hi, comparer);
                     // Note we've already partitioned around the pivot and do not have to move the pivot again.
                     ref var afterPivot = ref Unsafe.Add(ref keys, p + 1);
                     IntroSort(ref afterPivot, ref values, hi - (p + 1), depthLimit, comparer);
@@ -446,8 +644,11 @@ namespace System
                 }
             }
 
-            private static int PickPivotAndPartitionIntIndeces<T, TComparer>(ref T keys, ref int values, int lo, int hi, in TComparer comparer)
-                where TComparer : ILessThanComparer<T>
+            private static int PickPivotAndPartitionIntIndeces<TKey, TValue, TComparer, TSwapper>(
+                ref TKey keys, ref TValue values, int lo, int hi, 
+                TComparer comparer, TSwapper swapper)
+                where TComparer : ILessThanComparer<TKey>
+                where TSwapper : ISwapper<TKey>
             {
                 Debug.Assert(comparer != null);
                 Debug.Assert(lo >= 0);
@@ -464,12 +665,12 @@ namespace System
                 int middle = (int)(((uint)hi + (uint)lo) >> 1);
 
                 // Sort lo, mid and hi appropriately, then pick mid as the pivot.
-                ref T loRef = ref Unsafe.Add(ref keys, lo);
-                ref T miRef = ref Unsafe.Add(ref keys, middle);
-                ref T hiRef = ref Unsafe.Add(ref keys, hi);
+                ref TKey loRef = ref Unsafe.Add(ref keys, lo);
+                ref TKey miRef = ref Unsafe.Add(ref keys, middle);
+                ref TKey hiRef = ref Unsafe.Add(ref keys, hi);
                 Sort3(ref loRef, ref miRef, ref hiRef, comparer);
 
-                T pivot = miRef;
+                TKey pivot = miRef;
 
                 int left = lo, right = hi - 1;  // We already partitioned lo and hi and put the pivot in hi - 1.  And we pre-increment & decrement below.
                 Swap(ref miRef, ref Unsafe.Add(ref keys, right));
@@ -496,142 +697,11 @@ namespace System
                 return left;
             }
 
-            private static int PickPivotAndPartitionIntPtrIndeces<T, TComparer>(ref T keys, ref int values, int lo, int hi, in TComparer comparer)
-                where TComparer : ILessThanComparer<T>
-            {
-                Debug.Assert(comparer != null);
-                Debug.Assert(lo >= 0);
-                Debug.Assert(hi > lo);
-
-                // Compute median-of-three.  But also partition them, since we've done the comparison.
-
-                // PERF: `lo` or `hi` will never be negative inside the loop,
-                //       so computing median using uints is safe since we know 
-                //       `length <= int.MaxValue`, and indices are >= 0
-                //       and thus cannot overflow an uint. 
-                //       Saves one subtraction per loop compared to 
-                //       `int middle = lo + ((hi - lo) >> 1);`
-                var middle = new IntPtr((int)(((uint)hi + (uint)lo) >> 1));
-
-                var low = new IntPtr(lo);
-                var high = new IntPtr(hi);
-
-                // Sort lo, mid and hi appropriately, then pick mid as the pivot.
-                ref T loRef = ref Unsafe.Add(ref keys, low);
-                ref T miRef = ref Unsafe.Add(ref keys, middle);
-                ref T hiRef = ref Unsafe.Add(ref keys, high);
-                Sort3(ref loRef, ref miRef, ref hiRef, comparer);
-
-                T pivot = miRef;
-
-                // Put pivot in the right location.
-                IntPtr left = low;
-                IntPtr right = high - 1;  // We already partitioned lo and hi and put the pivot in hi - 1.  And we pre-increment & decrement below.
-                Swap(ref miRef, ref Unsafe.Add(ref keys, right));
-
-                while (left.LessThan(right))
-                {
-                    // TODO: Would be good to update local ref here
-                    do
-                    {
-                        left += 1;
-                    }
-                    while (comparer.LessThan(Unsafe.Add(ref keys, left), pivot));
-                    //while (comparer.Compare(pivot, Unsafe.Add(ref keys, left)) >= 0) ;
-                    // TODO: Would be good to update local ref here
-                    do
-                    {
-                        right -= 1;
-                    }
-                    while (comparer.LessThan(pivot, Unsafe.Add(ref keys, right)));
-
-                    //if (left >= right)
-                    //if (left.GreaterThanEqual(right))
-                    if (right.LessThan(left))
-                        break;
-
-                    // Indeces cannot be equal here
-                    Swap(ref keys, left, right);
-                }
-                // Put pivot in the right location.
-                right = high - 1;
-                if (left != right)
-                {
-                    Swap(ref keys, left, right);
-                }
-                return (int)left;
-            }
-
-            private static int PickPivotAndPartitionIntPtrByteOffsets<T, TComparer>(ref T keys, ref int values, int lo, int hi, in TComparer comparer)
-                where TComparer : ILessThanComparer<T>
-            {
-                Debug.Assert(comparer != null);
-                Debug.Assert(lo >= 0);
-                Debug.Assert(hi > lo);
-
-                // Compute median-of-three.  But also partition them, since we've done the comparison.
-
-                // PERF: `lo` or `hi` will never be negative inside the loop,
-                //       so computing median using uints is safe since we know 
-                //       `length <= int.MaxValue`, and indices are >= 0
-                //       and thus cannot overflow an uint. 
-                //       Saves one subtraction per loop compared to 
-                //       `int middle = lo + ((hi - lo) >> 1);`
-                var middle = new IntPtr((int)(((uint)hi + (uint)lo) >> 1));
-                var low = new IntPtr(lo);
-                var high = new IntPtr(hi);
-
-                // Sort lo, mid and hi appropriately, then pick mid as the pivot.
-                ref T loRef = ref Unsafe.Add(ref keys, low);
-                ref T miRef = ref Unsafe.Add(ref keys, middle);
-                ref T hiRef = ref Unsafe.Add(ref keys, high);
-                Sort3(ref loRef, ref miRef, ref hiRef, comparer);
-
-                T pivot = miRef;
-
-                // Put pivot in the right location.
-                IntPtr left = low;
-                IntPtr right = high - 1;  // We already partitioned lo and hi and put the pivot in hi - 1.  And we pre-increment & decrement below.
-                Swap(ref miRef, ref Unsafe.Add(ref keys, right));
-
-                IntPtr leftBytes = left.Multiply(Unsafe.SizeOf<T>());
-                IntPtr rightBytes = right.Multiply(Unsafe.SizeOf<T>());
-
-                while (leftBytes.LessThan(rightBytes))
-                {
-                    // TODO: Would be good to update local ref here
-                    do
-                    {
-                        leftBytes += Unsafe.SizeOf<T>();
-                    }
-                    while (comparer.LessThan(Unsafe.AddByteOffset(ref keys, leftBytes), pivot));
-                    // TODO: Would be good to update local ref here
-                    do
-                    {
-                        rightBytes -= Unsafe.SizeOf<T>();
-                    }
-                    while (comparer.LessThan(pivot, Unsafe.AddByteOffset(ref keys, rightBytes)));
-
-                    if (leftBytes.GreaterThanEqual(rightBytes))
-                        break;
-
-                    // Indeces cannot be equal here
-                    //Swap(ref keys, left, right);
-                    Swap(ref Unsafe.AddByteOffset(ref keys, leftBytes), ref Unsafe.AddByteOffset(ref keys, rightBytes));
-                }
-                // Put pivot in the right location.
-                //right = (hi - 1);
-                rightBytes = new IntPtr(hi - 1).Multiply(Unsafe.SizeOf<T>());
-                if (leftBytes != rightBytes)
-                {
-                    //Swap(ref keys, left, right);
-                    Swap(ref Unsafe.AddByteOffset(ref keys, leftBytes), ref Unsafe.AddByteOffset(ref keys, rightBytes));
-                }
-                return (int)leftBytes.Divide(Unsafe.SizeOf<T>());
-            }
-
-            private static void HeapSort<T, TComparer>(ref T keys, ref int values, int lo, int hi, in TComparer comparer)
-                where TComparer : ILessThanComparer<T>
+            private static void HeapSort<TKey, TValue, TComparer, TSwapper>(
+                ref TKey keys, ref TValue values, int lo, int hi, 
+                TComparer comparer, TSwapper swapper)
+                where TComparer : ILessThanComparer<TKey>
+                where TSwapper : ISwapper<TKey>
             {
                 Debug.Assert(keys != null);
                 Debug.Assert(comparer != null);
@@ -650,8 +720,11 @@ namespace System
                 }
             }
 
-            private static void DownHeap<T, TComparer>(ref T keys, ref int values, int i, int n, int lo, in TComparer comparer)
-                where TComparer : ILessThanComparer<T>
+            private static void DownHeap<TKey, TValue, TComparer, TSwapper>(
+                ref TKey keys, ref int values, int i, int n, int lo, 
+                TComparer comparer, TSwapper swapper)
+                where TComparer : ILessThanComparer<TKey>
+                where TSwapper : ISwapper<TKey>
             {
                 Debug.Assert(keys != null);
                 Debug.Assert(comparer != null);
@@ -680,9 +753,9 @@ namespace System
                 //Unsafe.Add(ref keys, lo + i - 1) = d;
 
                 //T d = keys[lo + i - 1];
-                ref T refLo = ref Unsafe.Add(ref keys, lo);
-                ref T refLoMinus1 = ref Unsafe.Subtract(ref refLo, 1);
-                T d = Unsafe.Add(ref refLoMinus1, i);
+                ref TKey refLo = ref Unsafe.Add(ref keys, lo);
+                ref TKey refLoMinus1 = ref Unsafe.Subtract(ref refLo, 1);
+                TKey d = Unsafe.Add(ref refLoMinus1, i);
                 var nHalf = n / 2;
                 while (i <= nHalf)
                 {
@@ -709,8 +782,11 @@ namespace System
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private static void InsertionSort<T, TComparer>(ref T keys, ref int values, int lo, int hi, in TComparer comparer)
-                where TComparer : ILessThanComparer<T>
+            private static void InsertionSort<TKey, TValue, TComparer, TSwapper>(
+                ref TKey keys, ref TValue values, int lo, int hi, 
+                TComparer comparer, TSwapper swapper)
+                where TComparer : ILessThanComparer<TKey>
+                where TSwapper : ISwapper<TKey>
             {
                 Debug.Assert(keys != null);
                 Debug.Assert(lo >= 0);
@@ -732,8 +808,10 @@ namespace System
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            internal static void Sort3<T, TComparer>(ref T r0, ref T r1, ref T r2, in TComparer comparer)
-                where TComparer : ILessThanComparer<T>
+            internal static void Sort3<TKey, TValue, TComparer, TSwapper>(
+                ref TKey r0, ref TKey r1, ref TKey r2, 
+                TComparer comparer)
+                where TComparer : ILessThanComparer<TKey>
             {
                 //SwapIfGreater(ref r0, ref r1, comparer); // swap the low with the mid point
                 //SwapIfGreater(ref r0, ref r2, comparer); // swap the low with the high
@@ -751,7 +829,7 @@ namespace System
                     }
                     else
                     {
-                        T tmp = r0;
+                        TKey tmp = r0;
                         r0 = r2;
                         r2 = r1;
                         r1 = tmp;
@@ -769,7 +847,7 @@ namespace System
                     }
                     else
                     {
-                        T tmp = r0;
+                        TKey tmp = r0;
                         r0 = r1;
                         r1 = r2;
                         r2 = tmp;
