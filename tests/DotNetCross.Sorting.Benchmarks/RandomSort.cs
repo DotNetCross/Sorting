@@ -5,6 +5,7 @@ using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Attributes.Jobs;
 using BenchmarkDotNet.Engines;
 using BenchmarkDotNet.Running;
+using DotNetCross.Sorting.Sequences;
 
 namespace DotNetCross.Sorting.Benchmarks
 {
@@ -17,7 +18,7 @@ namespace DotNetCross.Sorting.Benchmarks
     public class RandomSort
     {
         const int MaxLength = 3 * 1000 * 1000;
-        static readonly int[] _random = CreateRandomArray<int>(MaxLength, i => i);
+        static readonly int[] _filled = new int[MaxLength];
         int[] _work = new int[MaxLength];
 
         public RandomSort()
@@ -29,21 +30,29 @@ namespace DotNetCross.Sorting.Benchmarks
         public int Length { get; set; }
 
         //public IEnumerable<int> Lengths => new[] { 1000000 }; //1, 10, 100, 10000, 
+        [GlobalSetup]
+        public void GlobalSetup()
+        {
+            //const int Seed = 213718398;
+            var filler = new MedianOfThreeKillerSpanFiller();
+            Console.WriteLine($"// {nameof(GlobalSetup)} Filling {MaxLength} with {filler.GetType().Name} for {Length} slice run");
+            filler.Fill(_filled, Length, i => i);
+        }
 
         [IterationSetup]
         public void IterationSetup()
         {
-            Array.Copy(_random, _work, MaxLength);
+            Array.Copy(_filled, _work, MaxLength);
         }
 
-        [Benchmark(Baseline = true)]
-        public void ArraySort()
-        {
-            for (int i = 0; i <= MaxLength - Length; i += Length)
-            {
-                Array.Sort(_work, i, Length);
-            }
-        }
+        //[Benchmark(Baseline = true)]
+        //public void ArraySort()
+        //{
+        //    for (int i = 0; i <= MaxLength - Length; i += Length)
+        //    {
+        //        Array.Sort(_work, i, Length);
+        //    }
+        //}
 
         [Benchmark]
         public void SpanSort()
@@ -54,23 +63,21 @@ namespace DotNetCross.Sorting.Benchmarks
             }
         }
 
-        //[Benchmark]
-        //public void SpanQuickSort_Hoare()
+        //const int Seed = 213718398;
+        //private static T[] CreateRandomArray<T>(int length, Func<int, T> toValue)
+        //    where T : IComparable<T>
         //{
-        //    QuickSort.Sort(new Span<int>(_work), new HoarePartitioner(), new ComparableComparer<int>());
+        //    //var random = new Random(Seed);
+        //    //var array = new T[length];
+        //    //for (int i = 0; i < array.Length; i++)
+        //    //{
+        //    //    array[i] = toValue(random.Next());
+        //    //}
+        //    //return array;
+        //    var array = new T[length];
+        //    var filler = new MedianOfThreeKillerSpanFiller();
+        //    filler.Fill(array, toValue);
+        //    return array;
         //}
-
-        const int Seed = 213718398;
-        private static T[] CreateRandomArray<T>(int length, Func<int, T> toValue)
-            where T : IComparable<T>
-        {
-            var random = new Random(Seed);
-            var array = new T[length];
-            for (int i = 0; i < array.Length; i++)
-            {
-                array[i] = toValue(random.Next());
-            }
-            return array;
-        }
     }
 }

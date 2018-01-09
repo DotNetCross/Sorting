@@ -17,13 +17,13 @@ namespace DotNetCross.Sorting.Benchmarks
     [Config(typeof(SortDisassemblerBenchConfig))]
     public class Int32SortDisassemblerBench
     {
-        const int MaxLength = 30 * 1000 * 1000;
-        static readonly int[] _random = CreateArray<int>(MaxLength, i => i);
+        const int MaxLength = 3 * 1000 * 1000;
+        static readonly int[] _filled = new int[MaxLength];
         int[] _work = new int[MaxLength];
 
         public Int32SortDisassemblerBench()
         {
-            Length = 10000000;
+            Length = 1000000;
         }
 
         //[ParamsSource(nameof(Lengths))]
@@ -31,22 +31,32 @@ namespace DotNetCross.Sorting.Benchmarks
 
         //public IEnumerable<int> Lengths => new[] { 1000000 }; //1, 10, 100, 10000, 
 
+        [GlobalSetup]
+        public void GlobalSetup()
+        {
+            var filler = new MedianOfThreeKillerSpanFiller();
+            Console.WriteLine($"// {nameof(GlobalSetup)} Filling {MaxLength} with {filler.GetType().Name} for {Length} slice run");
+            filler.Fill(_filled, Length, i => i);
+        }
+
         [IterationSetup]
         public void IterationSetup()
         {
-            Array.Copy(_random, _work, MaxLength);
+            Console.WriteLine($"// {nameof(IterationSetup)} Copy filled to work {Length}");
+            Array.Copy(_filled, _work, MaxLength);
         }
 
-        [Benchmark(Baseline = true)]
-        public void ArraySort()
-        {
-            //int i = 0;
-            // NOTE: IF FOR LOOP REMOVED CODE-GEN IS COMPLETELY DIFFERENT IN FACT BDN DOES NOT FULLY DISASM IT
-            for (int i = 0; i <= MaxLength - Length; i += Length)
-            {
-                Array.Sort(_work, i, Length);
-            }
-        }
+        // Can't really use this for much for ints since it is native code and not disassembled...
+        //[Benchmark(Baseline = true)]
+        //public void ArraySort()
+        //{
+        //    //int i = 0;
+        //    // NOTE: IF FOR LOOP REMOVED CODE-GEN IS COMPLETELY DIFFERENT IN FACT BDN DOES NOT FULLY DISASM IT
+        //    for (int i = 0; i <= MaxLength - Length; i += Length)
+        //    {
+        //        Array.Sort(_work, i, Length);
+        //    }
+        //}
 
         [Benchmark]
         public void SpanSort()
@@ -90,8 +100,6 @@ namespace DotNetCross.Sorting.Benchmarks
             where T : IComparable<T>
         {
             var array = new T[length];
-            var filler = new MedianOfThreeKillerSpanFiller();
-            filler.Fill(array, toValue);
             return array;
         }
     }

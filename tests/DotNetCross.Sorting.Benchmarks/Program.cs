@@ -61,6 +61,7 @@ namespace DotNetCross.Sorting.Benchmarks
             : base(maxLength: 3000000, new ISpanFiller[]{
                 new RandomSpanFiller(RandomSeed),
                 new PartialRandomShuffleSpanFiller(new IncrementingSpanFiller(), ShuffleFraction, ShuffleSeed),
+                // MEDIAN OF THREE REQUIRES SIZE FOR STEP! CAN'T JUST FILL MAXLENGTH!
                 new MedianOfThreeKillerSpanFiller(),
                 new IncrementingSpanFiller(),
                 new DecrementingSpanFiller(),
@@ -80,12 +81,12 @@ namespace DotNetCross.Sorting.Benchmarks
     {
         static void Main(string[] args)
         {
+            BenchmarkRunner.Run<Int32SortBench>();
+
             //BenchmarkRunner.Run<Int32SortDisassemblerBenchNotWorking>(); // Fails?!
             BenchmarkRunner.Run<Int32SortDisassemblerBench>(); // Dissassembly isn't full...
 
             //BenchmarkRunner.Run<RandomSort>();
-
-            //BenchmarkRunner.Run<Int32SortBench>();
 
             //BenchmarkRunner.Run<RandomShuffleSortBench>();
             //BenchmarkRunner.Run<RandomSortBench>();

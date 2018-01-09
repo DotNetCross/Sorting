@@ -389,9 +389,9 @@ namespace System
                     depthLimit--;
 
                     // We should never reach here, unless > 3 elements due to partition size
-                    //int p = PickPivotAndPartitionIntIndeces(ref keys, lo, hi, comparer);
+                    int p = PickPivotAndPartitionIntIndeces(ref keys, ref values, lo, hi, comparer);
                     //int p = PickPivotAndPartitionIntPtrIndeces(ref keys, lo, hi, comparer);
-                    int p = PickPivotAndPartitionIntPtrByteOffsets(ref keys, ref values, lo, hi, comparer);
+                    //int p = PickPivotAndPartitionIntPtrByteOffsets(ref keys, ref values, lo, hi, comparer);
                     // Note we've already partitioned around the pivot and do not have to move the pivot again.
                     IntroSort(ref keys, ref values,p + 1, hi, depthLimit, comparer);
                     hi = p - 1;
@@ -463,7 +463,7 @@ namespace System
                 }
             }
 
-            private static int PickPivotAndPartitionIntIndeces<T, TComparer>(ref T keys, int lo, int hi, in TComparer comparer)
+            private static int PickPivotAndPartitionIntIndeces<T, TComparer>(ref T keys, ref int values, int lo, int hi, in TComparer comparer)
                 where TComparer : ILessThanComparer<T>
             {
                 Debug.Assert(comparer != null);
@@ -516,7 +516,7 @@ namespace System
                 return left;
             }
 
-            private static int PickPivotAndPartitionIntPtrIndeces<T, TComparer>(ref T keys, int lo, int hi, in TComparer comparer)
+            private static int PickPivotAndPartitionIntPtrIndeces<T, TComparer>(ref T keys, ref int values, int lo, int hi, in TComparer comparer)
                 where TComparer : ILessThanComparer<T>
             {
                 Debug.Assert(comparer != null);

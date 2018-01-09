@@ -22,19 +22,14 @@ namespace DotNetCross.Sorting.Benchmarks
             _length = length;
             _filled = new T[_length];
             // We use median of three to ensure heap sort code is hit
-            new MedianOfThreeKillerSpanFiller().Fill(_filled, toValue);
+            new MedianOfThreeKillerSpanFiller().Fill(_filled, _length, toValue);
             _work = new T[_length];
-        }
-
-        [GlobalSetup]
-        public void GlobalSetup()
-        {
-            Console.WriteLine($"// {nameof(GlobalSetup)} Filling {_length}");
         }
 
         [IterationSetup]
         public void IterationSetup()
         {
+            Console.WriteLine($"// {nameof(IterationSetup)} Copy filled to work {_length}");
             Array.Copy(_filled, _work, _length);
         }
 

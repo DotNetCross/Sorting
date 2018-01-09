@@ -4,7 +4,7 @@ namespace DotNetCross.Sorting.Sequences
 {
     public struct DecrementingSpanFiller : ISpanFiller
     {
-        public void Fill<T>(Span<T> span, Func<int, T> toValue)
+        public void Fill<T>(Span<T> span, int sliceLength, Func<int, T> toValue)
         {
             DecrementingFill(span, toValue);
         }

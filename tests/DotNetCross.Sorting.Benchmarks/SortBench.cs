@@ -40,7 +40,7 @@ namespace DotNetCross.Sorting.Benchmarks
         public void GlobalSetup()
         {
             Console.WriteLine($"// {nameof(GlobalSetup)} Filling {_maxLength} with {Filler.GetType().Name} for {Length} slice run");
-            Filler.Fill(_filled, _toValue);
+            Filler.Fill(_filled, Length, _toValue);
         }
 
         [IterationSetup]

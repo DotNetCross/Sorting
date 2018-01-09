@@ -4,9 +4,16 @@ namespace DotNetCross.Sorting.Sequences
 {
     public struct MedianOfThreeKillerSpanFiller : ISpanFiller
     {
-        public void Fill<T>(Span<T> span, Func<int, T> toValue)
+        public void Fill<T>(Span<T> span, int sliceLength, Func<int, T> toValue)
         {
-            InitializeMedianOfThreeKiller(span, toValue);
+            // Each slice must be median of three!
+            int i = 0;
+            for (; i < span.Length - sliceLength; i += sliceLength)
+            {
+                InitializeMedianOfThreeKiller(span.Slice(i, sliceLength), toValue);
+            }
+            // Fill remainder just to be sure
+            InitializeMedianOfThreeKiller(span.Slice(i, span.Length - i), toValue);
         }
 
         public static void InitializeMedianOfThreeKiller<T>(Span<T> span, Func<int, T> toValue)
