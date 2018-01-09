@@ -359,21 +359,16 @@ namespace System
                         }
                         if (partitionSize == 2)
                         {
-                            // No indeces equal here!
                             SwapIfGreater(ref keys, lo, hi, comparer);
                             return;
                         }
                         if (partitionSize == 3)
                         {
                             ref T loRef = ref Unsafe.Add(ref keys, lo);
-                            ref T hiMinusOneRef = ref Unsafe.Add(ref keys, hi - 1);
+                            ref T miRef = ref Unsafe.Add(ref keys, hi - 1);
                             ref T hiRef = ref Unsafe.Add(ref keys, hi);
-                            //ref T hiMinusOneRef = ref Unsafe.SubtractByteOffset(ref hiRef, new IntPtr(Unsafe.SizeOf<T>()));
-                            Sort3(ref loRef, ref hiMinusOneRef, ref hiRef, comparer);
-                            // No indeces equal here! Many indeces can be reused here...
-                            //SwapIfGreater(ref keys, comparer, lo, hi - 1);
-                            //SwapIfGreater(ref keys, comparer, lo, hi);
-                            //SwapIfGreater(ref keys, comparer, hi - 1, hi);
+                            //ref T miRef = ref Unsafe.SubtractByteOffset(ref hiRef, new IntPtr(Unsafe.SizeOf<T>()));
+                            Sort3(ref loRef, ref miRef, ref hiRef, comparer);
                             return;
                         }
 
@@ -416,27 +411,15 @@ namespace System
 
                         if (partitionSize == 2)
                         {
-                            //ref T loRef = ref Unsafe.Add(ref keys, lo);
-                            //ref T hiRef = ref Unsafe.Add(ref keys, hi);
-                            //SwapIfGreater(ref loRef, ref hiRef, comparer);
-                            // No indeces equal here!
                             SwapIfGreater(ref keys, lo, hi, comparer);
                             return;
                         }
                         if (partitionSize == 3)
                         {
                             ref T loRef = ref Unsafe.Add(ref keys, lo);
-                            ref T hiMinusOneRef = ref Unsafe.Add(ref keys, hi - 1);
+                            ref T miRef = ref Unsafe.Add(ref keys, hi - 1);
                             ref T hiRef = ref Unsafe.Add(ref keys, hi);
-                            //ref T hiMinusOneRef = ref Unsafe.SubtractByteOffset(ref hiRef, new IntPtr(Unsafe.SizeOf<T>()));
-                            Sort3(ref loRef, ref hiMinusOneRef, ref hiRef, comparer);
-                            //// No indeces equal here! Many indeces can be reused here...
-                            //SwapIfGreater(ref loRef, ref hiMinusOneRef, comparer);
-                            //SwapIfGreater(ref loRef, ref hiRef, comparer);
-                            //SwapIfGreater(ref hiMinusOneRef, ref hiRef, comparer);
-                            //SwapIfGreater(ref keys, comparer, lo, hi - 1);
-                            //SwapIfGreater(ref keys, comparer, lo, hi);
-                            //SwapIfGreater(ref keys, comparer, hi - 1, hi);
+                            Sort3(ref loRef, ref miRef, ref hiRef, comparer);
                             return;
                         }
 
@@ -485,9 +468,6 @@ namespace System
                 ref T miRef = ref Unsafe.Add(ref keys, middle);
                 ref T hiRef = ref Unsafe.Add(ref keys, hi);
                 Sort3(ref loRef, ref miRef, ref hiRef, comparer);
-                //SwapIfGreater(ref keys, comparer, lo, middle);  // swap the low with the mid point
-                //SwapIfGreater(ref keys, comparer, lo, hi);   // swap the low with the high
-                //SwapIfGreater(ref keys, comparer, middle, hi); // swap the middle with the high
 
                 T pivot = miRef;
 
@@ -541,9 +521,7 @@ namespace System
                 ref T miRef = ref Unsafe.Add(ref keys, middle);
                 ref T hiRef = ref Unsafe.Add(ref keys, high);
                 Sort3(ref loRef, ref miRef, ref hiRef, comparer);
-                //SwapIfGreater(ref keys, comparer, lo, middle);  // swap the low with the mid point
-                //SwapIfGreater(ref keys, comparer, lo, hi);   // swap the low with the high
-                //SwapIfGreater(ref keys, comparer, middle, hi); // swap the middle with the high
+
                 T pivot = miRef;
 
                 // Put pivot in the right location.
@@ -608,9 +586,6 @@ namespace System
                 ref T miRef = ref Unsafe.Add(ref keys, middle);
                 ref T hiRef = ref Unsafe.Add(ref keys, high);
                 Sort3(ref loRef, ref miRef, ref hiRef, comparer);
-                //SwapIfGreater(ref keys, comparer, lo, middle);  // swap the low with the mid point
-                //SwapIfGreater(ref keys, comparer, lo, hi);   // swap the low with the high
-                //SwapIfGreater(ref keys, comparer, middle, hi); // swap the middle with the high
 
                 T pivot = miRef;
 
@@ -760,6 +735,10 @@ namespace System
             internal static void Sort3<T, TComparer>(ref T r0, ref T r1, ref T r2, in TComparer comparer)
                 where TComparer : ILessThanComparer<T>
             {
+                //SwapIfGreater(ref r0, ref r1, comparer); // swap the low with the mid point
+                //SwapIfGreater(ref r0, ref r2, comparer); // swap the low with the high
+                //SwapIfGreater(ref r1, ref r2, comparer); // swap the middle with the high
+
                 if (comparer.LessThan(r0, r1)) //r0 < r1)
                 {
                     if (comparer.LessThan(r1, r2)) //(r1 < r2)
@@ -768,7 +747,7 @@ namespace System
                     }
                     else if (comparer.LessThan(r0, r2)) //(r0 < r2)
                     {
-                        Swap(ref r1, ref r2); //std::swap(r1, r2);
+                        Swap(ref r1, ref r2);
                     }
                     else
                     {
@@ -782,11 +761,11 @@ namespace System
                 {
                     if (comparer.LessThan(r0, r2)) //(r0 < r2)
                     {
-                        Swap(ref r0, ref r1); //std::swap(r0, r1);
+                        Swap(ref r0, ref r1);
                     }
                     else if (comparer.LessThan(r2, r1)) //(r2 < r1)
                     {
-                        Swap(ref r0, ref r2); //std::swap(r0, r2);
+                        Swap(ref r0, ref r2);
                     }
                     else
                     {
