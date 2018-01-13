@@ -201,10 +201,15 @@ namespace System
                 void Copy<TKey, TValue>(ref TKey keys, ref TValue values, int sourceIndex, int destinationIndex);
                 void Write<TKey, TValue>(TKey key, TValue value, int index, ref TKey keys, ref TValue values);
 
-                ref TKey Sort3<TKey, TValue, TLessThanComparer>(
+                void Sort2<TKey, TValue, TComparer>(
+                    ref TKey keys, ref TValue values, int i, int j, 
+                    TComparer comparer)
+                    where TComparer : ILessThanComparer<TKey>;
+
+                ref TKey Sort3<TKey, TValue, TComparer>(
                     ref TKey keys, ref TValue values, int lo, int mi, int hi,
-                    TLessThanComparer comparer)
-                    where TLessThanComparer : ILessThanComparer<TKey>;
+                    TComparer comparer)
+                    where TComparer : ILessThanComparer<TKey>;
 
                 void InsertionSort<TKey, TValue, TComparer>(
                     ref TKey keys, ref TValue values, int lo, int hi,
@@ -238,6 +243,24 @@ namespace System
                 {
                     Unsafe.Add(ref keys, index) = key;
                 }
+
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                public void Sort2<TKey, TValue, TComparer>(ref TKey keys, ref TValue values, int i, int j, TComparer comparer)
+                    where TComparer : ILessThanComparer<TKey>
+                {
+                    Debug.Assert(i != j);
+                    {
+                        ref var a = ref Unsafe.Add(ref keys, i);
+                        ref var b = ref Unsafe.Add(ref keys, j);
+                        if (comparer.LessThan(b, a))
+                        {
+                            TKey temp = a;
+                            a = b;
+                            b = temp;
+                        }
+                    }
+                }
+
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public ref TKey Sort3<TKey, TValue, TLessThanComparer>(
                     ref TKey keys, ref TValue values, int lo, int mi, int hi,
@@ -344,6 +367,23 @@ namespace System
                 {
                     Unsafe.Add(ref keys, index) = key;
                     Unsafe.Add(ref values, index) = value;
+                }
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                public void Sort2<TKey, TValue, TComparer>(ref TKey keys, ref TValue values, int i, int j, TComparer comparer)
+                    where TComparer : ILessThanComparer<TKey>
+                {
+                    Debug.Assert(i != j);
+                    {
+                        ref var a = ref Unsafe.Add(ref keys, i);
+                        ref var b = ref Unsafe.Add(ref keys, j);
+                        if (comparer.LessThan(b, a))
+                        {
+                            TKey temp = a;
+                            a = b;
+                            b = temp;
+                            SpanSortHelper.Swap(ref values, i, j);
+                        }
+                    }
                 }
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public ref TKey Sort3<TKey, TValue, TLessThanComparer>(
@@ -578,7 +618,7 @@ namespace System
                         }
                         if (partitionSize == 2)
                         {
-                            SwapIfGreater(ref keys, lo, hi, comparer);
+                            ops.Sort2(ref keys, ref values, lo, hi, comparer);
                             return;
                         }
                         if (partitionSize == 3)
@@ -613,63 +653,63 @@ namespace System
                 }
             }
 
-            private static void IntroSort<TKey, TValue, TComparer, TSortOps>(
-                ref TKey keys, ref TValue values, int hi, int depthLimit, 
-                TComparer comparer, TSortOps ops)
-                where TComparer : ILessThanComparer<TKey>
-                where TSortOps : ISortOps
-            {
-                Debug.Assert(comparer != null);
-                //Debug.Assert(lo >= 0);
-                const int lo = 0;
-                while (hi > lo)
-                {
-                    int partitionSize = hi - lo + 1;
-                    if (partitionSize <= IntrosortSizeThreshold)
-                    {
-                        if (partitionSize == 1)
-                        {
-                            return;
-                        }
+            //private static void IntroSort<TKey, TValue, TComparer, TSortOps>(
+            //    ref TKey keys, ref TValue values, int hi, int depthLimit, 
+            //    TComparer comparer, TSortOps ops)
+            //    where TComparer : ILessThanComparer<TKey>
+            //    where TSortOps : ISortOps
+            //{
+            //    Debug.Assert(comparer != null);
+            //    //Debug.Assert(lo >= 0);
+            //    const int lo = 0;
+            //    while (hi > lo)
+            //    {
+            //        int partitionSize = hi - lo + 1;
+            //        if (partitionSize <= IntrosortSizeThreshold)
+            //        {
+            //            if (partitionSize == 1)
+            //            {
+            //                return;
+            //            }
 
-                        if (partitionSize == 2)
-                        {
-                            SwapIfGreater(ref keys, lo, hi, comparer);
-                            return;
-                        }
-                        if (partitionSize == 3)
-                        {
-                            ops.Sort3(ref keys, ref values, lo, hi - 1, hi, comparer);
-                            //ref TKey loRef = ref Unsafe.Add(ref keys, lo);
-                            //ref TKey miRef = ref Unsafe.Add(ref keys, hi - 1);
-                            //ref TKey hiRef = ref Unsafe.Add(ref keys, hi);
-                            //Sort3(ref loRef, ref miRef, ref hiRef, comparer);
-                            return;
-                        }
+            //            if (partitionSize == 2)
+            //            {
+            //                ops.Sort2(ref keys, ref values, lo, hi, comparer);
+            //                return;
+            //            }
+            //            if (partitionSize == 3)
+            //            {
+            //                ops.Sort3(ref keys, ref values, lo, hi - 1, hi, comparer);
+            //                //ref TKey loRef = ref Unsafe.Add(ref keys, lo);
+            //                //ref TKey miRef = ref Unsafe.Add(ref keys, hi - 1);
+            //                //ref TKey hiRef = ref Unsafe.Add(ref keys, hi);
+            //                //Sort3(ref loRef, ref miRef, ref hiRef, comparer);
+            //                return;
+            //            }
 
-                        InsertionSort(ref keys, ref values, lo, hi, comparer, ops);
-                        return;
-                    }
+            //            InsertionSort(ref keys, ref values, lo, hi, comparer, ops);
+            //            return;
+            //        }
 
-                    if (depthLimit == 0)
-                    {
-                        HeapSort(ref keys, ref values, lo, hi, comparer, ops);
-                        return;
-                    }
-                    depthLimit--;
+            //        if (depthLimit == 0)
+            //        {
+            //            HeapSort(ref keys, ref values, lo, hi, comparer, ops);
+            //            return;
+            //        }
+            //        depthLimit--;
 
-                    // We should never reach here, unless > 3 elements due to partition size
-                    //ref var keysAtLo = ref Unsafe.Add(ref keys, lo);
-                    int p = PickPivotAndPartitionIntIndeces(ref keys, ref values, lo, hi, comparer, ops);
-                    //int p = PickPivotAndPartitionIntPtrIndeces(ref keys, lo, hi, comparer);
-                    //int p = PickPivotAndPartitionIntPtrByteOffsets(ref keys, ref values, lo, hi, comparer);
-                    // Note we've already partitioned around the pivot and do not have to move the pivot again.
-                    ref var keysAfterPivot = ref Unsafe.Add(ref keys, p + 1);
-                    ref var valuesAfterPivot = ref Unsafe.Add(ref values, p + 1);
-                    IntroSort(ref keysAfterPivot, ref valuesAfterPivot, hi - (p + 1), depthLimit, comparer, ops);
-                    hi = p - 1;
-                }
-            }
+            //        // We should never reach here, unless > 3 elements due to partition size
+            //        //ref var keysAtLo = ref Unsafe.Add(ref keys, lo);
+            //        int p = PickPivotAndPartitionIntIndeces(ref keys, ref values, lo, hi, comparer, ops);
+            //        //int p = PickPivotAndPartitionIntPtrIndeces(ref keys, lo, hi, comparer);
+            //        //int p = PickPivotAndPartitionIntPtrByteOffsets(ref keys, ref values, lo, hi, comparer);
+            //        // Note we've already partitioned around the pivot and do not have to move the pivot again.
+            //        ref var keysAfterPivot = ref Unsafe.Add(ref keys, p + 1);
+            //        ref var valuesAfterPivot = ref Unsafe.Add(ref values, p + 1);
+            //        IntroSort(ref keysAfterPivot, ref valuesAfterPivot, hi - (p + 1), depthLimit, comparer, ops);
+            //        hi = p - 1;
+            //    }
+            //}
 
             private static int PickPivotAndPartitionIntIndeces<TKey, TValue, TComparer, TSortOps>(
                 ref TKey keys, ref TValue values, int lo, int hi, 
@@ -717,13 +757,13 @@ namespace System
                         break;
 
                     // Indeces cannot be equal here
-                    Swap(ref keys, left, right);
+                    ops.Swap(ref keys, ref values, left, right);
                 }
                 // Put pivot in the right location.
                 right = (hi - 1);
                 if (left != right)
                 {
-                    Swap(ref keys, left, right);
+                    ops.Swap(ref keys, ref values, left, right);
                 }
                 return left;
             }
@@ -787,6 +827,7 @@ namespace System
                 ref TKey refLo = ref Unsafe.Add(ref keys, lo);
                 ref TKey refLoMinus1 = ref Unsafe.Subtract(ref refLo, 1);
                 TKey d = Unsafe.Add(ref refLoMinus1, i);
+                TValue dValue = ops.SortValues ? Unsafe.Add(ref values, lo + i - 1) : values;
                 var nHalf = n / 2;
                 while (i <= nHalf)
                 {
@@ -804,116 +845,118 @@ namespace System
                         break;
 
                     // keys[lo + i - 1] = keys[lo + child - 1]
-                    Unsafe.Add(ref refLoMinus1, i) = Unsafe.Add(ref refLoMinus1, child);
+                    //Unsafe.Add(ref refLoMinus1, i) = Unsafe.Add(ref refLoMinus1, child);
+                    ops.Copy(ref keys, ref values, child, i);
 
                     i = child;
                 }
                 //keys[lo + i - 1] = d;
-                Unsafe.Add(ref keys, lo + i - 1) = d;
+                //Unsafe.Add(ref keys, lo + i - 1) = d;
+                ops.Write(d, dValue, lo + i - 1, ref keys, ref values);
             }
 
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private static void InsertionSort<TKey, TValue, TComparer, TSortOps>(
-                ref TKey keys, ref TValue values, int lo, int hi, 
-                TComparer comparer, TSortOps ops)
-                where TComparer : ILessThanComparer<TKey>
-                where TSortOps : ISortOps
-            {
-                Debug.Assert(keys != null);
-                Debug.Assert(lo >= 0);
-                Debug.Assert(hi >= lo);
+            //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+            //private static void InsertionSort<TKey, TValue, TComparer, TSortOps>(
+            //    ref TKey keys, ref TValue values, int lo, int hi, 
+            //    TComparer comparer, TSortOps ops)
+            //    where TComparer : ILessThanComparer<TKey>
+            //    where TSortOps : ISortOps
+            //{
+            //    Debug.Assert(keys != null);
+            //    Debug.Assert(lo >= 0);
+            //    Debug.Assert(hi >= lo);
 
-                for (int i = lo; i < hi; i++)
-                {
-                    //t = keys[i + 1];
-                    var t = Unsafe.Add(ref keys, i + 1);
-                    // Need local ref that can be updated!
-                    int j = i;
-                    while (j >= lo && comparer.LessThan(t, Unsafe.Add(ref keys, j)))
-                    {
-                        Unsafe.Add(ref keys, j + 1) = Unsafe.Add(ref keys, j);
-                        --j;
-                    }
-                    Unsafe.Add(ref keys, j + 1) = t;
-                }
-            }
+            //    for (int i = lo; i < hi; i++)
+            //    {
+            //        //t = keys[i + 1];
+            //        var t = Unsafe.Add(ref keys, i + 1);
+            //        // Need local ref that can be updated!
+            //        int j = i;
+            //        while (j >= lo && comparer.LessThan(t, Unsafe.Add(ref keys, j)))
+            //        {
+            //            Unsafe.Add(ref keys, j + 1) = Unsafe.Add(ref keys, j);
+            //            --j;
+            //        }
+            //        Unsafe.Add(ref keys, j + 1) = t;
+            //    }
+            //}
 
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            internal static void Sort3<TKey, TValue, TComparer, TSortOps>(
-                ref TKey r0, ref TKey r1, ref TKey r2, 
-                TComparer comparer, TSortOps ops)
-                where TComparer : ILessThanComparer<TKey>
-                where TSortOps : ISortOps
-            {
-                //SwapIfGreater(ref r0, ref r1, comparer); // swap the low with the mid point
-                //SwapIfGreater(ref r0, ref r2, comparer); // swap the low with the high
-                //SwapIfGreater(ref r1, ref r2, comparer); // swap the middle with the high
+            //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+            //internal static void Sort3<TKey, TValue, TComparer, TSortOps>(
+            //    ref TKey r0, ref TKey r1, ref TKey r2, 
+            //    TComparer comparer, TSortOps ops)
+            //    where TComparer : ILessThanComparer<TKey>
+            //    where TSortOps : ISortOps
+            //{
+            //    //SwapIfGreater(ref r0, ref r1, comparer); // swap the low with the mid point
+            //    //SwapIfGreater(ref r0, ref r2, comparer); // swap the low with the high
+            //    //SwapIfGreater(ref r1, ref r2, comparer); // swap the middle with the high
 
-                if (comparer.LessThan(r0, r1)) //r0 < r1)
-                {
-                    if (comparer.LessThan(r1, r2)) //(r1 < r2)
-                    {
-                        return;
-                    }
-                    else if (comparer.LessThan(r0, r2)) //(r0 < r2)
-                    {
-                        Swap(ref r1, ref r2);
-                    }
-                    else
-                    {
-                        TKey tmp = r0;
-                        r0 = r2;
-                        r2 = r1;
-                        r1 = tmp;
-                    }
-                }
-                else
-                {
-                    if (comparer.LessThan(r0, r2)) //(r0 < r2)
-                    {
-                        Swap(ref r0, ref r1);
-                    }
-                    else if (comparer.LessThan(r2, r1)) //(r2 < r1)
-                    {
-                        Swap(ref r0, ref r2);
-                    }
-                    else
-                    {
-                        TKey tmp = r0;
-                        r0 = r1;
-                        r1 = r2;
-                        r2 = tmp;
-                    }
-                }
-            }
+            //    if (comparer.LessThan(r0, r1)) //r0 < r1)
+            //    {
+            //        if (comparer.LessThan(r1, r2)) //(r1 < r2)
+            //        {
+            //            return;
+            //        }
+            //        else if (comparer.LessThan(r0, r2)) //(r0 < r2)
+            //        {
+            //            Swap(ref r1, ref r2);
+            //        }
+            //        else
+            //        {
+            //            TKey tmp = r0;
+            //            r0 = r2;
+            //            r2 = r1;
+            //            r1 = tmp;
+            //        }
+            //    }
+            //    else
+            //    {
+            //        if (comparer.LessThan(r0, r2)) //(r0 < r2)
+            //        {
+            //            Swap(ref r0, ref r1);
+            //        }
+            //        else if (comparer.LessThan(r2, r1)) //(r2 < r1)
+            //        {
+            //            Swap(ref r0, ref r2);
+            //        }
+            //        else
+            //        {
+            //            TKey tmp = r0;
+            //            r0 = r1;
+            //            r1 = r2;
+            //            r2 = tmp;
+            //        }
+            //    }
+            //}
 
 
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private static void SwapIfGreater<T, TComparer>(ref T keys, int i, int j, TComparer comparer)
-                where TComparer : ILessThanComparer<T>
-            {
-                Debug.Assert(i != j);
-                // Check moved to the one case actually needing it, not all!
-                //if (i != j)
-                {
-                    ref var iElement = ref Unsafe.Add(ref keys, i);
-                    ref var jElement = ref Unsafe.Add(ref keys, j);
-                    SwapIfGreater(ref iElement, ref jElement, comparer);
-                }
-            }
+            //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+            //private static void SwapIfGreater<T, TComparer>(ref T keys, int i, int j, TComparer comparer)
+            //    where TComparer : ILessThanComparer<T>
+            //{
+            //    Debug.Assert(i != j);
+            //    // Check moved to the one case actually needing it, not all!
+            //    //if (i != j)
+            //    {
+            //        ref var iElement = ref Unsafe.Add(ref keys, i);
+            //        ref var jElement = ref Unsafe.Add(ref keys, j);
+            //        SwapIfGreater(ref iElement, ref jElement, comparer);
+            //    }
+            //}
 
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private static void SwapIfGreater<T, TComparer>(ref T a, ref T b, in TComparer comparer)
-                where TComparer : ILessThanComparer<T>
-            {
-                //if (comparer.Compare(a, b) > 0)
-                if (comparer.LessThan(b, a))
-                {
-                    T temp = a;
-                    a = b;
-                    b = temp;
-                }
-            }
+            //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+            //private static void SwapIfGreater<T, TComparer>(ref T a, ref T b, in TComparer comparer)
+            //    where TComparer : ILessThanComparer<T>
+            //{
+            //    //if (comparer.Compare(a, b) > 0)
+            //    if (comparer.LessThan(b, a))
+            //    {
+            //        T temp = a;
+            //        a = b;
+            //        b = temp;
+            //    }
+            //}
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private static void Swap<T>(ref T items, int i, int j)
