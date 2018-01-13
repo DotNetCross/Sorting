@@ -15,27 +15,54 @@ namespace System
     internal static partial class SpanHelpers
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void Sort<T>(this Span<T> keys)
+        internal static void Sort<TKey>(this Span<TKey> keys)
         {
             // PERF: Try specialized here for optimal performance
             // Code-gen is weird unless used in loop outside
             if (!SpanSortHelper.TrySortSpecialized(
                 ref keys.DangerousGetPinnableReference(), keys.Length))
             {
-                Sort(keys, Comparer<T>.Default);
+                Sort(keys, Comparer<TKey>.Default);
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void Sort<T, TComparer>(
-            this Span<T> keys, TComparer comparer)
-            where TComparer : IComparer<T>
+        internal static void Sort<TKey, TComparer>(
+            this Span<TKey> keys, TComparer comparer)
+            where TComparer : IComparer<TKey>
         {
             Span<SpanSortHelper.Void> values = default;
-            DefaultSpanSortHelper<T, SpanSortHelper.Void, TComparer>.s_default.Sort(
+            DefaultSpanSortHelper<TKey, SpanSortHelper.Void, TComparer>.s_default.Sort(
                 ref keys.DangerousGetPinnableReference(), 
                 ref values.DangerousGetPinnableReference(), 
                 keys.Length, comparer, new SpanSortHelper.KeysSortOps());
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static void Sort<TKey, TValue>(this Span<TKey> keys, Span<TValue> values)
+        {
+            if (keys.Length != values.Length)
+                // Add new exception to ThrowHelper
+                throw new ArgumentException("lengths must be equal");
+
+            // PERF: Try specialized here for optimal performance
+            // Code-gen is weird unless used in loop outside
+            if (!SpanSortHelper.TrySortSpecializedWithValues(
+                ref keys.DangerousGetPinnableReference(), ref values.DangerousGetPinnableReference(), keys.Length))
+            {
+                Sort(keys, values, Comparer<TKey>.Default);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static void Sort<TKey, TValue, TComparer>(
+            this Span<TKey> keys, Span<TValue> values, TComparer comparer)
+            where TComparer : IComparer<TKey>
+        {
+            DefaultSpanSortHelper<TKey, TValue, TComparer>.s_default.Sort(
+                ref keys.DangerousGetPinnableReference(),
+                ref values.DangerousGetPinnableReference(),
+                keys.Length, comparer, new SpanSortHelper.KeysValuesSortOps());
         }
 
         internal interface ILessThanComparer<T>
@@ -391,7 +418,59 @@ namespace System
                     TLessThanComparer comparer)
                     where TLessThanComparer : ILessThanComparer<TKey>
                 {
-                    throw new NotImplementedException();
+                    ref var r0 = ref Unsafe.Add(ref keys, lo);
+                    ref var r1 = ref Unsafe.Add(ref keys, mi);
+                    ref var r2 = ref Unsafe.Add(ref keys, hi);
+
+                    // TODO: Perhaps move to where being swapped
+                    ref var v0 = ref Unsafe.Add(ref values, lo);
+                    ref var v1 = ref Unsafe.Add(ref values, mi);
+                    ref var v2 = ref Unsafe.Add(ref values, hi);
+
+                    if (comparer.LessThan(r0, r1)) //r0 < r1)
+                    {
+                        if (comparer.LessThan(r1, r2)) //(r1 < r2)
+                        {
+                            return ref r1;
+                        }
+                        else if (comparer.LessThan(r0, r2)) //(r0 < r2)
+                        {
+                            SpanSortHelper.Swap(ref r1, ref r2);
+                            SpanSortHelper.Swap(ref v1, ref v2);
+                        }
+                        else
+                        {
+                            TKey tmp = r0;
+                            r0 = r2;
+                            r2 = r1;
+                            r1 = tmp;
+                        }
+                    }
+                    else
+                    {
+                        if (comparer.LessThan(r0, r2)) //(r0 < r2)
+                        {
+                            SpanSortHelper.Swap(ref r0, ref r1);
+                            SpanSortHelper.Swap(ref v0, ref v1);
+                        }
+                        else if (comparer.LessThan(r2, r1)) //(r2 < r1)
+                        {
+                            SpanSortHelper.Swap(ref r0, ref r2);
+                            SpanSortHelper.Swap(ref v0, ref v2);
+                        }
+                        else
+                        {
+                            TKey tmp = r0;
+                            r0 = r1;
+                            r1 = r2;
+                            r2 = tmp;
+                            TValue vTemp = v0;
+                            v0 = v1;
+                            v1 = v2;
+                            v2 = vTemp;
+                        }
+                    }
+                    return ref r1;
                 }
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public void InsertionSort<TKey, TValue, TComparer>(
@@ -399,7 +478,25 @@ namespace System
                     TComparer comparer)
                     where TComparer : ILessThanComparer<TKey>
                 {
-                    throw new NotImplementedException();
+                    Debug.Assert(keys != null);
+                    Debug.Assert(lo >= 0);
+                    Debug.Assert(hi >= lo);
+
+                    for (int i = lo; i < hi; i++)
+                    {
+                        //t = keys[i + 1];
+                        var t = Unsafe.Add(ref keys, i + 1);
+                        // Need local ref that can be updated
+                        int j = i;
+                        while (j >= lo && comparer.LessThan(t, Unsafe.Add(ref keys, j)))
+                        {
+                            Unsafe.Add(ref keys, j + 1) = Unsafe.Add(ref keys, j);
+                            Unsafe.Add(ref values, j + 1) = Unsafe.Add(ref values, j);
+                            --j;
+                        }
+                        Unsafe.Add(ref keys, j + 1) = t;
+                        Unsafe.Add(ref values, j + 1) = Unsafe.Add(ref values, i + 1);
+                    }
                 }
             }
 
@@ -412,13 +509,13 @@ namespace System
                     new KeysSortOps());
             }
 
-            //[MethodImpl(MethodImplOptions.AggressiveInlining)]
-            //internal static bool TrySortSpecialized<TKey, TValue>(
-            //    ref TKey keys, ref TValue values, int length)
-            //{
-            //    return TrySortSpecialized(ref keys, ref values, length,
-            //        new KeysValuesSwapper());
-            //}
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            internal static bool TrySortSpecializedWithValues<TKey, TValue>(
+                ref TKey keys, ref TValue values, int length)
+            {
+                return TrySortSpecialized(ref keys, ref values, length,
+                    new KeysValuesSortOps());
+            }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             internal static bool TrySortSpecialized<TKey, TValue, TSortOps>(

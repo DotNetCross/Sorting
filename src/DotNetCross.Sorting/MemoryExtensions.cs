@@ -232,7 +232,7 @@ namespace System
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Sort<TKey, TValue>(this Span<TKey> keys, Span<TValue> items)
         {
-
+            SpanHelpers.Sort(keys, items);
         }
 
         /// <summary>
@@ -247,7 +247,7 @@ namespace System
            Span<TValue> items, TComparer comparer)
            where TComparer : IComparer<TKey>
         {
-
+            SpanHelpers.Sort(keys, items, comparer);
         }
 
         /// <summary>
@@ -261,7 +261,7 @@ namespace System
         public static void Sort<TKey, TValue>(this Span<TKey> keys,
            Span<TValue> items, Comparison<TKey> comparison)
         {
-            
+            SpanHelpers.Sort(keys, items, new SpanHelpers.ComparisonComparer<TKey>(comparison));
         }
     }
 }

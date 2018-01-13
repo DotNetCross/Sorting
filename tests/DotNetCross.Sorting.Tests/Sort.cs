@@ -130,6 +130,22 @@ namespace System.SpanTests
             }
         }
 
+        [Theory]
+        [Trait("MyTrait", "MyTraitValue")]
+        [InlineData(17, 1024)]
+        [InlineData(42, 1024)]
+        [InlineData(1873318, 1024)]
+        public static void SortWithItems_Random_Int(int seed, int maxCount)
+        {
+            var random = new Random(seed);
+            for (int count = 0; count < maxCount; count++)
+            {
+                var unsorted = Enumerable.Range(0, count).Select(i => random.Next()).ToArray();
+                var unsortedItems = Enumerable.Range(0, count).ToArray();
+                TestSortOverloads(unsorted, unsortedItems);
+            }
+        }
+
         //[Fact]
         //public static void Sort_Slice()
         //{
@@ -240,6 +256,58 @@ namespace System.SpanTests
             span.Sort(Comparer<T>.Default.Compare);
 
             Assert.Equal(expected, array);
+        }
+
+
+        private static void TestSortOverloads<TKey, TValue>(TKey[] keys, TValue[] values)
+            where TKey : IComparable<TKey>
+        {
+            TestSpan(keys, values);
+            TestComparerSpan(keys, values);
+            TestComparisonSpan(keys, values);
+        }
+
+        private static void TestSpan<TKey, TValue>(TKey[] keys, TValue[] values)
+            where TKey : IComparable<TKey>
+        {
+            var expectedKeys = (TKey[])keys.Clone();
+            var expectedValues = (TValue[])values.Clone();
+            Array.Sort(expectedKeys, expectedValues);
+
+            var spanKeys = new Span<TKey>(keys);
+            var spanValues = new Span<TValue>(values);
+            spanKeys.Sort(spanValues);
+
+            Assert.Equal(expectedKeys, keys);
+            Assert.Equal(expectedValues, values);
+        }
+        private static void TestComparerSpan<TKey, TValue>(TKey[] keys, TValue[] values)
+            where TKey : IComparable<TKey>
+        {
+            var expectedKeys = (TKey[])keys.Clone();
+            var expectedValues = (TValue[])values.Clone();
+            Array.Sort(expectedKeys, expectedValues);
+
+            var spanKeys = new Span<TKey>(keys);
+            var spanValues = new Span<TValue>(values);
+            spanKeys.Sort(spanValues, Comparer<TKey>.Default);
+
+            Assert.Equal(expectedKeys, keys);
+            Assert.Equal(expectedValues, values);
+        }
+        private static void TestComparisonSpan<TKey, TValue>(TKey[] keys, TValue[] values)
+            where TKey : IComparable<TKey>
+        {
+            var expectedKeys = (TKey[])keys.Clone();
+            var expectedValues = (TValue[])values.Clone();
+            Array.Sort(expectedKeys, expectedValues);
+
+            var spanKeys = new Span<TKey>(keys);
+            var spanValues = new Span<TValue>(values);
+            spanKeys.Sort(spanValues, Comparer<TKey>.Default.Compare);
+
+            Assert.Equal(expectedKeys, keys);
+            Assert.Equal(expectedValues, values);
         }
     }
 }
