@@ -446,6 +446,10 @@ namespace System
                             r0 = r2;
                             r2 = r1;
                             r1 = tmp;
+                            TValue vTemp = v0;
+                            v0 = v2;
+                            v2 = v1;
+                            v1 = vTemp;
                         }
                     }
                     else
@@ -724,11 +728,6 @@ namespace System
                         if (partitionSize == 3)
                         {
                             ops.Sort3(ref keys, ref values, lo, hi - 1, hi, comparer);
-                            //ref TKey loRef = ref Unsafe.Add(ref keys, lo);
-                            //ref TKey miRef = ref Unsafe.Add(ref keys, hi - 1);
-                            //ref TKey hiRef = ref Unsafe.Add(ref keys, hi);
-                            ////ref T miRef = ref Unsafe.SubtractByteOffset(ref hiRef, new IntPtr(Unsafe.SizeOf<T>()));
-                            //Sort3(ref loRef, ref miRef, ref hiRef, comparer, ops);
                             return;
                         }
 
@@ -744,74 +743,14 @@ namespace System
                     depthLimit--;
 
                     // We should never reach here, unless > 3 elements due to partition size
-                    int p = PickPivotAndPartitionIntIndeces(ref keys, ref values, lo, hi, comparer, ops);
-                    //int p = PickPivotAndPartitionIntPtrIndeces(ref keys, lo, hi, comparer);
-                    //int p = PickPivotAndPartitionIntPtrByteOffsets(ref keys, ref values, lo, hi, comparer);
+                    int p = PickPivotAndPartition(ref keys, ref values, lo, hi, comparer, ops);
                     // Note we've already partitioned around the pivot and do not have to move the pivot again.
                     IntroSort(ref keys, ref values, p + 1, hi, depthLimit, comparer, ops);
                     hi = p - 1;
                 }
             }
 
-            //private static void IntroSort<TKey, TValue, TComparer, TSortOps>(
-            //    ref TKey keys, ref TValue values, int hi, int depthLimit, 
-            //    TComparer comparer, TSortOps ops)
-            //    where TComparer : ILessThanComparer<TKey>
-            //    where TSortOps : ISortOps
-            //{
-            //    Debug.Assert(comparer != null);
-            //    //Debug.Assert(lo >= 0);
-            //    const int lo = 0;
-            //    while (hi > lo)
-            //    {
-            //        int partitionSize = hi - lo + 1;
-            //        if (partitionSize <= IntrosortSizeThreshold)
-            //        {
-            //            if (partitionSize == 1)
-            //            {
-            //                return;
-            //            }
-
-            //            if (partitionSize == 2)
-            //            {
-            //                ops.Sort2(ref keys, ref values, lo, hi, comparer);
-            //                return;
-            //            }
-            //            if (partitionSize == 3)
-            //            {
-            //                ops.Sort3(ref keys, ref values, lo, hi - 1, hi, comparer);
-            //                //ref TKey loRef = ref Unsafe.Add(ref keys, lo);
-            //                //ref TKey miRef = ref Unsafe.Add(ref keys, hi - 1);
-            //                //ref TKey hiRef = ref Unsafe.Add(ref keys, hi);
-            //                //Sort3(ref loRef, ref miRef, ref hiRef, comparer);
-            //                return;
-            //            }
-
-            //            InsertionSort(ref keys, ref values, lo, hi, comparer, ops);
-            //            return;
-            //        }
-
-            //        if (depthLimit == 0)
-            //        {
-            //            HeapSort(ref keys, ref values, lo, hi, comparer, ops);
-            //            return;
-            //        }
-            //        depthLimit--;
-
-            //        // We should never reach here, unless > 3 elements due to partition size
-            //        //ref var keysAtLo = ref Unsafe.Add(ref keys, lo);
-            //        int p = PickPivotAndPartitionIntIndeces(ref keys, ref values, lo, hi, comparer, ops);
-            //        //int p = PickPivotAndPartitionIntPtrIndeces(ref keys, lo, hi, comparer);
-            //        //int p = PickPivotAndPartitionIntPtrByteOffsets(ref keys, ref values, lo, hi, comparer);
-            //        // Note we've already partitioned around the pivot and do not have to move the pivot again.
-            //        ref var keysAfterPivot = ref Unsafe.Add(ref keys, p + 1);
-            //        ref var valuesAfterPivot = ref Unsafe.Add(ref values, p + 1);
-            //        IntroSort(ref keysAfterPivot, ref valuesAfterPivot, hi - (p + 1), depthLimit, comparer, ops);
-            //        hi = p - 1;
-            //    }
-            //}
-
-            private static int PickPivotAndPartitionIntIndeces<TKey, TValue, TComparer, TSortOps>(
+            private static int PickPivotAndPartition<TKey, TValue, TComparer, TSortOps>(
                 ref TKey keys, ref TValue values, int lo, int hi, 
                 TComparer comparer, TSortOps ops)
                 where TComparer : ILessThanComparer<TKey>

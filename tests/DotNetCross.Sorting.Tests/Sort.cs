@@ -130,6 +130,19 @@ namespace System.SpanTests
             }
         }
 
+        // TODO: OuterLoop
+        [Fact]
+        [Trait("MyTrait", "MyTraitValue")]
+        public static void SortWithItems_Reverse_Int()
+        {
+            for (int count = 1; count <= 256 * 1024; count <<= 1)
+            {
+                var unsorted = Enumerable.Range(0, count).Reverse().ToArray();
+                var unsortedItems = Enumerable.Range(0, count).ToArray();
+                TestSortOverloads(unsorted, unsortedItems);
+            }
+        }
+
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
         [InlineData(17, 1024)]
