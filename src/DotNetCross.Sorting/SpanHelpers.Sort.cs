@@ -205,6 +205,11 @@ namespace System
                     ref TKey keys, ref TValue values, int lo, int mi, int hi,
                     TLessThanComparer comparer)
                     where TLessThanComparer : ILessThanComparer<TKey>;
+
+                void InsertionSort<TKey, TValue, TComparer>(
+                    ref TKey keys, ref TValue values, int lo, int hi,
+                    TComparer comparer)
+                    where TComparer : ILessThanComparer<TKey>;
             }
             internal struct KeysSortOps : ISortOps
             {
@@ -280,6 +285,30 @@ namespace System
                     }
                     return ref r1;
                 }
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                public void InsertionSort<TKey, TValue, TComparer>(
+                    ref TKey keys, ref TValue values, int lo, int hi,
+                    TComparer comparer)
+                    where TComparer : ILessThanComparer<TKey>
+                {
+                    Debug.Assert(keys != null);
+                    Debug.Assert(lo >= 0);
+                    Debug.Assert(hi >= lo);
+
+                    for (int i = lo; i < hi; i++)
+                    {
+                        //t = keys[i + 1];
+                        var t = Unsafe.Add(ref keys, i + 1);
+                        // Need local ref that can be updated!
+                        int j = i;
+                        while (j >= lo && comparer.LessThan(t, Unsafe.Add(ref keys, j)))
+                        {
+                            Unsafe.Add(ref keys, j + 1) = Unsafe.Add(ref keys, j);
+                            --j;
+                        }
+                        Unsafe.Add(ref keys, j + 1) = t;
+                    }
+                }
             }
             internal struct KeysValuesSortOps : ISortOps
             {
@@ -321,6 +350,14 @@ namespace System
                     ref TKey keys, ref TValue values, int lo, int mi, int hi,
                     TLessThanComparer comparer)
                     where TLessThanComparer : ILessThanComparer<TKey>
+                {
+                    throw new NotImplementedException();
+                }
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                public void InsertionSort<TKey, TValue, TComparer>(
+                    ref TKey keys, ref TValue values, int lo, int hi,
+                    TComparer comparer)
+                    where TComparer : ILessThanComparer<TKey>
                 {
                     throw new NotImplementedException();
                 }
@@ -555,7 +592,7 @@ namespace System
                             return;
                         }
 
-                        InsertionSort(ref keys, ref values, lo, hi, comparer, ops);
+                        ops.InsertionSort(ref keys, ref values, lo, hi, comparer);
                         return;
                     }
 
