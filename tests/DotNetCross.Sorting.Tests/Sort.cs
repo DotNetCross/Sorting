@@ -146,6 +146,21 @@ namespace System.SpanTests
             }
         }
 
+        [Theory]
+        [Trait("MyTrait", "MyTraitValue")]
+        [InlineData(new uint[] { })]
+        [InlineData(new uint[] { 1 })]
+        [InlineData(new uint[] { 2, 1 })]
+        [InlineData(new uint[] { 3, 1, 2 })]
+        [InlineData(new uint[] { 3, 2, 1 })]
+        [InlineData(new uint[] { 3, 2, 4, 1 })]
+        [InlineData(new uint[] { 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 1, 2, 3, 4, 7, 6, 5 })]
+        public static void SortWithItems_UInt(uint[] unsorted)
+        {
+            var unsortedItems = Enumerable.Range(0, unsorted.Length).ToArray();
+            TestSortOverloads(unsorted, unsortedItems);
+        }
+
         //[Fact]
         //public static void Sort_Slice()
         //{

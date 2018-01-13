@@ -371,17 +371,19 @@ namespace System
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public void Swap<TKey, TValue>(ref TKey keys, ref TValue values, int i, int j)
                 {
-                    ref var keyA = ref Unsafe.Add(ref keys, i);
-                    ref var keyB = ref Unsafe.Add(ref keys, j);
-                    TKey keyTemp = keyA;
-                    keyA = keyB;
-                    keyB = keyTemp;
+                    SpanSortHelper.Swap(ref keys, i, j);
+                    //ref var keyA = ref Unsafe.Add(ref keys, i);
+                    //ref var keyB = ref Unsafe.Add(ref keys, j);
+                    //TKey keyTemp = keyA;
+                    //keyA = keyB;
+                    //keyB = keyTemp;
 
-                    ref var valueA = ref Unsafe.Add(ref values, i);
-                    ref var valueB = ref Unsafe.Add(ref values, j);
-                    TValue valueTemp = valueA;
-                    valueA = valueB;
-                    valueB = valueTemp;
+                    SpanSortHelper.Swap(ref values, i, j);
+                    //ref var valueA = ref Unsafe.Add(ref values, i);
+                    //ref var valueB = ref Unsafe.Add(ref values, j);
+                    //TValue valueTemp = valueA;
+                    //valueA = valueB;
+                    //valueB = valueTemp;
                 }
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public void Copy<TKey, TValue>(ref TKey keys, ref TValue values, int sourceIndex, int destinationIndex)
@@ -486,6 +488,7 @@ namespace System
                     {
                         //t = keys[i + 1];
                         var t = Unsafe.Add(ref keys, i + 1);
+                        var v = Unsafe.Add(ref values, i + 1);
                         // Need local ref that can be updated
                         int j = i;
                         while (j >= lo && comparer.LessThan(t, Unsafe.Add(ref keys, j)))
@@ -495,7 +498,7 @@ namespace System
                             --j;
                         }
                         Unsafe.Add(ref keys, j + 1) = t;
-                        Unsafe.Add(ref values, j + 1) = Unsafe.Add(ref values, i + 1);
+                        Unsafe.Add(ref values, j + 1) = v;
                     }
                 }
             }
@@ -829,14 +832,14 @@ namespace System
                 int middle = (int)(((uint)hi + (uint)lo) >> 1);
 
                 // Sort lo, mid and hi appropriately, then pick mid as the pivot.
-                ops.Sort3(ref keys, ref values, lo, middle, hi, comparer);
+                ref TKey miRef = ref ops.Sort3(ref keys, ref values, lo, middle, hi, comparer);
                 //ref TKey loRef = ref Unsafe.Add(ref keys, lo);
                 //ref TKey miRef = ref Unsafe.Add(ref keys, middle);
                 //ref TKey hiRef = ref Unsafe.Add(ref keys, hi);
                 //Sort3(ref loRef, ref miRef, ref hiRef, comparer);
                 //TKey pivot = miRef;
 
-                ref TKey miRef = ref Unsafe.Add(ref keys, middle);
+                //ref TKey miRef = ref Unsafe.Add(ref keys, middle);
                 TKey pivot = miRef;
 
                 int left = lo, right = hi - 1;  // We already partitioned lo and hi and put the pivot in hi - 1.  And we pre-increment & decrement below.
@@ -845,9 +848,8 @@ namespace System
 
                 while (left < right)
                 {
-                    // TODO: Would be good to update local ref here
                     while (comparer.LessThan(Unsafe.Add(ref keys, ++left), pivot)) ;
-                    // TODO: Would be good to update local ref here
+                    
                     while (comparer.LessThan(pivot, Unsafe.Add(ref keys, --right))) ;
 
                     if (left >= right)
@@ -942,8 +944,8 @@ namespace System
                         break;
 
                     // keys[lo + i - 1] = keys[lo + child - 1]
+                    ops.Copy(ref keys, ref values, lo + child - 1, lo + i - 1);
                     //Unsafe.Add(ref refLoMinus1, i) = Unsafe.Add(ref refLoMinus1, child);
-                    ops.Copy(ref keys, ref values, child, i);
 
                     i = child;
                 }
