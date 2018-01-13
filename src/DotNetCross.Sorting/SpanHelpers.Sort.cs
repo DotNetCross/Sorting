@@ -542,7 +542,6 @@ namespace System
                 {
                     ref var specificKeys = ref Unsafe.As<TKey, byte>(ref keys);
                     Sort(ref specificKeys, ref values, length, new ByteLessThanComparer(), ops);
-
                     return true;
                 }
                 else if (typeof(TKey) == typeof(short) ||
@@ -550,42 +549,36 @@ namespace System
                 {
                     ref var specificKeys = ref Unsafe.As<TKey, short>(ref keys);
                     Sort(ref specificKeys, ref values, length, new Int16LessThanComparer(), ops);
-
                     return true;
                 }
                 else if (typeof(TKey) == typeof(ushort))
                 {
                     ref var specificKeys = ref Unsafe.As<TKey, ushort>(ref keys);
                     Sort(ref specificKeys, ref values, length, new UInt16LessThanComparer(), ops);
-
                     return true;
                 }
                 else if (typeof(TKey) == typeof(int))
                 {
                     ref var specificKeys = ref Unsafe.As<TKey, int>(ref keys);
                     Sort(ref specificKeys, ref values, length, new Int32LessThanComparer(), ops);
-
                     return true;
                 }
                 else if (typeof(TKey) == typeof(uint))
                 {
                     ref var specificKeys = ref Unsafe.As<TKey, uint>(ref keys);
                     Sort(ref specificKeys, ref values, length, new UInt32LessThanComparer(), ops);
-
                     return true;
                 }
                 else if (typeof(TKey) == typeof(long))
                 {
                     ref var specificKeys = ref Unsafe.As<TKey, long>(ref keys);
                     Sort(ref specificKeys, ref values, length, new Int64LessThanComparer(), ops);
-
                     return true;
                 }
                 else if (typeof(TKey) == typeof(ulong))
                 {
                     ref var specificKeys = ref Unsafe.As<TKey, ulong>(ref keys);
                     Sort(ref specificKeys, ref values, length, new UInt64LessThanComparer(), ops);
-
                     return true;
                 }
                 else if (typeof(TKey) == typeof(float))
@@ -771,15 +764,7 @@ namespace System
                 int middle = (int)(((uint)hi + (uint)lo) >> 1);
 
                 // Sort lo, mid and hi appropriately, then pick mid as the pivot.
-                ref TKey miRef = ref ops.Sort3(ref keys, ref values, lo, middle, hi, comparer);
-                //ref TKey loRef = ref Unsafe.Add(ref keys, lo);
-                //ref TKey miRef = ref Unsafe.Add(ref keys, middle);
-                //ref TKey hiRef = ref Unsafe.Add(ref keys, hi);
-                //Sort3(ref loRef, ref miRef, ref hiRef, comparer);
-                //TKey pivot = miRef;
-
-                //ref TKey miRef = ref Unsafe.Add(ref keys, middle);
-                TKey pivot = miRef;
+                TKey pivot = ops.Sort3(ref keys, ref values, lo, middle, hi, comparer);
 
                 int left = lo, right = hi - 1;  // We already partitioned lo and hi and put the pivot in hi - 1.  And we pre-increment & decrement below.
                 //Swap(ref miRef, ref Unsafe.Add(ref keys, right));
@@ -838,28 +823,6 @@ namespace System
                 Debug.Assert(keys != null);
                 Debug.Assert(comparer != null);
                 Debug.Assert(lo >= 0);
-
-                ////T d = keys[lo + i - 1];
-                //T d = Unsafe.Add(ref keys, lo + i - 1);
-                //int child;
-                //while (i <= n / 2)
-                //{
-                //    child = 2 * i;
-                //    //if (child < n && comparer(keys[lo + child - 1], keys[lo + child]) < 0)
-                //    if (child < n && comparer.Compare(Unsafe.Add(ref keys, lo + child - 1),
-                //        Unsafe.Add(ref keys, lo + child)) < 0)
-                //    {
-                //        child++;
-                //    }
-                //    //if (!(comparer(d, keys[lo + child - 1]) < 0))
-                //    if (!(comparer.Compare(d, Unsafe.Add(ref keys, lo + child - 1)) < 0))
-                //        break;
-                //    // keys[lo + i - 1] = keys[lo + child - 1]
-                //    Unsafe.Add(ref keys, lo + i - 1) = Unsafe.Add(ref keys, lo + child - 1);
-                //    i = child;
-                //}
-                ////keys[lo + i - 1] = d;
-                //Unsafe.Add(ref keys, lo + i - 1) = d;
 
                 //T d = keys[lo + i - 1];
                 ref TKey refLo = ref Unsafe.Add(ref keys, lo);
@@ -1010,18 +973,18 @@ namespace System
                     Swap(ref iElement, ref jElement);
                 }
             }
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private static void Swap<T>(ref T items, IntPtr i, IntPtr j)
-            {
-                Debug.Assert(i != j);
-                // No place needs this anymore
-                //if (i != j)
-                {
-                    ref var iElement = ref Unsafe.Add(ref items, i);
-                    ref var jElement = ref Unsafe.Add(ref items, j);
-                    Swap(ref iElement, ref jElement);
-                }
-            }
+            //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+            //private static void Swap<T>(ref T items, IntPtr i, IntPtr j)
+            //{
+            //    Debug.Assert(i != j);
+            //    // No place needs this anymore
+            //    //if (i != j)
+            //    {
+            //        ref var iElement = ref Unsafe.Add(ref items, i);
+            //        ref var jElement = ref Unsafe.Add(ref items, j);
+            //        Swap(ref iElement, ref jElement);
+            //    }
+            //}
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             internal static void Swap<T>(ref T a, ref T b)
