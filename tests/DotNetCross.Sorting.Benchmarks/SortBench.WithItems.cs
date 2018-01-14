@@ -9,21 +9,28 @@ using DotNetCross.Sorting.Sequences;
 namespace DotNetCross.Sorting.Benchmarks
 {
     [Config(typeof(SortBenchConfig))]
-    public class SortBench<TKey>
+    public class SortBench<TKey, TValue>
     {
         readonly int _maxLength;
         readonly IParam[] _paramFillers;
-        readonly Func<int, TKey> _toValue;
+        readonly Func<int, TKey> _toKey;
         readonly TKey[] _filled;
         readonly TKey[] _work;
+        readonly Func<int, TValue> _toValue;
+        readonly TValue[] _filledValues;
+        readonly TValue[] _workValues;
 
-        public SortBench(int maxLength, ISpanFiller[] fillers, Func<int, TKey> toValue)
+        public SortBench(int maxLength, ISpanFiller[] fillers, 
+            Func<int, TKey> toKey, Func<int, TValue> toValue)
         {
             _maxLength = maxLength;
             _paramFillers = fillers.Select(f => new SpanFillerParam(f)).ToArray();
-            _toValue = toValue;
+            _toKey = toKey;
             _filled = new TKey[_maxLength];
             _work = new TKey[_maxLength];
+            _toValue = toValue;
+            _filledValues = new TValue[_maxLength];
+            _workValues = new TValue[_maxLength];
         }
 
         [ParamsSource(nameof(Fillers))]
@@ -40,13 +47,15 @@ namespace DotNetCross.Sorting.Benchmarks
         public void GlobalSetup()
         {
             Console.WriteLine($"// {nameof(GlobalSetup)} Filling {_maxLength} with {Filler.GetType().Name} for {Length} slice run");
-            Filler.Fill(_filled, Length, _toValue);
+            Filler.Fill(_filled, Length, _toKey);
+            new IncrementingSpanFiller().Fill(_filledValues, Length, _toValue);
         }
 
         [IterationSetup]
         public void IterationSetup()
         {
             Array.Copy(_filled, _work, _maxLength);
+            Array.Copy(_filledValues, _workValues, _maxLength);
         }
 
         [Benchmark(Baseline = true)]
@@ -54,7 +63,7 @@ namespace DotNetCross.Sorting.Benchmarks
         {
             for (int i = 0; i <= _maxLength - Length; i += Length)
             {
-                Array.Sort(_work, i, Length);
+                Array.Sort(_work, _workValues, i, Length);
             }
         }
 
@@ -63,7 +72,7 @@ namespace DotNetCross.Sorting.Benchmarks
         {
             for (int i = 0; i <= _maxLength - Length; i += Length)
             {
-                new Span<TKey>(_work, i, Length).Sort();
+                new Span<TKey>(_work, i, Length).Sort(new Span<TValue>(_workValues, i, Length));
             }
         }
     }
