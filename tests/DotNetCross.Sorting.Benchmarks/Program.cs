@@ -34,22 +34,23 @@ namespace DotNetCross.Sorting.Benchmarks
         { }
     }
 
-    public class Int32SortDisassemblerBenchNotWorking : SortDisassemblerBench<int>
-    {
-        public Int32SortDisassemblerBenchNotWorking()
-            : base(length: 1024 * 1024, i => i)
-        { }
-    }
+    // BDN fails
+    //public class Int32SortDisassemblerBenchNotWorking : SortDisassemblerBench<int>
+    //{
+    //    public Int32SortDisassemblerBenchNotWorking()
+    //        : base(length: 1024 * 1024, i => i)
+    //    { }
+    //}
 
     class Program
     {
         static void Main(string[] args)
         {
-            //BenchmarkRunner.Run<Int32SortBench>();
-
-            //BenchmarkRunner.Run<Int32Int32SortBench>();
-
+            BenchmarkRunner.Run<Int32SortBench>();
             BenchmarkRunner.Run<Int32SortDisassemblerBench>();
+
+            BenchmarkRunner.Run<Int32Int32SortBench>();
+
 
             //BenchmarkRunner.Run<Int32SortDisassemblerBenchNotWorking>(); // Fails?!
             //BenchmarkRunner.Run<RandomSort>();
