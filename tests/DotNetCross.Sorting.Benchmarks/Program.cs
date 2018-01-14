@@ -47,9 +47,11 @@ namespace DotNetCross.Sorting.Benchmarks
         static void Main(string[] args)
         {
             BenchmarkRunner.Run<Int32SortBench>();
-            BenchmarkRunner.Run<Int32SortDisassemblerBench>();
 
             BenchmarkRunner.Run<Int32Int32SortBench>();
+
+            BenchmarkRunner.Run<Int32SortDisassemblerBench>();
+
 
 
             //BenchmarkRunner.Run<Int32SortDisassemblerBenchNotWorking>(); // Fails?!
