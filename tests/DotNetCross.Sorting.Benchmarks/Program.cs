@@ -34,7 +34,7 @@ namespace DotNetCross.Sorting.Benchmarks
         { }
     }
 
-    public class Int32SortDisassemblerBenchNotWorking : SortDisassemblerBench//<int>
+    public class Int32SortDisassemblerBenchNotWorking : SortDisassemblerBench<int>
     {
         public Int32SortDisassemblerBenchNotWorking()
             : base(length: 1024 * 1024, i => i)
