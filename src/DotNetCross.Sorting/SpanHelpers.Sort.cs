@@ -779,8 +779,20 @@ namespace System
                     if (left >= right)
                         break;
 
+                    //ref var keyA = ref Unsafe.Add(ref keys, i);
+                    //ref var keyB = ref Unsafe.Add(ref keys, j);
+                    //TKey keyTemp = keyA;
+                    //keyA = keyB;
+                    //keyB = keyTemp;
+
                     // Indeces cannot be equal here
-                    ops.Swap(ref keys, ref values, left, right);
+                    Swap(ref keys, left, right);
+                    if (ops.SortValues)
+                    {
+                        Swap(ref values, left, right);
+                    }
+                    // Below is really slow...
+                    //ops.Swap(ref keys, ref values, left, right);
                 }
                 // Put pivot in the right location.
                 right = (hi - 1);
@@ -968,9 +980,8 @@ namespace System
                 // No place needs this anymore
                 //if (i != j)
                 {
-                    ref var iElement = ref Unsafe.Add(ref items, i);
-                    ref var jElement = ref Unsafe.Add(ref items, j);
-                    Swap(ref iElement, ref jElement);
+                    Swap(ref Unsafe.Add(ref items, i), 
+                         ref Unsafe.Add(ref items, j));
                 }
             }
             //[MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -86,51 +86,68 @@ namespace DotNetCross.Sorting.Benchmarks
     }
 
     // BDN fails
-    //public class Int32SortDisassemblerBenchNotWorking : SortDisassemblerBench<int>
-    //{
-    //    public Int32SortDisassemblerBenchNotWorking()
-    //        : base(length: 1024 * 1024, i => i)
-    //    { }
-    //}
+    public class Int32SortDisassemblerBenchNotWorking : SortDisassemblerBench<int>
+    {
+        public Int32SortDisassemblerBenchNotWorking()
+            : base(length: 1024 * 1024, i => i)
+        { }
+    }
 
     class Program
     {
         static void Main(string[] args)
         {
-            BenchmarkRunner.Run<ComparableStructInt32SortBench>();
-            BenchmarkRunner.Run<StringSortBench>();
-            BenchmarkRunner.Run<SingleSortBench>();
-            BenchmarkRunner.Run<Int32SortBench>();
+            bool benchOrProfile = true;
+            if (benchOrProfile)
+            {
+                //BenchmarkRunner.Run<ComparableStructInt32SortBench>();
+                //BenchmarkRunner.Run<StringSortBench>();
+                //BenchmarkRunner.Run<SingleSortBench>();
+                //BenchmarkRunner.Run<Int32SortBench>();
 
-            BenchmarkRunner.Run<Int32StringSortBench>();
-            BenchmarkRunner.Run<Int32SingleSortBench>();
-            BenchmarkRunner.Run<Int32Int32SortBench>();
+                BenchmarkRunner.Run<Int32StringSortBench>();
+                //BenchmarkRunner.Run<Int32SingleSortBench>();
+                //BenchmarkRunner.Run<Int32Int32SortBench>();
 
-            BenchmarkRunner.Run<StringSortDisassemblerBench>();
-            BenchmarkRunner.Run<Int32SortDisassemblerBench>();
+                //BenchmarkRunner.Run<StringSortDisassemblerBench>();
+                //BenchmarkRunner.Run<Int32SortDisassemblerBench>();
 
 
 
-            //BenchmarkRunner.Run<Int32SortDisassemblerBenchNotWorking>(); // Fails?!
-            //BenchmarkRunner.Run<RandomSort>();
+                //BenchmarkRunner.Run<Int32SortDisassemblerBenchNotWorking>(); // Fails?!
+                //BenchmarkRunner.Run<RandomSort>();
 
-            //BenchmarkRunner.Run<RandomShuffleSortBench>();
-            //BenchmarkRunner.Run<RandomSortBench>();
-            //BenchmarkRunner.Run<MedianOfThreeSortBench>();
-            //BenchmarkRunner.Run<IncrementingSortBench>();
-            //BenchmarkRunner.Run<DecrementingSortBench>();
-            //BenchmarkRunner.Run<ConstantSortBench>();
+                //BenchmarkRunner.Run<RandomShuffleSortBench>();
+                //BenchmarkRunner.Run<RandomSortBench>();
+                //BenchmarkRunner.Run<MedianOfThreeSortBench>();
+                //BenchmarkRunner.Run<IncrementingSortBench>();
+                //BenchmarkRunner.Run<DecrementingSortBench>();
+                //BenchmarkRunner.Run<ConstantSortBench>();
 
-            //BenchmarkRunner.Run<IntPtrHelperBenchmark>();
-            //BenchmarkRunner.Run<CompareAsm>();
+                //BenchmarkRunner.Run<IntPtrHelperBenchmark>();
+                //BenchmarkRunner.Run<CompareAsm>();
+            }
+            else
+            {
+                //SomeMethod();
+                var sut = new Int32StringSortBench();
+                sut.Filler = new ConstantSpanFiller();
+                sut.Length = 1000000;
+                sut.GlobalSetup();
+                sut.IterationSetup();
+                sut.SpanSort();
+                sut.IterationSetup();
+                sut.SpanSort();
 
-            //SomeMethod();
-            //var sut = new RandomSort();
-            //for (int i = 0; i < 150; i++)
-            //{
-            //    sut.IterationSetup();
-            //    sut.SpanSort();
-            //}
+                Console.WriteLine("Enter key...");
+                Console.ReadKey();
+
+                for (int i = 0; i < 100; i++)
+                {
+                    sut.IterationSetup();
+                    sut.SpanSort();
+                }
+            }
         }
     }
 }

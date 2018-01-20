@@ -1,17 +1,20 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27130.2010
+VisualStudioVersion = 15.0.27130.2020
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNetCross.Sorting", "src\DotNetCross.Sorting\DotNetCross.Sorting.csproj", "{48641357-FA01-4C5C-AF39-37406A1EC2F0}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNetCross.Sorting.Tests", "tests\DotNetCross.Sorting.Tests\DotNetCross.Sorting.Tests.csproj", "{B2B17C62-5C97-4B13-8CE1-ACE0D0B8F148}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotNetCross.Sorting.Benchmarks", "tests\DotNetCross.Sorting.Benchmarks\DotNetCross.Sorting.Benchmarks.csproj", "{A833DC17-F62F-473C-9A0A-B2B231297F98}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNetCross.Sorting.Benchmarks", "tests\DotNetCross.Sorting.Benchmarks\DotNetCross.Sorting.Benchmarks.csproj", "{A833DC17-F62F-473C-9A0A-B2B231297F98}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotNetCross.Sorting.Sequences", "src\DotNetCross.Sorting.Sequences\DotNetCross.Sorting.Sequences.csproj", "{AF9702D1-23F2-45DB-8DC0-BD31DD9C6BCF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNetCross.Sorting.Sequences", "src\DotNetCross.Sorting.Sequences\DotNetCross.Sorting.Sequences.csproj", "{AF9702D1-23F2-45DB-8DC0-BD31DD9C6BCF}"
 EndProject
 Global
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
