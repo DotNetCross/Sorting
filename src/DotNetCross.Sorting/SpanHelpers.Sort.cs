@@ -229,7 +229,7 @@ namespace System
             {
                 //void Swap<TKey, TValue>(ref TKey keys, ref TValue values, int i, int j);
                 //void Copy<TKey, TValue>(ref TKey keys, ref TValue values, int sourceIndex, int destinationIndex);
-                void Write<TKey, TValue>(TKey key, TValue value, int index, ref TKey keys, ref TValue values);
+                //void Write<TKey, TValue>(TKey key, TValue value, int index, ref TKey keys, ref TValue values);
 
                 //void Sort2<TKey, TValue, TComparer>(
                 //    ref TKey keys, ref TValue values, int i, int j, 
@@ -846,10 +846,14 @@ namespace System
                 Debug.Assert(lo >= 0);
 
                 //T d = keys[lo + i - 1];
-                ref TKey refLo = ref Unsafe.Add(ref keys, lo);
-                ref TKey refLoMinus1 = ref Unsafe.Subtract(ref refLo, 1);
-                TKey d = Unsafe.Add(ref refLoMinus1, i);
-                TValue dValue = ops.SortValues ? Unsafe.Add(ref values, lo + i - 1) : values;
+                ref TKey keysAtLo = ref Unsafe.Add(ref keys, lo);
+                ref TKey keysAtLoMinus1 = ref Unsafe.Subtract(ref keysAtLo, 1);
+
+                ref TValue valuesAtLoMinus1 = ref ops.SortValues ? ref Unsafe.Add(ref values, lo - 1) : ref values;
+
+                TKey d = Unsafe.Add(ref keysAtLoMinus1, i);
+                TValue dValue = ops.SortValues ? Unsafe.Add(ref valuesAtLoMinus1, i) : values;
+
                 var nHalf = n / 2;
                 while (i <= nHalf)
                 {
@@ -857,20 +861,20 @@ namespace System
 
                     //if (child < n && comparer(keys[lo + child - 1], keys[lo + child]) < 0)
                     if (child < n &&
-                        comparer.LessThan(Unsafe.Add(ref refLoMinus1, child), Unsafe.Add(ref refLo, child)))
+                        comparer.LessThan(Unsafe.Add(ref keysAtLoMinus1, child), Unsafe.Add(ref keysAtLo, child)))
                     {
                         ++child;
                     }
 
                     //if (!(comparer(d, keys[lo + child - 1]) < 0))
-                    if (!(comparer.LessThan(d, Unsafe.Add(ref refLoMinus1, child))))
+                    if (!(comparer.LessThan(d, Unsafe.Add(ref keysAtLoMinus1, child))))
                         break;
 
                     // keys[lo + i - 1] = keys[lo + child - 1]
-                    Unsafe.Add(ref refLoMinus1, i) = Unsafe.Add(ref refLoMinus1, child);
+                    Unsafe.Add(ref keysAtLoMinus1, i) = Unsafe.Add(ref keysAtLoMinus1, child);
                     if (ops.SortValues)
                     {
-                        Unsafe.Add(ref values, lo + i - 1) = Unsafe.Add(ref values, lo + child - 1);
+                        Unsafe.Add(ref valuesAtLoMinus1, i) = Unsafe.Add(ref valuesAtLoMinus1, child);
                     }
                     //ops.Copy(ref keys, ref values, lo + child - 1, lo + i - 1);
                     //Unsafe.Add(ref refLoMinus1, i) = Unsafe.Add(ref refLoMinus1, child);
@@ -879,7 +883,12 @@ namespace System
                 }
                 //keys[lo + i - 1] = d;
                 //Unsafe.Add(ref keys, lo + i - 1) = d;
-                ops.Write(d, dValue, lo + i - 1, ref keys, ref values);
+                Unsafe.Add(ref keysAtLoMinus1, i) = d;
+                if (ops.SortValues)
+                {
+                    Unsafe.Add(ref values, lo + i - 1) = dValue;
+                }
+                //ops.Write(d, dValue, lo + i - 1, ref keys, ref values);
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
