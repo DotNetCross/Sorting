@@ -40,7 +40,7 @@ namespace DotNetCross.Sorting.Benchmarks
     public class Int32SortBench : SortBench<int>
     {
         public Int32SortBench()
-            : base(maxLength: 3000000, new[] { 2, 3, 10, 100, 10000, 1000000 }, 
+            : base(maxLength: 3000000, new[] { 2, 3, 10, 100, 10000, 1000000 },
                    SpanFillers.Default, i => i)
         { }
     }
@@ -109,21 +109,18 @@ namespace DotNetCross.Sorting.Benchmarks
                 //BenchmarkRunner.Run<Int32SingleSortBench>();
                 //BenchmarkRunner.Run<Int32Int32SortBench>();
 
+                //
+                // Disassembler benchmarks
+                //
                 //BenchmarkRunner.Run<StringSortDisassemblerBench>();
                 //BenchmarkRunner.Run<Int32SortDisassemblerBench>();
 
 
 
                 //BenchmarkRunner.Run<Int32SortDisassemblerBenchNotWorking>(); // Fails?!
-                //BenchmarkRunner.Run<RandomSort>();
 
-                //BenchmarkRunner.Run<RandomShuffleSortBench>();
-                //BenchmarkRunner.Run<RandomSortBench>();
-                //BenchmarkRunner.Run<MedianOfThreeSortBench>();
-                //BenchmarkRunner.Run<IncrementingSortBench>();
-                //BenchmarkRunner.Run<DecrementingSortBench>();
-                //BenchmarkRunner.Run<ConstantSortBench>();
-
+                // Micro benchmarks
+                //
                 //BenchmarkRunner.Run<IntPtrHelperBenchmark>();
                 //BenchmarkRunner.Run<CompareAsm>();
             }
@@ -132,7 +129,7 @@ namespace DotNetCross.Sorting.Benchmarks
                 //SomeMethod();
                 var sut = new Int32StringSortBench();
                 sut.Filler = new ConstantSpanFiller();
-                sut.Length = 1000000;
+                sut.Length = 10; // 1000000;
                 sut.GlobalSetup();
                 sut.IterationSetup();
                 sut.SpanSort();
