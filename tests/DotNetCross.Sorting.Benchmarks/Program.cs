@@ -97,17 +97,17 @@ namespace DotNetCross.Sorting.Benchmarks
     {
         static void Main(string[] args)
         {
-            BenchmarkRunner.Run<Int32SortBench>();
-            BenchmarkRunner.Run<SingleSortBench>();
             BenchmarkRunner.Run<ComparableStructInt32SortBench>();
             BenchmarkRunner.Run<StringSortBench>();
+            BenchmarkRunner.Run<SingleSortBench>();
+            BenchmarkRunner.Run<Int32SortBench>();
 
-            BenchmarkRunner.Run<Int32Int32SortBench>();
-            BenchmarkRunner.Run<Int32SingleSortBench>();
             BenchmarkRunner.Run<Int32StringSortBench>();
+            BenchmarkRunner.Run<Int32SingleSortBench>();
+            BenchmarkRunner.Run<Int32Int32SortBench>();
 
-            BenchmarkRunner.Run<Int32SortDisassemblerBench>();
             BenchmarkRunner.Run<StringSortDisassemblerBench>();
+            BenchmarkRunner.Run<Int32SortDisassemblerBench>();
 
 
 
