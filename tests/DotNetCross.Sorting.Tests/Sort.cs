@@ -4,6 +4,7 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using DotNetCross.Sorting.Sequences;
 using Xunit;
 
 namespace System.SpanTests
@@ -106,6 +107,20 @@ namespace System.SpanTests
             }
         }
 
+        [Theory]
+        [Trait("MyTrait", "MyTraitValue")]
+        [InlineData(1024)]
+        public static void Sort_MedianOfThreeKiller_Int(int maxCount)
+        {
+            var filler = new MedianOfThreeKillerSpanFiller();
+            for (int count = 0; count < maxCount; count++)
+            {
+                var unsorted = new int[count];
+                filler.Fill(unsorted, count, i => i);
+                TestSortOverloads(unsorted);
+            }
+        }
+
         // TODO: OuterLoop
         [Fact]
         [Trait("MyTrait", "MyTraitValue")]
@@ -154,6 +169,21 @@ namespace System.SpanTests
             for (int count = 0; count < maxCount; count++)
             {
                 var unsorted = Enumerable.Range(0, count).Select(i => random.Next()).ToArray();
+                var unsortedItems = Enumerable.Range(0, count).ToArray();
+                TestSortOverloads(unsorted, unsortedItems);
+            }
+        }
+
+        [Theory]
+        [Trait("MyTrait", "MyTraitValue")]
+        [InlineData(1024)]
+        public static void SortWithItems_MedianOfThreeKiller_Int(int maxCount)
+        {
+            var filler = new MedianOfThreeKillerSpanFiller();
+            for (int count = 0; count < maxCount; count++)
+            {
+                var unsorted = new int[count];
+                filler.Fill(unsorted, count, i => i);
                 var unsortedItems = Enumerable.Range(0, count).ToArray();
                 TestSortOverloads(unsorted, unsortedItems);
             }

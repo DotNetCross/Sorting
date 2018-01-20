@@ -227,8 +227,8 @@ namespace System
             // Could move TKey generic type to the methods, would avoid the need to unfold specialized sort twice...
             internal interface ISortOps : ISortValues
             {
-                void Swap<TKey, TValue>(ref TKey keys, ref TValue values, int i, int j);
-                void Copy<TKey, TValue>(ref TKey keys, ref TValue values, int sourceIndex, int destinationIndex);
+                //void Swap<TKey, TValue>(ref TKey keys, ref TValue values, int i, int j);
+                //void Copy<TKey, TValue>(ref TKey keys, ref TValue values, int sourceIndex, int destinationIndex);
                 void Write<TKey, TValue>(TKey key, TValue value, int index, ref TKey keys, ref TValue values);
 
                 //void Sort2<TKey, TValue, TComparer>(
@@ -769,11 +769,16 @@ namespace System
 
                 // Sort lo, mid and hi appropriately, then pick mid as the pivot.
                 //TKey pivot = ops.Sort3(ref keys, ref values, lo, middle, hi, comparer);
-                TKey pivot = Sort3(ref keys, ref values, lo, middle, hi, comparer, ops);
+                //TKey pivot = Sort3(ref keys, ref values, lo, middle, hi, comparer, ops);
+                ref TKey miRef = ref Sort3(ref keys, ref values, lo, middle, hi, comparer, ops);
+                TKey pivot = miRef; 
 
                 int left = lo, right = hi - 1;  // We already partitioned lo and hi and put the pivot in hi - 1.  And we pre-increment & decrement below.
-                //Swap(ref miRef, ref Unsafe.Add(ref keys, right));
-                ops.Swap(ref keys, ref values, middle, right);
+                Swap(ref miRef, ref Unsafe.Add(ref keys, right));
+                if (ops.SortValues)
+                {
+                    Swap(ref values, middle, right);
+                }
 
                 while (left < right)
                 {
@@ -784,26 +789,21 @@ namespace System
                     if (left >= right)
                         break;
 
-                    //ref var keyA = ref Unsafe.Add(ref keys, i);
-                    //ref var keyB = ref Unsafe.Add(ref keys, j);
-                    //TKey keyTemp = keyA;
-                    //keyA = keyB;
-                    //keyB = keyTemp;
-
-                    // Indeces cannot be equal here
                     Swap(ref keys, left, right);
                     if (ops.SortValues)
                     {
                         Swap(ref values, left, right);
                     }
-                    // Below is really slow...
-                    //ops.Swap(ref keys, ref values, left, right);
                 }
                 // Put pivot in the right location.
                 right = (hi - 1);
                 if (left != right)
                 {
-                    ops.Swap(ref keys, ref values, left, right);
+                    Swap(ref keys, left, right);
+                    if (ops.SortValues)
+                    {
+                        Swap(ref values, left, right);
+                    }
                 }
                 return left;
             }
@@ -826,7 +826,11 @@ namespace System
                 }
                 for (int i = n; i > 1; --i)
                 {
-                    ops.Swap(ref keys, ref values, lo, lo + i - 1);
+                    Swap(ref keys, lo, lo + i - 1);
+                    if (ops.SortValues)
+                    {
+                        Swap(ref values, lo, lo + i - 1);
+                    }
                     DownHeap(ref keys, ref values, 1, i - 1, lo, comparer, ops);
                 }
             }
@@ -863,7 +867,12 @@ namespace System
                         break;
 
                     // keys[lo + i - 1] = keys[lo + child - 1]
-                    ops.Copy(ref keys, ref values, lo + child - 1, lo + i - 1);
+                    Unsafe.Add(ref refLoMinus1, i) = Unsafe.Add(ref refLoMinus1, child);
+                    if (ops.SortValues)
+                    {
+                        Unsafe.Add(ref values, lo + i - 1) = Unsafe.Add(ref values, lo + child - 1);
+                    }
+                    //ops.Copy(ref keys, ref values, lo + child - 1, lo + i - 1);
                     //Unsafe.Add(ref refLoMinus1, i) = Unsafe.Add(ref refLoMinus1, child);
 
                     i = child;
