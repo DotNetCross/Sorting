@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System;
+using System.Runtime.CompilerServices;
 using BenchmarkDotNet.Running;
 using DotNetCross.Sorting.Sequences;
 
@@ -20,10 +21,44 @@ namespace DotNetCross.Sorting.Benchmarks
             };
     }
 
+    public struct ComparableStructInt32 : IComparable<ComparableStructInt32>
+    {
+        public readonly int Value;
+
+        public ComparableStructInt32(int value)
+        {
+            Value = value;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public int CompareTo(ComparableStructInt32 other)
+        {
+            return this.Value.CompareTo(other.Value);
+        }
+    }
+
     public class Int32SortBench : SortBench<int>
     {
         public Int32SortBench()
             : base(maxLength: 3000000, SpanFillers.Default, i => i)
+        { }
+    }
+    public class SingleSortBench : SortBench<float>
+    {
+        public SingleSortBench()
+            : base(maxLength: 3000000, SpanFillers.Default, i => i)
+        { }
+    }
+    public class StringSortBench : SortBench<string>
+    {
+        public StringSortBench()
+            : base(maxLength: 3000000, SpanFillers.Default, i => i.ToString("D9"))
+        { }
+    }
+    public class ComparableStructInt32SortBench : SortBench<ComparableStructInt32>
+    {
+        public ComparableStructInt32SortBench()
+            : base(maxLength: 3000000, SpanFillers.Default, i => new ComparableStructInt32(i))
         { }
     }
 
@@ -31,6 +66,18 @@ namespace DotNetCross.Sorting.Benchmarks
     {
         public Int32Int32SortBench()
             : base(maxLength: 3000000, SpanFillers.Default, i => i, i => i)
+        { }
+    }
+    public class Int32SingleSortBench : SortBench<int, float>
+    {
+        public Int32SingleSortBench()
+            : base(maxLength: 3000000, SpanFillers.Default, i => i, i => i)
+        { }
+    }
+    public class Int32StringSortBench : SortBench<int, string>
+    {
+        public Int32StringSortBench()
+            : base(maxLength: 3000000, SpanFillers.Default, i => i, i => i.ToString("D9"))
         { }
     }
 
@@ -47,8 +94,13 @@ namespace DotNetCross.Sorting.Benchmarks
         static void Main(string[] args)
         {
             BenchmarkRunner.Run<Int32SortBench>();
+            BenchmarkRunner.Run<SingleSortBench>();
+            BenchmarkRunner.Run<StringSortBench>();
+            BenchmarkRunner.Run<ComparableStructInt32SortBench>();
 
             BenchmarkRunner.Run<Int32Int32SortBench>();
+            BenchmarkRunner.Run<Int32SingleSortBench>();
+            BenchmarkRunner.Run<Int32StringSortBench>();
 
             BenchmarkRunner.Run<Int32SortDisassemblerBench>();
 
