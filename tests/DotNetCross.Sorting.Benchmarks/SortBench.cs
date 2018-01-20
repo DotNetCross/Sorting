@@ -17,9 +17,10 @@ namespace DotNetCross.Sorting.Benchmarks
         readonly TKey[] _filled;
         readonly TKey[] _work;
 
-        public SortBench(int maxLength, ISpanFiller[] fillers, Func<int, TKey> toValue)
+        public SortBench(int maxLength, int[] sliceLengths, ISpanFiller[] fillers, Func<int, TKey> toValue)
         {
             _maxLength = maxLength;
+            Lengths = sliceLengths;
             _paramFillers = fillers.Select(f => new SpanFillerParam(f)).ToArray();
             _toValue = toValue;
             _filled = new TKey[_maxLength];
@@ -34,7 +35,7 @@ namespace DotNetCross.Sorting.Benchmarks
         [ParamsSource(nameof(Lengths))]
         public int Length { get; set; }
 
-        public IEnumerable<int> Lengths => new[] { 2, 3, 10, 100, 10000, 1000000 };
+        public IEnumerable<int> Lengths { get; }
 
         [GlobalSetup]
         public void GlobalSetup()

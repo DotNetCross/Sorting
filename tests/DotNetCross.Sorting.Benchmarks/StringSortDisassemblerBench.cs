@@ -7,13 +7,13 @@ namespace DotNetCross.Sorting.Benchmarks
 {
     // Why does this work but not generic SortDissassemblerBench
     [Config(typeof(SortDisassemblerBenchConfig))]
-    public class Int32SortDisassemblerBench
+    public class StringSortDisassemblerBench
     {
-        const int MaxLength = 3 * 1000 * 1000;
-        static readonly int[] _filled = new int[MaxLength];
-        int[] _work = new int[MaxLength];
+        const int MaxLength = 3 * 100 * 100;
+        static readonly string[] _filled = new string[MaxLength];
+        string[] _work = new string[MaxLength];
 
-        public Int32SortDisassemblerBench()
+        public StringSortDisassemblerBench()
         {
             Length = 1000000;
         }
@@ -25,7 +25,7 @@ namespace DotNetCross.Sorting.Benchmarks
         {
             var filler = new MedianOfThreeKillerSpanFiller();
             Console.WriteLine($"// {nameof(GlobalSetup)} Filling {MaxLength} with {filler.GetType().Name} for {Length} slice run");
-            filler.Fill(_filled, Length, i => i);
+            filler.Fill(_filled, Length, i => i.ToString("D9"));
         }
 
         [IterationSetup]
@@ -42,7 +42,7 @@ namespace DotNetCross.Sorting.Benchmarks
             // NOTE: IF FOR LOOP REMOVED CODE-GEN IS COMPLETELY DIFFERENT
             for (int i = 0; i <= MaxLength - Length; i += Length)
             {
-                new Span<int>(_work, i, Length).Sort();
+                new Span<string>(_work, i, Length).Sort();
             }
         }
     }

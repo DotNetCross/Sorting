@@ -72,16 +72,6 @@ namespace System
         //
         // Type specific LessThanComparer(s) to ensure optimal code-gen
         //
-
-        // Could this be done better by simply casting? and being generic?
-        // This way we do not need special casing for TValue...
-        internal struct GenericSByteLessThanComparer<T> : ILessThanComparer<T>
-        {
-            // Does this trick work for this as well?
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public bool LessThan(T x, T y) => ((sbyte)(object)x) < ((sbyte)(object)y);
-        }
-
         internal struct SByteLessThanComparer : ILessThanComparer<sbyte>
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -168,9 +158,6 @@ namespace System
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public int Compare(T x, T y) => m_comparison(x, y);
-
-            //[MethodImpl(MethodImplOptions.AggressiveInlining)]
-            //public bool LessThan(T x, T y) => m_comparison(x, y) < 0;
         }
 
         // https://github.com/dotnet/coreclr/blob/master/src/mscorlib/src/System/Collections/Generic/ArraySortHelper.cs
