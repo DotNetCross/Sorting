@@ -22,7 +22,11 @@ namespace System
             if (!TrySortSpecialized(
                 ref keys.DangerousGetPinnableReference(), keys.Length))
             {
-                Sort(keys, Comparer<TKey>.Default);
+                Span<Void> values = default;
+                DefaultSpanSortHelper<TKey, Void>.s_default.Sort(
+                    ref keys.DangerousGetPinnableReference(),
+                    ref values.DangerousGetPinnableReference(),
+                    keys.Length);
             }
         }
 
@@ -764,26 +768,9 @@ namespace System
     {
         public void Sort(ref TKey keys, ref TValue values, int length)
         {
-            // Add a try block here to detect IComparers (or their
-            // underlying IComparables, etc) that are bogus.
-            //
-            // TODO: Do we need the try/catch?
-            //try
-            //{
-                SpanSortHelpers.Sort(
-                    ref keys, ref values, length,
-                    new SpanSortHelpers.ComparerLessThanComparer<TKey, IComparer<TKey>>(Comparer<TKey>.Default));
-            //}
-            //catch (IndexOutOfRangeException e)
-            //{
-            //    throw e;
-            //    //IntrospectiveSortUtilities.ThrowOrIgnoreBadComparer(comparer);
-            //}
-            //catch (Exception e)
-            //{
-            //    throw e;
-            //    //throw new InvalidOperationException(SR.InvalidOperation_IComparerFailed, e);
-            //}
+            SpanSortHelpers.Sort(
+                ref keys, ref values, length,
+                new SpanSortHelpers.ComparerLessThanComparer<TKey, IComparer<TKey>>(Comparer<TKey>.Default));
         }
     }
 
@@ -793,29 +780,9 @@ namespace System
     {
         public void Sort(ref TKey keys, ref TValue values, int length)
         {
-            // Add a try block here to detect IComparers (or their
-            // underlying IComparables, etc) that are bogus.
-            //
-            // TODO: Do we need the try/catch?
-            //try
-            //{
-                if (!SpanSortHelpers.TrySortSpecialized(ref keys, ref values, length))
-                {
-                    SpanSortHelpers.Sort(
-                        ref keys, ref values, length,
-                        new SpanSortHelpers.ComparableLessThanComparer<TKey>());
-                }
-            //}
-            //catch (IndexOutOfRangeException e)
-            //{
-            //    throw e;
-            //    //IntrospectiveSortUtilities.ThrowOrIgnoreBadComparer(comparer);
-            //}
-            //catch (Exception e)
-            //{
-            //    throw e;
-            //    //throw new InvalidOperationException(SR.InvalidOperation_IComparerFailed, e);
-            //}
+            SpanSortHelpers.Sort(
+                ref keys, ref values, length,
+                new SpanSortHelpers.ComparableLessThanComparer<TKey>());
         }
     }
 
