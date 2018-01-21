@@ -121,6 +121,20 @@ namespace System.SpanTests
             }
         }
 
+        [Theory]
+        [Trait("MyTrait", "MyTraitValue")]
+        [InlineData(64)]
+        public static void Sort_MedianOfThreeKiller_String(int maxCount)
+        {
+            var filler = new MedianOfThreeKillerSpanFiller();
+            for (int count = 0; count < maxCount; count++)
+            {
+                var unsorted = new string[count];
+                filler.Fill(unsorted, count, i => i.ToString("D9"));
+                TestSortOverloads(unsorted);
+            }
+        }
+
         // TODO: OuterLoop
         [Fact]
         [Trait("MyTrait", "MyTraitValue")]

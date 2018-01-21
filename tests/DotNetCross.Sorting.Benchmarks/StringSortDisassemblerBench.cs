@@ -9,13 +9,13 @@ namespace DotNetCross.Sorting.Benchmarks
     [Config(typeof(SortDisassemblerBenchConfig))]
     public class StringSortDisassemblerBench
     {
-        const int MaxLength = 3 * 100 * 100;
+        const int MaxLength = 6 * 100 * 100;
         static readonly string[] _filled = new string[MaxLength];
         string[] _work = new string[MaxLength];
 
         public StringSortDisassemblerBench()
         {
-            Length = 1000000;
+            Length = 1000;
         }
 
         public int Length { get; set; }

@@ -194,7 +194,7 @@ namespace System
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Sort<T>(this Span<T> span)
         {
-            SpanHelpers.Sort(span);
+            SpanSortHelpers.Sort(span);
         }
 
         /// <summary>
@@ -205,7 +205,7 @@ namespace System
         public static void Sort<T, TComparer>(this Span<T> span, TComparer comparer)
            where TComparer : IComparer<T>
         {
-            SpanHelpers.Sort(span, comparer);
+            SpanSortHelpers.Sort(span, comparer);
         }
 
         /// <summary>
@@ -218,7 +218,7 @@ namespace System
             if (comparison == null)
                 ThrowHelper.ThrowArgumentNullException(ExceptionArgument.comparison);
 
-            SpanHelpers.Sort(span, new SpanHelpers.ComparisonComparer<T>(comparison));
+            SpanSortHelpers.Sort(span, new SpanSortHelpers.ComparisonComparer<T>(comparison));
         }
 
         /// <summary>
@@ -232,7 +232,7 @@ namespace System
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Sort<TKey, TValue>(this Span<TKey> keys, Span<TValue> items)
         {
-            SpanHelpers.Sort(keys, items);
+            SpanSortHelpers.Sort(keys, items);
         }
 
         /// <summary>
@@ -247,7 +247,7 @@ namespace System
            Span<TValue> items, TComparer comparer)
            where TComparer : IComparer<TKey>
         {
-            SpanHelpers.Sort(keys, items, comparer);
+            SpanSortHelpers.Sort(keys, items, comparer);
         }
 
         /// <summary>
@@ -261,7 +261,7 @@ namespace System
         public static void Sort<TKey, TValue>(this Span<TKey> keys,
            Span<TValue> items, Comparison<TKey> comparison)
         {
-            SpanHelpers.Sort(keys, items, new SpanHelpers.ComparisonComparer<TKey>(comparison));
+            SpanSortHelpers.Sort(keys, items, new SpanSortHelpers.ComparisonComparer<TKey>(comparison));
         }
     }
 }

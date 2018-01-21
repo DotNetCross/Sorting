@@ -15,7 +15,7 @@ namespace DotNetCross.Sorting.Benchmarks
 
         public Int32SortDisassemblerBench()
         {
-            Length = 1000000;
+            Length = 100000;
         }
 
         public int Length { get; set; }
