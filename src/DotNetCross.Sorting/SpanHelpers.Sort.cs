@@ -42,8 +42,7 @@ namespace System
         internal static void Sort<TKey, TValue>(this Span<TKey> keys, Span<TValue> values)
         {
             if (keys.Length != values.Length)
-                // Add new exception to ThrowHelper
-                throw new ArgumentException("lengths must be equal");
+                ThrowHelper.ThrowArgumentException_ItemsMustHaveSameLength();
 
             // PERF: Try specialized here for optimal performance
             // Code-gen is weird unless used in loop outside
