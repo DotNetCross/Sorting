@@ -727,6 +727,99 @@ namespace System
         }
     }
 
+
+    internal static class DefaultSpanSortHelper<TKey, TValue>
+    {
+        internal static readonly ISpanSortHelper<TKey, TValue> s_default = CreateSortHelper();
+
+        private static ISpanSortHelper<TKey, TValue> CreateSortHelper()
+        {
+            if (typeof(IComparable<TKey>).IsAssignableFrom(typeof(TKey)))
+            {
+                // TODO: Is there a faster way? A way without heap alloc? 
+                // Albeit, this only happens once for each type combination
+                var ctor = typeof(ComparableSpanSortHelper<,>)
+                    .MakeGenericType(new Type[] { typeof(TKey), typeof(TValue) })
+                    .GetConstructor(Array.Empty<Type>());
+
+                return (ISpanSortHelper<TKey, TValue>)ctor.Invoke(Array.Empty<object>());
+                // coreclr does the following:
+                //return (IArraySortHelper<T, TComparer>)
+                //    RuntimeTypeHandle.Allocate(
+                //        .TypeHandle.Instantiate());
+            }
+            else
+            {
+                return new SpanSortHelper<TKey, TValue>();
+            }
+        }
+    }
+
+    internal interface ISpanSortHelper<TKey, TValue>
+    {
+        void Sort(ref TKey keys, ref TValue values, int length);
+    }
+
+    internal class SpanSortHelper<TKey, TValue> : ISpanSortHelper<TKey, TValue>
+    {
+        public void Sort(ref TKey keys, ref TValue values, int length)
+        {
+            // Add a try block here to detect IComparers (or their
+            // underlying IComparables, etc) that are bogus.
+            //
+            // TODO: Do we need the try/catch?
+            //try
+            //{
+                SpanSortHelpers.Sort(
+                    ref keys, ref values, length,
+                    new SpanSortHelpers.ComparerLessThanComparer<TKey, IComparer<TKey>>(Comparer<TKey>.Default));
+            //}
+            //catch (IndexOutOfRangeException e)
+            //{
+            //    throw e;
+            //    //IntrospectiveSortUtilities.ThrowOrIgnoreBadComparer(comparer);
+            //}
+            //catch (Exception e)
+            //{
+            //    throw e;
+            //    //throw new InvalidOperationException(SR.InvalidOperation_IComparerFailed, e);
+            //}
+        }
+    }
+
+    internal class ComparableSpanSortHelper<TKey, TValue>
+        : ISpanSortHelper<TKey, TValue>
+        where TKey : IComparable<TKey>
+    {
+        public void Sort(ref TKey keys, ref TValue values, int length)
+        {
+            // Add a try block here to detect IComparers (or their
+            // underlying IComparables, etc) that are bogus.
+            //
+            // TODO: Do we need the try/catch?
+            //try
+            //{
+                if (!SpanSortHelpers.TrySortSpecialized(ref keys, ref values, length))
+                {
+                    SpanSortHelpers.Sort(
+                        ref keys, ref values, length,
+                        new SpanSortHelpers.ComparableLessThanComparer<TKey>());
+                }
+            //}
+            //catch (IndexOutOfRangeException e)
+            //{
+            //    throw e;
+            //    //IntrospectiveSortUtilities.ThrowOrIgnoreBadComparer(comparer);
+            //}
+            //catch (Exception e)
+            //{
+            //    throw e;
+            //    //throw new InvalidOperationException(SR.InvalidOperation_IComparerFailed, e);
+            //}
+        }
+    }
+
+
     internal static class DefaultSpanSortHelper<TKey, TValue, TComparer>
         where TComparer : IComparer<TKey>
     {
