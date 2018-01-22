@@ -2,7 +2,7 @@
 
 namespace DotNetCross.Sorting.Sequences
 {
-    public struct ConstantSpanFiller : ISpanFiller
+    public class ConstantSpanFiller : ISpanFiller
     {
         readonly int _fill;
 

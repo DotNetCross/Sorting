@@ -2,7 +2,7 @@
 
 namespace DotNetCross.Sorting.Sequences
 {
-    public struct MedianOfThreeKillerSpanFiller : ISpanFiller
+    public class MedianOfThreeKillerSpanFiller : ISpanFiller
     {
         public void Fill<T>(Span<T> span, int sliceLength, Func<int, T> toValue)
         {

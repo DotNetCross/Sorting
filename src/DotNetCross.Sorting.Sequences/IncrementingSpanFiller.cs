@@ -2,7 +2,7 @@
 
 namespace DotNetCross.Sorting.Sequences
 {
-    public struct IncrementingSpanFiller : ISpanFiller
+    public class IncrementingSpanFiller : ISpanFiller
     {
         public void Fill<T>(Span<T> span, int sliceLength, Func<int, T> toValue)
         {

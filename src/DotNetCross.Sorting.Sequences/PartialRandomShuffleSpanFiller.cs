@@ -2,7 +2,7 @@
 
 namespace DotNetCross.Sorting.Sequences
 {
-    public struct PartialRandomShuffleSpanFiller : ISpanFiller
+    public class PartialRandomShuffleSpanFiller : ISpanFiller
     {
         readonly ISpanFiller _spanFiller;
         readonly double _fractionRandomShuffles;
