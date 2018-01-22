@@ -1,4 +1,5 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+﻿//#define USE_NATIVE_INTS
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -9,6 +10,35 @@ using System.Runtime.CompilerServices;
 //#if !netstandard
 //using Internal.Runtime.CompilerServices;
 //#endif
+
+#if USE_NATIVE_INTS
+using nint = System.IntPtr;
+using nuint = System.UIntPtr;
+#else
+using nint = System.Int32;
+using nuint = System.UInt32;
+#endif
+namespace System
+{
+    internal static class Int32Helper
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public unsafe static bool GreaterThan(this int a, int b)
+        {
+            return a > b;
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public unsafe static bool GreaterThanEqual(this int a, int b)
+        {
+            return a >= b;
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public unsafe static bool LessThan(this int a, int b)
+        {
+            return a < b;
+        }
+    }
+}
 
 namespace System
 {
@@ -409,7 +439,7 @@ namespace System
                         return;
                     }
 
-                    InsertionSort(ref keys, ref values, lo, hi, comparer);
+                    InsertionSort(ref keys, ref values, (nint)lo, (nint)hi, comparer);
                     return;
                 }
 
@@ -453,20 +483,29 @@ namespace System
             ref TKey miRef = ref Sort3(ref keys, ref values, lo, middle, hi, comparer);
             TKey pivot = miRef;
 
-            int left = lo, right = hi - 1;  // We already partitioned lo and hi and put the pivot in hi - 1.  And we pre-increment & decrement below.
+            nint mid = (nint)middle;
+            nint left = (nint)lo, right = (nint)(hi - 1);  // We already partitioned lo and hi and put the pivot in hi - 1.  And we pre-increment & decrement below.
             Swap(ref miRef, ref Unsafe.Add(ref keys, right));
             if (typeof(TValue) != typeof(Void))
             {
-                Swap(ref values, middle, right);
+                Swap(ref values, mid, right);
             }
 
-            while (left < right)
+            while (left.LessThan(right))// < right)
             {
-                while (comparer.LessThan(Unsafe.Add(ref keys, ++left), pivot)) ;
+                do
+                {
+                    left += 1;
+                }
+                while (comparer.LessThan(Unsafe.Add(ref keys, left), pivot)) ;
 
-                while (comparer.LessThan(pivot, Unsafe.Add(ref keys, --right))) ;
+                do
+                {
+                    right -= 1;
+                }
+                while (comparer.LessThan(pivot, Unsafe.Add(ref keys, right))) ;
 
-                if (left >= right)
+                if (!left.LessThan(right)) //left >= right)
                     break;
 
                 Swap(ref keys, left, right);
@@ -476,7 +515,7 @@ namespace System
                 }
             }
             // Put pivot in the right location.
-            right = (hi - 1);
+            right = (nint)(hi - 1);
             if (left != right)
             {
                 Swap(ref keys, left, right);
@@ -485,7 +524,7 @@ namespace System
                     Swap(ref values, left, right);
                 }
             }
-            return left;
+            return (int)left;
         }
 
         private static void HeapSort<TKey, TValue, TComparer>(
@@ -567,31 +606,31 @@ namespace System
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void InsertionSort<TKey, TValue, TComparer>(
-            ref TKey keys, ref TValue values, int lo, int hi,
+            ref TKey keys, ref TValue values, nint lo, nint hi,
             TComparer comparer)
             where TComparer : ILessThanComparer<TKey>
         {
-            Debug.Assert(keys != null);
-            Debug.Assert(lo >= 0);
-            Debug.Assert(hi >= lo);
+            //Debug.Assert(keys != null);
+            //Debug.Assert(lo >= 0);
+            //Debug.Assert(hi >= lo);
 
-            for (int i = lo; i < hi; i++)
+            for (nint i = lo; i.LessThan(hi); i += 1)
             {
-                int j = i;
-                int jPlus = j + 1;
+                nint j = i;
+                nint jPlus = j + 1;
                 //t = keys[i + 1];
                 var t = Unsafe.Add(ref keys, jPlus);
                 var v = typeof(TValue) != typeof(Void) ? Unsafe.Add(ref values, jPlus) : default;
                 // Need local ref that can be updated
-                while (j >= lo && comparer.LessThan(t, Unsafe.Add(ref keys, j)))
+                while (j.GreaterThanEqual(lo) && comparer.LessThan(t, Unsafe.Add(ref keys, j)))
                 {
                     Unsafe.Add(ref keys, jPlus) = Unsafe.Add(ref keys, j);
                     if (typeof(TValue) != typeof(Void))
                     {
                         Unsafe.Add(ref values, jPlus) = Unsafe.Add(ref values, j);
                     }
-                    --jPlus;
-                    --j;
+                    jPlus -= 1;
+                    j -= 1;
                 }
                 Unsafe.Add(ref keys, jPlus) = t;
                 if (typeof(TValue) != typeof(Void))
@@ -599,6 +638,28 @@ namespace System
                     Unsafe.Add(ref values, jPlus) = v;
                 }
             }
+            //for (int i = lo; i < hi; i++)
+            //{
+            //    //t = keys[i + 1];
+            //    var t = Unsafe.Add(ref keys, i + 1);
+            //    var v = typeof(TValue) != typeof(Void) ? Unsafe.Add(ref values, i + 1) : default;
+            //    // Need local ref that can be updated
+            //    int j = i;
+            //    while (j >= lo && comparer.LessThan(t, Unsafe.Add(ref keys, j)))
+            //    {
+            //        Unsafe.Add(ref keys, j + 1) = Unsafe.Add(ref keys, j);
+            //        if (typeof(TValue) != typeof(Void))
+            //        {
+            //            Unsafe.Add(ref values, j + 1) = Unsafe.Add(ref values, j);
+            //        }
+            //        --j;
+            //    }
+            //    Unsafe.Add(ref keys, j + 1) = t;
+            //    if (typeof(TValue) != typeof(Void))
+            //    {
+            //        Unsafe.Add(ref values, j + 1) = v;
+            //    }
+            //}
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

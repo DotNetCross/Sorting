@@ -52,6 +52,14 @@ namespace System
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public unsafe static bool GreaterThan(this IntPtr a, IntPtr b)
+        {
+            return (sizeof(IntPtr) == sizeof(int))
+                ? (int)a > (int)b
+                : (long)a > (long)b;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public unsafe static bool GreaterThanEqual(this IntPtr a, IntPtr b)
         {
             return (sizeof(IntPtr) == sizeof(int))
