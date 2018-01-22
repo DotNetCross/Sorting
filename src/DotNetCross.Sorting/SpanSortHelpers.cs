@@ -617,25 +617,28 @@ namespace System
             for (nint i = lo; i.LessThan(hi); i += 1)
             {
                 nint j = i;
-                nint jPlus = j + 1;
                 //t = keys[i + 1];
-                var t = Unsafe.Add(ref keys, jPlus);
-                var v = typeof(TValue) != typeof(Void) ? Unsafe.Add(ref values, jPlus) : default;
+                var t = Unsafe.Add(ref keys, j + 1);
                 // Need local ref that can be updated
-                while (j.GreaterThanEqual(lo) && comparer.LessThan(t, Unsafe.Add(ref keys, j)))
+                if (j.GreaterThanEqual(lo) && comparer.LessThan(t, Unsafe.Add(ref keys, j)))
                 {
-                    Unsafe.Add(ref keys, jPlus) = Unsafe.Add(ref keys, j);
+                    var v = typeof(TValue) != typeof(Void) ? Unsafe.Add(ref values, j + 1) : default;
+                    do
+                    {
+                        Unsafe.Add(ref keys, j + 1) = Unsafe.Add(ref keys, j);
+                        if (typeof(TValue) != typeof(Void))
+                        {
+                            Unsafe.Add(ref values, j + 1) = Unsafe.Add(ref values, j);
+                        }
+                        j -= 1;
+                    }
+                    while (j.GreaterThanEqual(lo) && comparer.LessThan(t, Unsafe.Add(ref keys, j)));
+
+                    Unsafe.Add(ref keys, j + 1) = t;
                     if (typeof(TValue) != typeof(Void))
                     {
-                        Unsafe.Add(ref values, jPlus) = Unsafe.Add(ref values, j);
+                        Unsafe.Add(ref values, j + 1) = v;
                     }
-                    jPlus -= 1;
-                    j -= 1;
-                }
-                Unsafe.Add(ref keys, jPlus) = t;
-                if (typeof(TValue) != typeof(Void))
-                {
-                    Unsafe.Add(ref values, jPlus) = v;
                 }
             }
             //for (int i = lo; i < hi; i++)
