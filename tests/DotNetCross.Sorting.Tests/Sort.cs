@@ -329,6 +329,17 @@ namespace System.SpanTests
 
             Assert.Equal(expected, array);
         }
+        private static void TestCustomComparerSpan<T>(T[] array)
+            where T : IComparable<T>
+        {
+            var span = new Span<T>(array);
+            var expected = (T[])array.Clone();
+            Array.Sort(expected);
+
+            span.Sort(new CustomComparer<T>());
+
+            Assert.Equal(expected, array);
+        }
 
 
         private static void TestSortOverloads<TKey, TValue>(TKey[] keys, TValue[] values)
@@ -337,6 +348,7 @@ namespace System.SpanTests
             TestSpan(keys, values);
             TestComparerSpan(keys, values);
             TestComparisonSpan(keys, values);
+            TestCustomComparerSpan(keys, values);
         }
 
         private static void TestSpan<TKey, TValue>(TKey[] keys, TValue[] values)
@@ -380,6 +392,26 @@ namespace System.SpanTests
 
             Assert.Equal(expectedKeys, keys);
             Assert.Equal(expectedValues, values);
+        }
+        private static void TestCustomComparerSpan<TKey, TValue>(TKey[] keys, TValue[] values)
+            where TKey : IComparable<TKey>
+        {
+            var expectedKeys = (TKey[])keys.Clone();
+            var expectedValues = (TValue[])values.Clone();
+            Array.Sort(expectedKeys, expectedValues);
+
+            var spanKeys = new Span<TKey>(keys);
+            var spanValues = new Span<TValue>(values);
+            spanKeys.Sort(spanValues, new CustomComparer<TKey>());
+
+            Assert.Equal(expectedKeys, keys);
+            Assert.Equal(expectedValues, values);
+        }
+
+        internal struct CustomComparer<T> : IComparer<T>
+            where T : IComparable<T>
+        {
+            public int Compare(T x, T y) => x.CompareTo(y);
         }
     }
 }
