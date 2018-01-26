@@ -13,6 +13,7 @@ using System.Runtime.InteropServices;
 //#endif
 
 using static System.SpanSortHelpersHelperTypes;
+using S = System.SpanSortHelpers;
 
 #if USE_NATIVE_INTS
 using nint = System.IntPtr;
@@ -21,31 +22,10 @@ using nuint = System.UIntPtr;
 using nint = System.Int32;
 using nuint = System.UInt32;
 #endif
-namespace System
-{
-    internal static class Int32Helper
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static bool GreaterThan(this int a, int b)
-        {
-            return a > b;
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static bool GreaterThanEqual(this int a, int b)
-        {
-            return a >= b;
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static bool LessThan(this int a, int b)
-        {
-            return a < b;
-        }
-    }
-}
 
 namespace System
 {
-    internal static class SpanSortHelpers
+    internal static partial class SpanSortHelpers
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static void Sort<TKey>(this Span<TKey> keys)
@@ -117,12 +97,6 @@ namespace System
 
         [StructLayout(LayoutKind.Explicit, Size = 0)]
         internal struct Void { }
-
-        // Code-gen was poor when using this...
-        //internal static class SortValues<T>
-        //{
-        //    public static readonly bool Yes = typeof(T) != typeof(Void);
-        //}
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static bool TrySortSpecialized<TKey>(
@@ -267,12 +241,6 @@ namespace System
             in TComparer comparer)
             where TComparer : ILessThanComparer<TKey>
         {
-            // Note how old used the full length of keys array to limit, seems like a bug.
-            //IntroSort(keys, left, length + left - 1, 2 * IntrospectiveSortUtilities.FloorLog2PlusOne(keys.Length), comparer);
-            // In native code this is done right, so only for when using managed code:
-            // https://github.com/dotnet/coreclr/blob/master/src/mscorlib/src/System/Collections/Generic/ArraySortHelper.cs
-            // https://github.com/dotnet/coreclr/blob/master/src/classlibnative/bcltype/arrayhelpers.h#L139
-            // This appears to have been fixed
             var depthLimit = 2 * FloorLog2PlusOne(length);
             IntroSort(ref keys, ref values, 0, length - 1, depthLimit, comparer);
             //IntroSort(ref keys, length - 1, depthLimit, comparer);
@@ -290,24 +258,6 @@ namespace System
             while (n > 0);
 
             return result;
-
-            // Could be computed as below, but overhead for small lengths probably too big
-            // https://stackoverflow.com/questions/11376288/fast-computing-of-log2-for-64-bit-integers
-            //const int tab32[32] = {
-            //     0,  9,  1, 10, 13, 21,  2, 29,
-            //    11, 14, 16, 18, 22, 25,  3, 30,
-            //     8, 12, 20, 28, 15, 17, 24,  7,
-            //    19, 27, 23,  6, 26,  5,  4, 31};
-
-            //int log2_32(uint32_t value)
-            //{
-            //    value |= value >> 1;
-            //    value |= value >> 2;
-            //    value |= value >> 4;
-            //    value |= value >> 8;
-            //    value |= value >> 16;
-            //    return tab32[(uint32_t)(value * 0x07C4ACDD) >> 27];
-            //}
         }
 
         private static void IntroSort<TKey, TValue, TComparer>(
@@ -810,190 +760,190 @@ namespace System
             a = b;
             b = temp;
         }
-    }
 
 
-    internal static class DefaultSpanSortHelper<TKey, TValue>
-    {
-        internal static readonly ISpanSortHelper<TKey, TValue> s_default = CreateSortHelper();
-
-        private static ISpanSortHelper<TKey, TValue> CreateSortHelper()
+        internal static class DefaultSpanSortHelper<TKey, TValue>
         {
-            if (typeof(IComparable<TKey>).IsAssignableFrom(typeof(TKey)))
+            internal static readonly ISpanSortHelper<TKey, TValue> s_default = CreateSortHelper();
+
+            private static ISpanSortHelper<TKey, TValue> CreateSortHelper()
             {
-                // TODO: Is there a faster way? A way without heap alloc? 
-                // Albeit, this only happens once for each type combination
-                var ctor = typeof(ComparableSpanSortHelper<,>)
-                    .MakeGenericType(new Type[] { typeof(TKey), typeof(TValue) })
-                    .GetConstructor(Array.Empty<Type>());
+                if (typeof(IComparable<TKey>).IsAssignableFrom(typeof(TKey)))
+                {
+                    // TODO: Is there a faster way? A way without heap alloc? 
+                    // Albeit, this only happens once for each type combination
+                    var ctor = typeof(ComparableSpanSortHelper<,>)
+                        .MakeGenericType(new Type[] { typeof(TKey), typeof(TValue) })
+                        .GetConstructor(Array.Empty<Type>());
 
-                return (ISpanSortHelper<TKey, TValue>)ctor.Invoke(Array.Empty<object>());
-                // coreclr does the following:
-                //return (IArraySortHelper<T, TComparer>)
-                //    RuntimeTypeHandle.Allocate(
-                //        .TypeHandle.Instantiate());
-            }
-            else
-            {
-                return new SpanSortHelper<TKey, TValue>();
-            }
-        }
-    }
-
-    internal interface ISpanSortHelper<TKey, TValue>
-    {
-        void Sort(ref TKey keys, ref TValue values, int length);
-    }
-
-    internal class SpanSortHelper<TKey, TValue> : ISpanSortHelper<TKey, TValue>
-    {
-        public void Sort(ref TKey keys, ref TValue values, int length)
-        {
-            SpanSortHelpers.Sort(
-                ref keys, ref values, length,
-                new ComparerLessThanComparer<TKey, IComparer<TKey>>(Comparer<TKey>.Default));
-        }
-    }
-
-    internal class ComparableSpanSortHelper<TKey, TValue>
-        : ISpanSortHelper<TKey, TValue>
-        where TKey : IComparable<TKey>
-    {
-        public void Sort(ref TKey keys, ref TValue values, int length)
-        {
-            SpanSortHelpers.Sort(
-                ref keys, ref values, length,
-                new ComparableLessThanComparer<TKey>());
-        }
-    }
-
-
-    internal static class DefaultSpanSortHelper<TKey, TValue, TComparer>
-        where TComparer : IComparer<TKey>
-    {
-        //private static volatile ISpanSortHelper<T, TComparer> defaultArraySortHelper;
-        //public static ISpanSortHelper<T, TComparer> Default
-        //{
-        //    get
-        //    {
-        //        ISpanSortHelper<T, TComparer> sorter = defaultArraySortHelper;
-        //        if (sorter == null)
-        //            sorter = CreateArraySortHelper();
-        //        return sorter;
-        //    }
-        //}
-        internal static readonly ISpanSortHelper<TKey, TValue, TComparer> s_default = CreateSortHelper();
-
-        private static ISpanSortHelper<TKey, TValue, TComparer> CreateSortHelper()
-        {
-            if (typeof(IComparable<TKey>).IsAssignableFrom(typeof(TKey)))
-            {
-                // TODO: Is there a faster way? A way without heap alloc? 
-                // Albeit, this only happens once for each type combination
-                var ctor = typeof(ComparableSpanSortHelper<,,>)
-                    .MakeGenericType(new Type[] { typeof(TKey), typeof(TValue), typeof(TComparer) })
-                    .GetConstructor(Array.Empty<Type>());
-
-                return (ISpanSortHelper<TKey, TValue, TComparer>)ctor.Invoke(Array.Empty<object>());
-                // coreclr does the following:
-                //return (IArraySortHelper<T, TComparer>)
-                //    RuntimeTypeHandle.Allocate(
-                //        .TypeHandle.Instantiate());
-            }
-            else
-            {
-                return new SpanSortHelper<TKey, TValue, TComparer>();
+                    return (ISpanSortHelper<TKey, TValue>)ctor.Invoke(Array.Empty<object>());
+                    // coreclr does the following:
+                    //return (IArraySortHelper<T, TComparer>)
+                    //    RuntimeTypeHandle.Allocate(
+                    //        .TypeHandle.Instantiate());
+                }
+                else
+                {
+                    return new SpanSortHelper<TKey, TValue>();
+                }
             }
         }
-    }
 
-    // https://github.com/dotnet/coreclr/blob/master/src/mscorlib/src/System/Collections/Generic/ArraySortHelper.cs
-    internal interface ISpanSortHelper<TKey, TValue, TComparer>
-        where TComparer : IComparer<TKey>
-    {
-        void Sort(ref TKey keys, ref TValue values, int length, in TComparer comparer);
-    }
-
-    internal class SpanSortHelper<TKey, TValue, TComparer> : ISpanSortHelper<TKey, TValue, TComparer>
-        where TComparer : IComparer<TKey>
-    {
-        public void Sort(ref TKey keys, ref TValue values, int length, in TComparer comparer)
+        internal interface ISpanSortHelper<TKey, TValue>
         {
-            // Add a try block here to detect IComparers (or their
-            // underlying IComparables, etc) that are bogus.
-            //
-            // TODO: Do we need the try/catch?
-            //try
-            //{
-            if (typeof(TComparer) == typeof(IComparer<TKey>) && comparer == null)
+            void Sort(ref TKey keys, ref TValue values, int length);
+        }
+
+        internal class SpanSortHelper<TKey, TValue> : ISpanSortHelper<TKey, TValue>
+        {
+            public void Sort(ref TKey keys, ref TValue values, int length)
             {
-                SpanSortHelpers.Sort(
+                S.Sort(
                     ref keys, ref values, length,
                     new ComparerLessThanComparer<TKey, IComparer<TKey>>(Comparer<TKey>.Default));
             }
-            else
-            {
-                SpanSortHelpers.Sort(
-                    ref keys, ref values, length,
-                    new ComparerLessThanComparer<TKey, IComparer<TKey>>(comparer));
-            }
-            //}
-            //catch (IndexOutOfRangeException e)
-            //{
-            //    throw e;
-            //    //IntrospectiveSortUtilities.ThrowOrIgnoreBadComparer(comparer);
-            //}
-            //catch (Exception e)
-            //{
-            //    throw e;
-            //    //throw new InvalidOperationException(SR.InvalidOperation_IComparerFailed, e);
-            //}
         }
-    }
 
-    internal class ComparableSpanSortHelper<TKey, TValue, TComparer>
-        : ISpanSortHelper<TKey, TValue, TComparer>
-        where TKey : IComparable<TKey>
-        where TComparer : IComparer<TKey>
-    {
-        public void Sort(ref TKey keys, ref TValue values, int length,
-            in TComparer comparer)
+        internal class ComparableSpanSortHelper<TKey, TValue>
+            : ISpanSortHelper<TKey, TValue>
+            where TKey : IComparable<TKey>
         {
-            // Add a try block here to detect IComparers (or their
-            // underlying IComparables, etc) that are bogus.
-            //
-            // TODO: Do we need the try/catch?
-            //try
-            //{
-            if (comparer == null ||
-                // Cache this in generic traits helper class perhaps
-                (!typeof(TComparer).IsValueType &&
-                 object.ReferenceEquals(comparer, Comparer<TKey>.Default))) // Or "=="?
+            public void Sort(ref TKey keys, ref TValue values, int length)
             {
-                if (!SpanSortHelpers.TrySortSpecialized(ref keys, ref values, length))
+                S.Sort(
+                    ref keys, ref values, length,
+                    new ComparableLessThanComparer<TKey>());
+            }
+        }
+
+
+        internal static class DefaultSpanSortHelper<TKey, TValue, TComparer>
+            where TComparer : IComparer<TKey>
+        {
+            //private static volatile ISpanSortHelper<T, TComparer> defaultArraySortHelper;
+            //public static ISpanSortHelper<T, TComparer> Default
+            //{
+            //    get
+            //    {
+            //        ISpanSortHelper<T, TComparer> sorter = defaultArraySortHelper;
+            //        if (sorter == null)
+            //            sorter = CreateArraySortHelper();
+            //        return sorter;
+            //    }
+            //}
+            internal static readonly ISpanSortHelper<TKey, TValue, TComparer> s_default = CreateSortHelper();
+
+            private static ISpanSortHelper<TKey, TValue, TComparer> CreateSortHelper()
+            {
+                if (typeof(IComparable<TKey>).IsAssignableFrom(typeof(TKey)))
                 {
-                    SpanSortHelpers.Sort(
-                        ref keys, ref values, length,
-                        new ComparableLessThanComparer<TKey>());
+                    // TODO: Is there a faster way? A way without heap alloc? 
+                    // Albeit, this only happens once for each type combination
+                    var ctor = typeof(ComparableSpanSortHelper<,,>)
+                        .MakeGenericType(new Type[] { typeof(TKey), typeof(TValue), typeof(TComparer) })
+                        .GetConstructor(Array.Empty<Type>());
+
+                    return (ISpanSortHelper<TKey, TValue, TComparer>)ctor.Invoke(Array.Empty<object>());
+                    // coreclr does the following:
+                    //return (IArraySortHelper<T, TComparer>)
+                    //    RuntimeTypeHandle.Allocate(
+                    //        .TypeHandle.Instantiate());
+                }
+                else
+                {
+                    return new SpanSortHelper<TKey, TValue, TComparer>();
                 }
             }
-            else
+        }
+
+        // https://github.com/dotnet/coreclr/blob/master/src/mscorlib/src/System/Collections/Generic/ArraySortHelper.cs
+        internal interface ISpanSortHelper<TKey, TValue, TComparer>
+            where TComparer : IComparer<TKey>
+        {
+            void Sort(ref TKey keys, ref TValue values, int length, in TComparer comparer);
+        }
+
+        internal class SpanSortHelper<TKey, TValue, TComparer> : ISpanSortHelper<TKey, TValue, TComparer>
+            where TComparer : IComparer<TKey>
+        {
+            public void Sort(ref TKey keys, ref TValue values, int length, in TComparer comparer)
             {
-                SpanSortHelpers.Sort(
-                    ref keys, ref values, length,
-                    new ComparerLessThanComparer<TKey, TComparer>(comparer));
+                // Add a try block here to detect IComparers (or their
+                // underlying IComparables, etc) that are bogus.
+                //
+                // TODO: Do we need the try/catch?
+                //try
+                //{
+                if (typeof(TComparer) == typeof(IComparer<TKey>) && comparer == null)
+                {
+                    S.Sort(
+                        ref keys, ref values, length,
+                        new ComparerLessThanComparer<TKey, IComparer<TKey>>(Comparer<TKey>.Default));
+                }
+                else
+                {
+                    S.Sort(
+                        ref keys, ref values, length,
+                        new ComparerLessThanComparer<TKey, IComparer<TKey>>(comparer));
+                }
+                //}
+                //catch (IndexOutOfRangeException e)
+                //{
+                //    throw e;
+                //    //IntrospectiveSortUtilities.ThrowOrIgnoreBadComparer(comparer);
+                //}
+                //catch (Exception e)
+                //{
+                //    throw e;
+                //    //throw new InvalidOperationException(SR.InvalidOperation_IComparerFailed, e);
+                //}
             }
-            //}
-            //catch (IndexOutOfRangeException e)
-            //{
-            //    throw e;
-            //    //IntrospectiveSortUtilities.ThrowOrIgnoreBadComparer(comparer);
-            //}
-            //catch (Exception e)
-            //{
-            //    throw e;
-            //    //throw new InvalidOperationException(SR.InvalidOperation_IComparerFailed, e);
-            //}
+        }
+
+        internal class ComparableSpanSortHelper<TKey, TValue, TComparer>
+            : ISpanSortHelper<TKey, TValue, TComparer>
+            where TKey : IComparable<TKey>
+            where TComparer : IComparer<TKey>
+        {
+            public void Sort(ref TKey keys, ref TValue values, int length,
+                in TComparer comparer)
+            {
+                // Add a try block here to detect IComparers (or their
+                // underlying IComparables, etc) that are bogus.
+                //
+                // TODO: Do we need the try/catch?
+                //try
+                //{
+                if (comparer == null ||
+                    // Cache this in generic traits helper class perhaps
+                    (!typeof(TComparer).IsValueType &&
+                     object.ReferenceEquals(comparer, Comparer<TKey>.Default))) // Or "=="?
+                {
+                    if (!S.TrySortSpecialized(ref keys, ref values, length))
+                    {
+                        S.Sort(
+                            ref keys, ref values, length,
+                            new ComparableLessThanComparer<TKey>());
+                    }
+                }
+                else
+                {
+                    S.Sort(
+                        ref keys, ref values, length,
+                        new ComparerLessThanComparer<TKey, TComparer>(comparer));
+                }
+                //}
+                //catch (IndexOutOfRangeException e)
+                //{
+                //    throw e;
+                //    //IntrospectiveSortUtilities.ThrowOrIgnoreBadComparer(comparer);
+                //}
+                //catch (Exception e)
+                //{
+                //    throw e;
+                //    //throw new InvalidOperationException(SR.InvalidOperation_IComparerFailed, e);
+                //}
+            }
         }
     }
 }
