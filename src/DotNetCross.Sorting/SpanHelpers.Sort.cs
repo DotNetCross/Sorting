@@ -44,42 +44,52 @@ namespace System
         //
         internal struct SByteLessThanComparer : ILessThanComparer<sbyte>
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool LessThan(sbyte x, sbyte y) => x < y;
         }
         internal struct ByteLessThanComparer : ILessThanComparer<byte>
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool LessThan(byte x, byte y) => x < y;
         }
         internal struct Int16LessThanComparer : ILessThanComparer<short>
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool LessThan(short x, short y) => x < y;
         }
         internal struct UInt16LessThanComparer : ILessThanComparer<ushort>
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool LessThan(ushort x, ushort y) => x < y;
         }
         internal struct Int32LessThanComparer : ILessThanComparer<int>
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool LessThan(int x, int y) => x < y;
         }
         internal struct UInt32LessThanComparer : ILessThanComparer<uint>
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool LessThan(uint x, uint y) => x < y;
         }
         internal struct Int64LessThanComparer : ILessThanComparer<long>
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool LessThan(long x, long y) => x < y;
         }
         internal struct UInt64LessThanComparer : ILessThanComparer<ulong>
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool LessThan(ulong x, ulong y) => x < y;
         }
         internal struct SingleLessThanComparer : ILessThanComparer<float>
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool LessThan(float x, float y) => x < y;
         }
         internal struct DoubleLessThanComparer : ILessThanComparer<double>
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool LessThan(double x, double y) => x < y;
         }
 
@@ -136,10 +146,12 @@ namespace System
         }
         internal struct SingleIsNaN : IIsNaN<float>
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool IsNaN(float value) => float.IsNaN(value);
         }
         internal struct DoubleIsNaN : IIsNaN<double>
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool IsNaN(double value) => double.IsNaN(value);
         }
 

@@ -101,11 +101,11 @@ namespace DotNetCross.Sorting.Benchmarks
             if (benchOrProfile)
             {
                 //BenchmarkRunner.Run<Int32SortDisassemblerBench>();
-                //BenchmarkRunner.Run<Int32SortBench>();
-                BenchmarkRunner.Run<ComparableStructInt32SortBench>();
-                BenchmarkRunner.Run<StringSortBench>();
-                BenchmarkRunner.Run<SingleSortBench>();
                 BenchmarkRunner.Run<Int32SortBench>();
+                //BenchmarkRunner.Run<ComparableStructInt32SortBench>();
+                //BenchmarkRunner.Run<StringSortBench>();
+                //BenchmarkRunner.Run<SingleSortBench>();
+                //BenchmarkRunner.Run<Int32SortBench>();
                 
                 //BenchmarkRunner.Run<Int32StringSortBench>();
                 //BenchmarkRunner.Run<Int32SingleSortBench>();
