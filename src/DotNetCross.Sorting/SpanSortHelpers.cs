@@ -45,7 +45,7 @@ namespace System
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static void Sort<TKey, TComparer>(
-            this Span<TKey> keys, in TComparer comparer)
+            this Span<TKey> keys, TComparer comparer)
             where TComparer : IComparer<TKey>
         {
             Span<Void> values = default;
@@ -74,7 +74,7 @@ namespace System
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static void Sort<TKey, TValue, TComparer>(
-            this Span<TKey> keys, Span<TValue> values, in TComparer comparer)
+            this Span<TKey> keys, Span<TValue> values, TComparer comparer)
             where TComparer : IComparer<TKey>
         {
             DefaultSpanSortHelper<TKey, TValue, TComparer>.s_default.Sort(
@@ -227,7 +227,7 @@ namespace System
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static void Sort<TKey, TValue, TComparer>(
             ref TKey keys, ref TValue values, int length,
-            in TComparer comparer)
+            TComparer comparer)
             where TComparer : ILessThanComparer<TKey>
         {
             if (length < 2)
@@ -238,7 +238,7 @@ namespace System
 
         private static void IntrospectiveSort<TKey, TValue, TComparer>(
             ref TKey keys, ref TValue values, int length,
-            in TComparer comparer)
+            TComparer comparer)
             where TComparer : ILessThanComparer<TKey>
         {
             var depthLimit = 2 * FloorLog2PlusOne(length);
@@ -263,7 +263,7 @@ namespace System
         private static void IntroSort<TKey, TValue, TComparer>(
             ref TKey keys, ref TValue values,
             int lo, int hi, int depthLimit,
-            in TComparer comparer)
+            TComparer comparer)
             where TComparer : ILessThanComparer<TKey>
         {
             Debug.Assert(comparer != null);
@@ -329,7 +329,7 @@ namespace System
 
         private static int PickPivotAndPartition<TKey, TValue, TComparer>(
             ref TKey keys, ref TValue values, int lo, int hi,
-            in TComparer comparer)
+            TComparer comparer)
             where TComparer : ILessThanComparer<TKey>
         {
             Debug.Assert(comparer != null);
@@ -400,7 +400,7 @@ namespace System
 
         private static void HeapSort<TKey, TValue, TComparer>(
             ref TKey keys, ref TValue values, int lo, int hi,
-            in TComparer comparer)
+            TComparer comparer)
             where TComparer : ILessThanComparer<TKey>
         {
             Debug.Assert(keys != null);
@@ -426,7 +426,7 @@ namespace System
 
         private static void DownHeap<TKey, TValue, TComparer>(
             ref TKey keys, ref TValue values, int i, int n, int lo,
-            in TComparer comparer)
+            TComparer comparer)
             where TComparer : ILessThanComparer<TKey>
         {
             Debug.Assert(keys != null);
@@ -478,7 +478,7 @@ namespace System
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void InsertionSort<TKey, TComparer>(
             ref TKey keys, nint lo, nint hi,
-            in TComparer comparer)
+            TComparer comparer)
             where TComparer : ILessThanComparer<TKey>
         {
             //Debug.Assert(keys != null);
@@ -524,7 +524,7 @@ namespace System
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void InsertionSort<TKey, TValue, TComparer>(
             ref TKey keys, ref TValue values, nint lo, nint hi,
-            in TComparer comparer)
+            TComparer comparer)
             where TComparer : ILessThanComparer<TKey>
         {
             //Debug.Assert(keys != null);
@@ -585,7 +585,7 @@ namespace System
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void Sort2<TKey, TValue, TComparer>(
             ref TKey keys, ref TValue values, int i, int j,
-            in TComparer comparer)
+            TComparer comparer)
             where TComparer : ILessThanComparer<TKey>
         {
             Debug.Assert(i != j);
@@ -607,7 +607,7 @@ namespace System
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static ref TKey Sort3<TKey, TComparer>(
             ref TKey keys, int i0, int i1, int i2,
-            in TComparer comparer)
+            TComparer comparer)
             where TComparer : ILessThanComparer<TKey>
         {
             ref var r0 = ref Unsafe.Add(ref keys, i0);
@@ -656,7 +656,7 @@ namespace System
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static ref TKey Sort3<TKey, TValue, TComparer>(
             ref TKey keys, ref TValue values, int i0, int i1, int i2,
-            in TComparer comparer)
+            TComparer comparer)
             where TComparer : ILessThanComparer<TKey>
         {
             ref var r0 = ref Unsafe.Add(ref keys, i0);
@@ -860,13 +860,13 @@ namespace System
         internal interface ISpanSortHelper<TKey, TValue, TComparer>
             where TComparer : IComparer<TKey>
         {
-            void Sort(ref TKey keys, ref TValue values, int length, in TComparer comparer);
+            void Sort(ref TKey keys, ref TValue values, int length, TComparer comparer);
         }
 
         internal class SpanSortHelper<TKey, TValue, TComparer> : ISpanSortHelper<TKey, TValue, TComparer>
             where TComparer : IComparer<TKey>
         {
-            public void Sort(ref TKey keys, ref TValue values, int length, in TComparer comparer)
+            public void Sort(ref TKey keys, ref TValue values, int length, TComparer comparer)
             {
                 // Add a try block here to detect IComparers (or their
                 // underlying IComparables, etc) that are bogus.
@@ -906,7 +906,7 @@ namespace System
             where TComparer : IComparer<TKey>
         {
             public void Sort(ref TKey keys, ref TValue values, int length,
-                in TComparer comparer)
+                TComparer comparer)
             {
                 // Add a try block here to detect IComparers (or their
                 // underlying IComparables, etc) that are bogus.
