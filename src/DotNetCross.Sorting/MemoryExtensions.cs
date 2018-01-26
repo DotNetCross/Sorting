@@ -11,6 +11,7 @@ using System.Runtime.CompilerServices;
 
 //using SH = System.SpanSortHelpers;
 using SH = System.SpanHelpers;
+using SHT = System.SpanSortHelpersHelperTypes;
 
 namespace System
 {
@@ -221,7 +222,7 @@ namespace System
             if (comparison == null)
                 ThrowHelper.ThrowArgumentNullException(ExceptionArgument.comparison);
 
-            SH.Sort(span, new SH.ComparisonComparer<T>(comparison));
+            SH.Sort(span, new SHT.ComparisonComparer<T>(comparison));
         }
 
         /// <summary>
