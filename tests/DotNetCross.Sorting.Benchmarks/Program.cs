@@ -7,9 +7,9 @@ namespace DotNetCross.Sorting.Benchmarks
 {
     public static class SpanFillers
     {
-        const int RandomSeed = 213718398;
-        const double ShuffleFraction = 0.1;
-        const int ShuffleSeed = 931712983;
+        public const int RandomSeed = 213718398;
+        public const double ShuffleFraction = 0.1;
+        public const int ShuffleSeed = 931712983;
 
         public static ISpanFiller[] Default = new ISpanFiller[]{
                 new RandomSpanFiller(RandomSeed),
@@ -100,20 +100,22 @@ namespace DotNetCross.Sorting.Benchmarks
             bool benchOrProfile = true;
             if (benchOrProfile)
             {
+                //BenchmarkRunner.Run<Int32SortDisassemblerBench>();
+                //BenchmarkRunner.Run<Int32SortBench>();
                 BenchmarkRunner.Run<ComparableStructInt32SortBench>();
                 BenchmarkRunner.Run<StringSortBench>();
                 BenchmarkRunner.Run<SingleSortBench>();
                 BenchmarkRunner.Run<Int32SortBench>();
                 
-                BenchmarkRunner.Run<Int32StringSortBench>();
-                BenchmarkRunner.Run<Int32SingleSortBench>();
-                BenchmarkRunner.Run<Int32Int32SortBench>();
+                //BenchmarkRunner.Run<Int32StringSortBench>();
+                //BenchmarkRunner.Run<Int32SingleSortBench>();
+                //BenchmarkRunner.Run<Int32Int32SortBench>();
 
                 //
                 // Disassembler benchmarks
                 //
-                BenchmarkRunner.Run<StringSortDisassemblerBench>();
-                BenchmarkRunner.Run<Int32SortDisassemblerBench>();
+                //BenchmarkRunner.Run<StringSortDisassemblerBench>();
+                //BenchmarkRunner.Run<Int32SortDisassemblerBench>();
 
 
 
@@ -128,7 +130,7 @@ namespace DotNetCross.Sorting.Benchmarks
             {
                 //SomeMethod();
                 var sut = new Int32SortBench();
-                sut.Filler = new RandomSpanFiller();
+                sut.Filler = new RandomSpanFiller(SpanFillers.RandomSeed);
                 sut.Length = 100; // 1000000;
                 sut.GlobalSetup();
                 sut.IterationSetup();

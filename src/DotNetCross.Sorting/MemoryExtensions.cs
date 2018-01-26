@@ -9,6 +9,9 @@ using System.Runtime.CompilerServices;
 //using Internal.Runtime.CompilerServices;
 //#endif
 
+//using SH = System.SpanSortHelpers;
+using SH = System.SpanHelpers;
+
 namespace System
 {
     /// <summary>
@@ -194,7 +197,7 @@ namespace System
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Sort<T>(this Span<T> span)
         {
-            SpanSortHelpers.Sort(span);
+            SH.Sort(span);
         }
 
         /// <summary>
@@ -205,7 +208,7 @@ namespace System
         public static void Sort<T, TComparer>(this Span<T> span, TComparer comparer)
            where TComparer : IComparer<T>
         {
-            SpanSortHelpers.Sort(span, comparer);
+            SH.Sort(span, comparer);
         }
 
         /// <summary>
@@ -218,7 +221,7 @@ namespace System
             if (comparison == null)
                 ThrowHelper.ThrowArgumentNullException(ExceptionArgument.comparison);
 
-            SpanSortHelpers.Sort(span, new SpanSortHelpers.ComparisonComparer<T>(comparison));
+            SH.Sort(span, new SH.ComparisonComparer<T>(comparison));
         }
 
         /// <summary>
@@ -232,7 +235,7 @@ namespace System
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Sort<TKey, TValue>(this Span<TKey> keys, Span<TValue> items)
         {
-            SpanSortHelpers.Sort(keys, items);
+            //SH.Sort(keys, items);
         }
 
         /// <summary>
@@ -247,7 +250,7 @@ namespace System
            Span<TValue> items, TComparer comparer)
            where TComparer : IComparer<TKey>
         {
-            SpanSortHelpers.Sort(keys, items, comparer);
+            //SH.Sort(keys, items, comparer);
         }
 
         /// <summary>
@@ -261,7 +264,7 @@ namespace System
         public static void Sort<TKey, TValue>(this Span<TKey> keys,
            Span<TValue> items, Comparison<TKey> comparison)
         {
-            SpanSortHelpers.Sort(keys, items, new SpanSortHelpers.ComparisonComparer<TKey>(comparison));
+            //SH.Sort(keys, items, new SH.ComparisonComparer<TKey>(comparison));
         }
     }
 }
