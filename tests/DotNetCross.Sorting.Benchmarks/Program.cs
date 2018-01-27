@@ -100,7 +100,7 @@ namespace DotNetCross.Sorting.Benchmarks
             bool benchOrProfile = true;
             if (benchOrProfile)
             {
-                //BenchmarkRunner.Run<Int32SortDisassemblerBench>();
+                BenchmarkRunner.Run<Int32SortDisassemblerBench>();
                 BenchmarkRunner.Run<Int32SortBench>();
                 //BenchmarkRunner.Run<ComparableStructInt32SortBench>();
                 //BenchmarkRunner.Run<StringSortBench>();

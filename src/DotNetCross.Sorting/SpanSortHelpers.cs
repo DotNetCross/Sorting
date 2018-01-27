@@ -403,7 +403,6 @@ namespace System
             TComparer comparer)
             where TComparer : ILessThanComparer<TKey>
         {
-            Debug.Assert(keys != null);
             Debug.Assert(comparer != null);
             Debug.Assert(lo >= 0);
             Debug.Assert(hi > lo);
@@ -429,7 +428,6 @@ namespace System
             TComparer comparer)
             where TComparer : ILessThanComparer<TKey>
         {
-            Debug.Assert(keys != null);
             Debug.Assert(comparer != null);
             Debug.Assert(lo >= 0);
 
@@ -481,44 +479,27 @@ namespace System
             TComparer comparer)
             where TComparer : ILessThanComparer<TKey>
         {
-            //Debug.Assert(keys != null);
-            //Debug.Assert(lo >= 0);
-            //Debug.Assert(hi >= lo);
-            Debug.Assert(keys != null);
             Debug.Assert(lo >= 0);
             Debug.Assert(hi >= lo);
 
-            for (int i = lo; i < hi; i++)
+            for (nint i = lo; i.LessThan(hi); i += 1)
             {
+                nint j = i;
                 //t = keys[i + 1];
-                var t = Unsafe.Add(ref keys, i + 1);
-                // Need local ref that can be updated!
-                int j = i;
-                while (j >= lo && comparer.LessThan(t, Unsafe.Add(ref keys, j)))
+                var t = Unsafe.Add(ref keys, j + 1);
+                // Need local ref that can be updated
+                if (j.GreaterThanEqual(lo) && comparer.LessThan(t, Unsafe.Add(ref keys, j)))
                 {
-                    Unsafe.Add(ref keys, j + 1) = Unsafe.Add(ref keys, j);
-                    --j;
-                }
-                Unsafe.Add(ref keys, j + 1) = t;
-            }
-            //for (nint i = lo; i.LessThan(hi); i += 1)
-            //{
-            //    nint j = i;
-            //    //t = keys[i + 1];
-            //    var t = Unsafe.Add(ref keys, j + 1);
-            //    // Need local ref that can be updated
-            //    if (j.GreaterThanEqual(lo) && comparer.LessThan(t, Unsafe.Add(ref keys, j)))
-            //    {
-            //        do
-            //        {
-            //            Unsafe.Add(ref keys, j + 1) = Unsafe.Add(ref keys, j);
-            //            j -= 1;
-            //        }
-            //        while (j.GreaterThanEqual(lo) && comparer.LessThan(t, Unsafe.Add(ref keys, j)));
+                    do
+                    {
+                        Unsafe.Add(ref keys, j + 1) = Unsafe.Add(ref keys, j);
+                        j -= 1;
+                    }
+                    while (j.GreaterThanEqual(lo) && comparer.LessThan(t, Unsafe.Add(ref keys, j)));
 
-            //        Unsafe.Add(ref keys, j + 1) = t;
-            //    }
-            //}
+                    Unsafe.Add(ref keys, j + 1) = t;
+                }
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -527,9 +508,8 @@ namespace System
             TComparer comparer)
             where TComparer : ILessThanComparer<TKey>
         {
-            //Debug.Assert(keys != null);
-            //Debug.Assert(lo >= 0);
-            //Debug.Assert(hi >= lo);
+            Debug.Assert(lo >= 0);
+            Debug.Assert(hi >= lo);
 
             for (nint i = lo; i.LessThan(hi); i += 1)
             {
