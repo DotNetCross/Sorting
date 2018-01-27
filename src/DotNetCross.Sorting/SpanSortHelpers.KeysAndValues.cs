@@ -13,7 +13,7 @@ using System.Runtime.InteropServices;
 //#endif
 
 using static System.SpanSortHelpersHelperTypes;
-using S = System.SpanSortHelpers;
+using S = System.SpanSortHelpersKeysAndValues;
 
 #if USE_NATIVE_INTS
 using nint = System.IntPtr;
@@ -25,7 +25,7 @@ using nuint = System.UInt32;
 
 namespace System
 {
-    internal static partial class SpanSortHelpers
+    internal static partial class SpanSortHelpersKeysAndValues
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static void Sort<TKey>(this Span<TKey> keys)
@@ -64,8 +64,8 @@ namespace System
             // PERF: Try specialized here for optimal performance
             // Code-gen is weird unless used in loop outside
             if (!TrySortSpecializedWithValues(
-                ref keys.DangerousGetPinnableReference(), 
-                ref values.DangerousGetPinnableReference(), 
+                ref keys.DangerousGetPinnableReference(),
+                ref values.DangerousGetPinnableReference(),
                 keys.Length))
             {
                 Sort(keys, values, Comparer<TKey>.Default);
@@ -82,10 +82,6 @@ namespace System
                 ref values.DangerousGetPinnableReference(),
                 keys.Length, comparer);
         }
-
-
-
-
 
         // https://github.com/dotnet/coreclr/blob/master/src/mscorlib/src/System/Collections/Generic/ArraySortHelper.cs
         // https://github.com/dotnet/coreclr/blob/master/src/classlibnative/bcltype/arrayhelpers.cpp

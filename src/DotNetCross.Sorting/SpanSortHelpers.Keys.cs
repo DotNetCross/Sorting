@@ -25,7 +25,9 @@ namespace System
             if (!TrySortSpecialized(
                 ref keys.DangerousGetPinnableReference(), keys.Length))
             {
-                Sort(keys, Comparer<TKey>.Default);
+                DefaultSpanSortHelper<TKey>.s_default.Sort(
+                    ref keys.DangerousGetPinnableReference(),
+                    keys.Length);
             }
         }
 
@@ -35,8 +37,8 @@ namespace System
             where TComparer : IComparer<TKey>
         {
             DefaultSpanSortHelper<TKey, TComparer>.s_default.Sort(
-                keys,                 
-                comparer);
+                ref keys.DangerousGetPinnableReference(),
+                keys.Length, comparer);
         }
 
         // https://github.com/dotnet/coreclr/blob/master/src/mscorlib/src/System/Collections/Generic/ArraySortHelper.cs
@@ -476,19 +478,72 @@ namespace System
             b = temp;
         }
 
+        internal static class DefaultSpanSortHelper<TKey>
+        {
+            internal static readonly ISpanSortHelper<TKey> s_default = CreateSortHelper();
+
+            private static ISpanSortHelper<TKey> CreateSortHelper()
+            {
+                if (typeof(IComparable<TKey>).IsAssignableFrom(typeof(TKey)))
+                {
+                    // TODO: Is there a faster way? A way without heap alloc? 
+                    // Albeit, this only happens once for each type combination
+                    var ctor = typeof(ComparableSpanSortHelper<>)
+                        .MakeGenericType(new Type[] { typeof(TKey) })
+                        .GetConstructor(Array.Empty<Type>());
+
+                    return (ISpanSortHelper<TKey>)ctor.Invoke(Array.Empty<object>());
+                    // coreclr does the following:
+                    //return (IArraySortHelper<T, TComparer>)
+                    //    RuntimeTypeHandle.Allocate(
+                    //        .TypeHandle.Instantiate());
+                }
+                else
+                {
+                    return new SpanSortHelper<TKey>();
+                }
+            }
+        }
+
+        internal interface ISpanSortHelper<TKey>
+        {
+            void Sort(ref TKey keys, int length);
+        }
+
+        internal class SpanSortHelper<TKey> : ISpanSortHelper<TKey>
+        {
+            public void Sort(ref TKey keys, int length)
+            {
+                S.Sort(
+                    ref keys, length,
+                    new ComparerLessThanComparer<TKey, IComparer<TKey>>(Comparer<TKey>.Default));
+            }
+        }
+
+        internal class ComparableSpanSortHelper<TKey>
+            : ISpanSortHelper<TKey>
+            where TKey : IComparable<TKey>
+        {
+            public void Sort(ref TKey keys, int length)
+            {
+                S.Sort(
+                    ref keys, length,
+                    new ComparableLessThanComparer<TKey>());
+            }
+        }
+
+
         internal static class DefaultSpanSortHelper<TKey, TComparer>
             where TComparer : IComparer<TKey>
         {
-            //private static volatile ISpanSortHelper<TKey, TComparer> defaultArraySortHelper;
-
-            //public static ISpanSortHelper<TKey, TComparer> Default
+            //private static volatile ISpanSortHelper<T, TComparer> defaultArraySortHelper;
+            //public static ISpanSortHelper<T, TComparer> Default
             //{
             //    get
             //    {
-            //        ISpanSortHelper<TKey, TComparer> sorter = defaultArraySortHelper;
+            //        ISpanSortHelper<T, TComparer> sorter = defaultArraySortHelper;
             //        if (sorter == null)
             //            sorter = CreateArraySortHelper();
-
             //        return sorter;
             //    }
             //}
@@ -498,14 +553,15 @@ namespace System
             {
                 if (typeof(IComparable<TKey>).IsAssignableFrom(typeof(TKey)))
                 {
-                    // TODO: Is there a faster way?
+                    // TODO: Is there a faster way? A way without heap alloc? 
+                    // Albeit, this only happens once for each type combination
                     var ctor = typeof(ComparableSpanSortHelper<,>)
                         .MakeGenericType(new Type[] { typeof(TKey), typeof(TComparer) })
                         .GetConstructor(Array.Empty<Type>());
 
                     return (ISpanSortHelper<TKey, TComparer>)ctor.Invoke(Array.Empty<object>());
                     // coreclr does the following:
-                    //return (IArraySortHelper<TKey, TComparer>)
+                    //return (IArraySortHelper<T, TComparer>)
                     //    RuntimeTypeHandle.Allocate(
                     //        .TypeHandle.Instantiate());
                 }
@@ -520,30 +576,30 @@ namespace System
         internal interface ISpanSortHelper<TKey, TComparer>
             where TComparer : IComparer<TKey>
         {
-            void Sort(Span<TKey> keys, TComparer comparer);
+            void Sort(ref TKey keys, int length, TComparer comparer);
         }
 
         internal class SpanSortHelper<TKey, TComparer> : ISpanSortHelper<TKey, TComparer>
             where TComparer : IComparer<TKey>
         {
-            public void Sort(Span<TKey> keys, TComparer comparer)
+            public void Sort(ref TKey keys, int length, TComparer comparer)
             {
                 // Add a try block here to detect IComparers (or their
                 // underlying IComparables, etc) that are bogus.
                 //
-                // TODO: Do we need the try/catch? Just let it triggle up...
+                // TODO: Do we need the try/catch?
                 //try
                 //{
                 if (typeof(TComparer) == typeof(IComparer<TKey>) && comparer == null)
                 {
                     S.Sort(
-                        ref keys.DangerousGetPinnableReference(), keys.Length,
+                        ref keys, length,
                         new ComparerLessThanComparer<TKey, IComparer<TKey>>(Comparer<TKey>.Default));
                 }
                 else
                 {
                     S.Sort(
-                        ref keys.DangerousGetPinnableReference(), keys.Length,
+                        ref keys, length,
                         new ComparerLessThanComparer<TKey, IComparer<TKey>>(comparer));
                 }
                 //}
@@ -565,30 +621,32 @@ namespace System
             where TKey : IComparable<TKey>
             where TComparer : IComparer<TKey>
         {
-            public void Sort(Span<TKey> keys, TComparer comparer)
+            public void Sort(ref TKey keys, int length,
+                TComparer comparer)
             {
                 // Add a try block here to detect IComparers (or their
                 // underlying IComparables, etc) that are bogus.
                 //
-                // TODO: Do we need the try/catch? Just let it triggle up...
+                // TODO: Do we need the try/catch?
                 //try
                 //{
                 if (comparer == null ||
                     // Cache this in generic traits helper class perhaps
                     (!typeof(TComparer).IsValueType &&
-                        object.ReferenceEquals(comparer, Comparer<TKey>.Default))) // Or "=="?
+                     object.ReferenceEquals(comparer, Comparer<TKey>.Default))) // Or "=="?
                 {
-                    ref TKey keysRef = ref keys.DangerousGetPinnableReference();
-                    if (!TrySortSpecialized(ref keysRef, keys.Length))
+                    if (!S.TrySortSpecialized(ref keys, length))
                     {
-                        S.Sort(ref keysRef, keys.Length,
-                               new ComparableLessThanComparer<TKey>());
+                        S.Sort(
+                            ref keys, length,
+                            new ComparableLessThanComparer<TKey>());
                     }
                 }
                 else
                 {
-                    S.Sort(ref keys.DangerousGetPinnableReference(), keys.Length,
-                           new ComparerLessThanComparer<TKey, TComparer>(comparer));
+                    S.Sort(
+                        ref keys, length,
+                        new ComparerLessThanComparer<TKey, TComparer>(comparer));
                 }
                 //}
                 //catch (IndexOutOfRangeException e)
