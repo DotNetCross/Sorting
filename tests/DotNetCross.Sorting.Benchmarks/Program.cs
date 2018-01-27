@@ -100,18 +100,18 @@ namespace DotNetCross.Sorting.Benchmarks
             bool benchOrProfile = true;
             if (benchOrProfile)
             {
-                BenchmarkRunner.Run<Int32SortBench>();
-                BenchmarkRunner.Run<ComparableStructInt32SortBench>();
+                //BenchmarkRunner.Run<Int32SortBench>();
+                //BenchmarkRunner.Run<ComparableStructInt32SortBench>();
                 BenchmarkRunner.Run<StringSortBench>();
-                BenchmarkRunner.Run<SingleSortBench>();
+                //BenchmarkRunner.Run<SingleSortBench>();
                 
-                BenchmarkRunner.Run<Int32StringSortBench>();
-                BenchmarkRunner.Run<Int32SingleSortBench>();
-                BenchmarkRunner.Run<Int32Int32SortBench>();
+                //BenchmarkRunner.Run<Int32StringSortBench>();
+                //BenchmarkRunner.Run<Int32SingleSortBench>();
+                //BenchmarkRunner.Run<Int32Int32SortBench>();
 
-                BenchmarkRunner.Run<Int32SortDisassemblerBench>();
-                BenchmarkRunner.Run<StringSortDisassemblerBench>();
-                BenchmarkRunner.Run<Int32SortDisassemblerBench>();
+                //BenchmarkRunner.Run<Int32SortDisassemblerBench>();
+                //BenchmarkRunner.Run<StringSortDisassemblerBench>();
+                //BenchmarkRunner.Run<Int32SortDisassemblerBench>();
 
                 //BenchmarkRunner.Run<Int32SortDisassemblerBenchNotWorking>(); // Fails, probably due to generics...
 

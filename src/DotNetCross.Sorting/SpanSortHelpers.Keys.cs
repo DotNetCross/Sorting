@@ -374,16 +374,21 @@ namespace System
 
             for (int i = lo; i < hi; ++i)
             {
-                //t = keys[i + 1];
-                var t = Unsafe.Add(ref keys, i + 1);
-                // TODO: Would be good to be able to update local ref here
                 int j = i;
-                while (j >= lo && comparer.LessThan(t, Unsafe.Add(ref keys, j)))
+                //t = keys[i + 1];
+                var t = Unsafe.Add(ref keys, j + 1);
+                // TODO: Would be good to be able to update local ref here
+                if (j >= lo && comparer.LessThan(t, Unsafe.Add(ref keys, j)))
                 {
-                    Unsafe.Add(ref keys, j + 1) = Unsafe.Add(ref keys, j);
-                    --j;
+                    do
+                    {
+                        Unsafe.Add(ref keys, j + 1) = Unsafe.Add(ref keys, j);
+                        --j;
+                    }
+                    while (j >= lo && comparer.LessThan(t, Unsafe.Add(ref keys, j)));
+
+                    Unsafe.Add(ref keys, j + 1) = t;
                 }
-                Unsafe.Add(ref keys, j + 1) = t;
             }
         }
 
