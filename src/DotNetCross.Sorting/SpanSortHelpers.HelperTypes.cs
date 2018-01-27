@@ -7,6 +7,35 @@ namespace System
     // TODO: Rename to SpanSortHelpers before move to corefx
     internal static partial class SpanSortHelpersHelperTypes
     {
+        internal interface ILessThanComparer
+        {
+            bool LessThan<T>(T x, T y);
+        }
+        internal struct ComparerLessThanComparerNew<TKey, TComparer> : ILessThanComparer
+            where TComparer : IComparer<TKey>
+        {
+            readonly TComparer _comparer;
+
+            public ComparerLessThanComparerNew(in TComparer comparer)
+            {
+                _comparer = comparer;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool LessThan<T>(T x, T y) => _comparer.Compare(Unsafe.As<T, TKey>(ref x), Unsafe.As<T, TKey>(ref y)) < 0;
+        }
+        internal struct ComparableLessThanComparerNew<TKey> : ILessThanComparer
+            where TKey : struct, IComparable<TKey>
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool LessThan<T>(T x, T y) => Unsafe.As<T, TKey>(ref x).CompareTo(Unsafe.As<T, TKey>(ref y)) < 0;
+        }
+        internal struct IComparableLessThanComparer : ILessThanComparer
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool LessThan<T>(T x, T y) => Unsafe.As<T, IComparable<T>>(ref x).CompareTo(y) < 0;
+        }
+
         internal interface ILessThanComparer<in T>
         {
             bool LessThan(T x, T y);
