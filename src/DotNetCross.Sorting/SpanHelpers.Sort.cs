@@ -137,8 +137,8 @@ namespace System
 
         // For sorting, move all NaN instances to front of the input array
         private static int NaNPrepass<TKey, TIsNaN>(
-            ref TKey keys, int length, 
-            in TIsNaN isNaN)
+            ref TKey keys, int length,
+            TIsNaN isNaN)
             where TIsNaN : struct, IIsNaN<TKey>
         {
             int left = 0;
@@ -159,7 +159,7 @@ namespace System
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static void Sort<TKey, TComparer>(
-            ref TKey keys, int length, 
+            ref TKey keys, int length,
             TComparer comparer)
             where TComparer : ILessThanComparer<TKey>
         {
@@ -170,30 +170,31 @@ namespace System
         }
 
         private static void IntrospectiveSort<TKey, TComparer>(
-            ref TKey keys, int length, 
+            ref TKey keys, int length,
             TComparer comparer)
             where TComparer : ILessThanComparer<TKey>
         {
             var depthLimit = 2 * FloorLog2PlusOne(length);
             IntroSort(ref keys, 0, length - 1, depthLimit, comparer);
-            //IntroSort(ref keys, length - 1, depthLimit, comparer);
         }
 
         private static int FloorLog2PlusOne(int n)
         {
             Debug.Assert(n >= 2);
             int result = 0;
-            while (n >= 1)
+            do
             {
-                result++;
-                n = n / 2;
+                ++result;
+                n >>= 1;
             }
+            while (n > 0);
+
             return result;
         }
 
         private static void IntroSort<TKey, TComparer>(
             ref TKey keys, 
-            int lo, int hi, int depthLimit, 
+            int lo, int hi, int depthLimit,
             TComparer comparer)
             where TComparer : ILessThanComparer<TKey>
         {
@@ -244,7 +245,7 @@ namespace System
         }
 
         private static int PickPivotAndPartition<TKey, TComparer>(
-            ref TKey keys, int lo, int hi, 
+            ref TKey keys, int lo, int hi,
             TComparer comparer)
             where TComparer : ILessThanComparer<TKey>
         {
@@ -283,7 +284,6 @@ namespace System
                 if (left >= right)
                     break;
 
-                // Indeces cannot be equal here
                 Swap(ref keys, left, right);
             }
             // Put pivot in the right location.
@@ -295,9 +295,8 @@ namespace System
             return left;
         }
 
-
         private static void HeapSort<TKey, TComparer>(
-            ref TKey keys, int lo, int hi, 
+            ref TKey keys, int lo, int hi,
             TComparer comparer)
             where TComparer : ILessThanComparer<TKey>
         {
@@ -318,7 +317,7 @@ namespace System
         }
 
         private static void DownHeap<TKey, TComparer>(
-            ref TKey keys, int i, int n, int lo, 
+            ref TKey keys, int i, int n, int lo,
             TComparer comparer)
             where TComparer : ILessThanComparer<TKey>
         {
@@ -326,9 +325,9 @@ namespace System
             Debug.Assert(lo >= 0);
 
             //TKey d = keys[lo + i - 1];
-            ref TKey refLo = ref Unsafe.Add(ref keys, lo);
-            ref TKey refLoMinus1 = ref Unsafe.Subtract(ref refLo, 1);
-            TKey d = Unsafe.Add(ref refLoMinus1, i);
+            ref TKey keysAtLo = ref Unsafe.Add(ref keys, lo);
+            ref TKey keysAtLoMinus1 = ref Unsafe.Subtract(ref keysAtLo, 1);
+            TKey d = Unsafe.Add(ref keysAtLoMinus1, i);
             var nHalf = n / 2;
             while (i <= nHalf)
             {
@@ -336,27 +335,27 @@ namespace System
 
                 //if (child < n && comparer(keys[lo + child - 1], keys[lo + child]) < 0)
                 if (child < n &&
-                    comparer.LessThan(Unsafe.Add(ref refLoMinus1, child), Unsafe.Add(ref refLo, child)))
+                    comparer.LessThan(Unsafe.Add(ref keysAtLoMinus1, child), Unsafe.Add(ref keysAtLo, child)))
                 {
                     ++child;
                 }
 
                 //if (!(comparer(d, keys[lo + child - 1]) < 0))
-                if (!(comparer.LessThan(d, Unsafe.Add(ref refLoMinus1, child))))
+                if (!(comparer.LessThan(d, Unsafe.Add(ref keysAtLoMinus1, child))))
                     break;
 
                 // keys[lo + i - 1] = keys[lo + child - 1]
-                Unsafe.Add(ref refLoMinus1, i) = Unsafe.Add(ref refLoMinus1, child);
+                Unsafe.Add(ref keysAtLoMinus1, i) = Unsafe.Add(ref keysAtLoMinus1, child);
 
                 i = child;
             }
             //keys[lo + i - 1] = d;
-            Unsafe.Add(ref keys, lo + i - 1) = d;
+            Unsafe.Add(ref keysAtLoMinus1, i) = d;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void InsertionSort<TKey, TComparer>(
-            ref TKey keys, int lo, int hi, 
+            ref TKey keys, int lo, int hi,
             TComparer comparer)
             where TComparer : ILessThanComparer<TKey>
         {

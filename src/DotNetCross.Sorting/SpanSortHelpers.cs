@@ -243,7 +243,6 @@ namespace System
         {
             var depthLimit = 2 * FloorLog2PlusOne(length);
             IntroSort(ref keys, ref values, 0, length - 1, depthLimit, comparer);
-            //IntroSort(ref keys, length - 1, depthLimit, comparer);
         }
 
         private static int FloorLog2PlusOne(int n)
@@ -431,7 +430,7 @@ namespace System
             Debug.Assert(comparer != null);
             Debug.Assert(lo >= 0);
 
-            //T d = keys[lo + i - 1];
+            //TKey d = keys[lo + i - 1];
             ref TKey keysAtLo = ref Unsafe.Add(ref keys, lo);
             ref TKey keysAtLoMinus1 = ref Unsafe.Subtract(ref keysAtLo, 1);
 
