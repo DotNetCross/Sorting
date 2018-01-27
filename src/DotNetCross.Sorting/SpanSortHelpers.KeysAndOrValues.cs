@@ -21,16 +21,20 @@ namespace System
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static void Sort<TKey>(this Span<TKey> keys)
         {
+            int length = keys.Length;
+            if (length < 2)
+                return;
+
             // PERF: Try specialized here for optimal performance
             // Code-gen is weird unless used in loop outside
             if (!TrySortSpecialized(
-                ref keys.DangerousGetPinnableReference(), keys.Length))
+                ref keys.DangerousGetPinnableReference(), length))
             {
                 Span<Void> values = default;
                 DefaultSpanSortHelper<TKey, Void>.s_default.Sort(
                     ref keys.DangerousGetPinnableReference(),
                     ref values.DangerousGetPinnableReference(),
-                    keys.Length);
+                    length);
             }
         }
 
@@ -39,27 +43,37 @@ namespace System
             this Span<TKey> keys, TComparer comparer)
             where TComparer : IComparer<TKey>
         {
+            int length = keys.Length;
+            if (length < 2)
+                return;
+
             Span<Void> values = default;
             DefaultSpanSortHelper<TKey, Void, TComparer>.s_default.Sort(
                 ref keys.DangerousGetPinnableReference(),
                 ref values.DangerousGetPinnableReference(),
-                keys.Length, comparer);
+                length, comparer);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static void Sort<TKey, TValue>(this Span<TKey> keys, Span<TValue> values)
         {
-            if (keys.Length != values.Length)
+            int length = keys.Length;
+            if (length != values.Length)
                 ThrowHelper.ThrowArgumentException_ItemsMustHaveSameLength();
+            if (length < 2)
+                return;
 
             // PERF: Try specialized here for optimal performance
             // Code-gen is weird unless used in loop outside
             if (!TrySortSpecializedWithValues(
                 ref keys.DangerousGetPinnableReference(),
                 ref values.DangerousGetPinnableReference(),
-                keys.Length))
+                length))
             {
-                Sort(keys, values, Comparer<TKey>.Default);
+                DefaultSpanSortHelper<TKey, TValue>.s_default.Sort(
+                    ref keys.DangerousGetPinnableReference(),
+                    ref values.DangerousGetPinnableReference(),
+                    keys.Length);
             }
         }
 
@@ -68,6 +82,12 @@ namespace System
             this Span<TKey> keys, Span<TValue> values, TComparer comparer)
             where TComparer : IComparer<TKey>
         {
+            int length = keys.Length;
+            if (length != values.Length)
+                ThrowHelper.ThrowArgumentException_ItemsMustHaveSameLength();
+            if (length < 2)
+                return;
+
             DefaultSpanSortHelper<TKey, TValue, TComparer>.s_default.Sort(
                 ref keys.DangerousGetPinnableReference(),
                 ref values.DangerousGetPinnableReference(),
@@ -217,9 +237,6 @@ namespace System
             TComparer comparer)
             where TComparer : ILessThanComparer<TKey>
         {
-            if (length < 2)
-                return;
-
             IntrospectiveSort(ref keys, ref values, length, comparer);
         }
 
@@ -632,8 +649,7 @@ namespace System
         {
             public void Sort(ref TKey keys, ref TValue values, int length)
             {
-                S.Sort(
-                    ref keys, ref values, length,
+                S.Sort(ref keys, ref values, length,
                     new ComparerLessThanComparer<TKey, IComparer<TKey>>(Comparer<TKey>.Default));
             }
         }
@@ -644,8 +660,7 @@ namespace System
         {
             public void Sort(ref TKey keys, ref TValue values, int length)
             {
-                S.Sort(
-                    ref keys, ref values, length,
+                S.Sort(ref keys, ref values, length,
                     new ComparableLessThanComparer<TKey>());
             }
         }
@@ -715,8 +730,7 @@ namespace System
                 }
                 else
                 {
-                    S.Sort(
-                        ref keys, ref values, length,
+                    S.Sort(ref keys, ref values, length,
                         new ComparerLessThanComparer<TKey, IComparer<TKey>>(comparer));
                 }
                 //}
@@ -754,15 +768,13 @@ namespace System
                 {
                     if (!S.TrySortSpecialized(ref keys, ref values, length))
                     {
-                        S.Sort(
-                            ref keys, ref values, length,
+                        S.Sort(ref keys, ref values, length,
                             new ComparableLessThanComparer<TKey>());
                     }
                 }
                 else
                 {
-                    S.Sort(
-                        ref keys, ref values, length,
+                    S.Sort(ref keys, ref values, length,
                         new ComparerLessThanComparer<TKey, TComparer>(comparer));
                 }
                 //}

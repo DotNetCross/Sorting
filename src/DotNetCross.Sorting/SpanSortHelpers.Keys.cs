@@ -20,14 +20,18 @@ namespace System
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static void Sort<TKey>(this Span<TKey> keys)
         {
+            int length = keys.Length;
+            if (length < 2)
+                return;
+
             // PERF: Try specialized here for optimal performance
             // Code-gen is weird unless used in loop outside
             if (!TrySortSpecialized(
-                ref keys.DangerousGetPinnableReference(), keys.Length))
+                ref keys.DangerousGetPinnableReference(), length))
             {
                 DefaultSpanSortHelper<TKey>.s_default.Sort(
                     ref keys.DangerousGetPinnableReference(),
-                    keys.Length);
+                    length);
             }
         }
 
@@ -36,6 +40,10 @@ namespace System
             this Span<TKey> keys, TComparer comparer)
             where TComparer : IComparer<TKey>
         {
+            int length = keys.Length;
+            if (length < 2)
+                return;
+
             DefaultSpanSortHelper<TKey, TComparer>.s_default.Sort(
                 ref keys.DangerousGetPinnableReference(),
                 keys.Length, comparer);
@@ -165,9 +173,6 @@ namespace System
             TComparer comparer)
             where TComparer : ILessThanComparer<TKey>
         {
-            if (length < 2)
-                return;
-
             IntrospectiveSort(ref keys, length, comparer);
         }
 
@@ -497,8 +502,7 @@ namespace System
         {
             public void Sort(ref TKey keys, int length)
             {
-                S.Sort(
-                    ref keys, length,
+                S.Sort(ref keys, length,
                     new ComparerLessThanComparer<TKey, IComparer<TKey>>(Comparer<TKey>.Default));
             }
         }
@@ -509,8 +513,7 @@ namespace System
         {
             public void Sort(ref TKey keys, int length)
             {
-                S.Sort(
-                    ref keys, length,
+                S.Sort(ref keys, length,
                     new ComparableLessThanComparer<TKey>());
             }
         }

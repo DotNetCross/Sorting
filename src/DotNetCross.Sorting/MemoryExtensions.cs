@@ -9,7 +9,7 @@ using System.Runtime.CompilerServices;
 //using Internal.Runtime.CompilerServices;
 //#endif
 
-//using SH = System.SpanSortHelpers;
+//using SH = System.SpanSortHelpersKeysAndOrValues;
 using SH = System.SpanSortHelpersKeysOnly;
 using SHT = System.SpanSortHelpersHelperTypes;
 
@@ -265,7 +265,7 @@ namespace System
         public static void Sort<TKey, TValue>(this Span<TKey> keys,
            Span<TValue> items, Comparison<TKey> comparison)
         {
-            //SH.Sort(keys, items, new SH.ComparisonComparer<TKey>(comparison));
+            //SH.Sort(keys, items, new SHT.ComparisonComparer<TKey>(comparison));
         }
     }
 }
