@@ -251,5 +251,60 @@ namespace DotNetCross.Sorting
         //    }
         //    return (int)leftBytes.Divide(Unsafe.SizeOf<TKey>());
         //}
+
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        //private static ref TKey Sort3<TKey, TComparer>(
+        //    ref TKey keys, int i0, int i1, int i2,
+        //    TComparer comparer)
+        //    where TComparer : ILessThanComparer<TKey>
+        //{
+        //    ref var r0 = ref Unsafe.Add(ref keys, i0);
+        //    ref var r1 = ref Unsafe.Add(ref keys, i1);
+        //    ref var r2 = ref Unsafe.Add(ref keys, i2);
+
+        //    if (comparer.LessThan(r0, r1)) //r0 < r1)
+        //    {
+        //        if (comparer.LessThan(r1, r2)) //(r1 < r2)
+        //        {
+        //            return ref r1;
+        //        }
+        //        else if (comparer.LessThan(r0, r2)) //(r0 < r2)
+        //        {
+        //            Swap(ref r1, ref r2);
+        //        }
+        //        else
+        //        {
+        //            TKey tmp = r0;
+        //            r0 = r2;
+        //            r2 = r1;
+        //            r1 = tmp;
+        //        }
+        //    }
+        //    else
+        //    {
+        //        if (comparer.LessThan(r0, r2)) //(r0 < r2)
+        //        {
+        //            Swap(ref r0, ref r1);
+        //        }
+        //        else if (comparer.LessThan(r2, r1)) //(r2 < r1)
+        //        {
+        //            Swap(ref r0, ref r2);
+        //        }
+        //        else
+        //        {
+        //            TKey tmp = r0;
+        //            r0 = r1;
+        //            r1 = r2;
+        //            r2 = tmp;
+        //        }
+        //    }
+        //    return ref r1;
+        //}
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        //private static void Swap<T>(ref T items, IntPtr i, IntPtr j)
+        //{
+        //    Debug.Assert(i != j);
+        //    Swap(ref Unsafe.Add(ref items, i), ref Unsafe.Add(ref items, j));
+        //}
     }
 }

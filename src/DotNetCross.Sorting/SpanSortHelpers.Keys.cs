@@ -266,21 +266,24 @@ namespace System
             int middle = (int)(((uint)hi + (uint)lo) >> 1);
 
             // Sort lo, mid and hi appropriately, then pick mid as the pivot.
-            ref TKey loRef = ref Unsafe.Add(ref keys, lo);
-            ref TKey miRef = ref Unsafe.Add(ref keys, middle);
-            ref TKey hiRef = ref Unsafe.Add(ref keys, hi);
-            Sort3(ref loRef, ref miRef, ref hiRef, comparer);
+            ref TKey keysAtLo = ref Unsafe.Add(ref keys, lo);
+            ref TKey keysAtMiddle = ref Unsafe.Add(ref keys, middle);
+            ref TKey keysAtHi = ref Unsafe.Add(ref keys, hi);
+            Sort3(ref keysAtLo, ref keysAtMiddle, ref keysAtHi, comparer);
 
-            TKey pivot = miRef;
+            TKey pivot = keysAtMiddle;
 
-            int left = lo, right = hi - 1;  // We already partitioned lo and hi and put the pivot in hi - 1.  And we pre-increment & decrement below.
-            Swap(ref miRef, ref Unsafe.Add(ref keys, right));
+            int left = lo;
+            int right = hi - 1;
+            // We already partitioned lo and hi and put the pivot in hi - 1.  
+            // And we pre-increment & decrement below.
+            Swap(ref keysAtMiddle, ref Unsafe.Add(ref keys, right));
 
             while (left < right)
             {
-                // TODO: Would be good to update local ref here
+                // TODO: Would be good to be able to update local ref here
                 while (comparer.LessThan(Unsafe.Add(ref keys, ++left), pivot)) ;
-                // TODO: Would be good to update local ref here
+                // TODO: Would be good to be able to update local ref here
                 while (comparer.LessThan(pivot, Unsafe.Add(ref keys, --right))) ;
 
                 if (left >= right)
@@ -289,7 +292,7 @@ namespace System
                 Swap(ref keys, left, right);
             }
             // Put pivot in the right location.
-            right = (hi - 1);
+            right = hi - 1;
             if (left != right)
             {
                 Swap(ref keys, left, right);
@@ -364,11 +367,11 @@ namespace System
             Debug.Assert(lo >= 0);
             Debug.Assert(hi >= lo);
 
-            for (int i = lo; i < hi; i++)
+            for (int i = lo; i < hi; ++i)
             {
                 //t = keys[i + 1];
                 var t = Unsafe.Add(ref keys, i + 1);
-                // Need local ref that can be updated!
+                // TODO: Would be good to be able to update local ref here
                 int j = i;
                 while (j >= lo && comparer.LessThan(t, Unsafe.Add(ref keys, j)))
                 {
@@ -380,15 +383,11 @@ namespace System
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void Sort3<TKey, TComparer>(
-            ref TKey r0, ref TKey r1, ref TKey r2, 
+        private static void Sort3<TKey, TComparer>(
+            ref TKey r0, ref TKey r1, ref TKey r2,
             TComparer comparer)
             where TComparer : ILessThanComparer<TKey>
         {
-            //Sort2(ref r0, ref r1, comparer); // swap the low with the mid point
-            //Sort2(ref r0, ref r2, comparer); // swap the low with the high
-            //Sort2(ref r1, ref r2, comparer); // swap the middle with the high
-
             if (comparer.LessThan(r0, r1)) //r0 < r1)
             {
                 if (comparer.LessThan(r1, r2)) //(r1 < r2)
@@ -429,20 +428,15 @@ namespace System
 
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void Sort2<TKey, TComparer>(ref TKey keys, int i, int j, TComparer comparer)
+        private static void Sort2<TKey, TComparer>(
+            ref TKey keys, int i, int j,
+            TComparer comparer)
             where TComparer : ILessThanComparer<TKey>
         {
             Debug.Assert(i != j);
 
-            ref var iElement = ref Unsafe.Add(ref keys, i);
-            ref var jElement = ref Unsafe.Add(ref keys, j);
-            Sort2(ref iElement, ref jElement, comparer);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void Sort2<TKey, TComparer>(ref TKey a, ref TKey b, TComparer comparer)
-            where TComparer : ILessThanComparer<TKey>
-        {
+            ref TKey a = ref Unsafe.Add(ref keys, i);
+            ref TKey b = ref Unsafe.Add(ref keys, j);
             if (comparer.LessThan(b, a))
             {
                 TKey temp = a;
@@ -452,31 +446,20 @@ namespace System
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void Swap<TKey>(ref TKey items, int i, int j)
+        private static void Swap<T>(ref T items, int i, int j)
         {
             Debug.Assert(i != j);
-
-            ref var iElement = ref Unsafe.Add(ref items, i);
-            ref var jElement = ref Unsafe.Add(ref items, j);
-            Swap(ref iElement, ref jElement);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void Swap<TKey>(ref TKey items, IntPtr i, IntPtr j)
-        {
-            Debug.Assert(i != j);
-
-            ref var iElement = ref Unsafe.Add(ref items, i);
-            ref var jElement = ref Unsafe.Add(ref items, j);
-            Swap(ref iElement, ref jElement);
+            Swap(ref Unsafe.Add(ref items, i), ref Unsafe.Add(ref items, j));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void Swap<TKey>(ref TKey a, ref TKey b)
+        private static void Swap<T>(ref T a, ref T b)
         {
-            TKey temp = a;
+            T temp = a;
             a = b;
             b = temp;
         }
+
 
         internal static class DefaultSpanSortHelper<TKey>
         {
@@ -592,14 +575,12 @@ namespace System
                 //{
                 if (typeof(TComparer) == typeof(IComparer<TKey>) && comparer == null)
                 {
-                    S.Sort(
-                        ref keys, length,
+                    S.Sort(ref keys, length,
                         new ComparerLessThanComparer<TKey, IComparer<TKey>>(Comparer<TKey>.Default));
                 }
                 else
                 {
-                    S.Sort(
-                        ref keys, length,
+                    S.Sort(ref keys, length,
                         new ComparerLessThanComparer<TKey, IComparer<TKey>>(comparer));
                 }
                 //}
@@ -637,15 +618,13 @@ namespace System
                 {
                     if (!S.TrySortSpecialized(ref keys, length))
                     {
-                        S.Sort(
-                            ref keys, length,
+                        S.Sort(ref keys, length,
                             new ComparableLessThanComparer<TKey>());
                     }
                 }
                 else
                 {
-                    S.Sort(
-                        ref keys, length,
+                    S.Sort(ref keys, length,
                         new ComparerLessThanComparer<TKey, TComparer>(comparer));
                 }
                 //}
