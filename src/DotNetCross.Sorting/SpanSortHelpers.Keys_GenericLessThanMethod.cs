@@ -547,9 +547,9 @@ namespace System
         {
             public void Sort(ref TKey keys, int length)
             {
-                S.Sort<TKey, IComparableLessThanComparer>(
-                    ref keys, length, 
-                    new IComparableLessThanComparer());
+                S.Sort<Reference, IComparableLessThanComparerNew<TKey>>(
+                    ref Unsafe.As<TKey, Reference>(ref keys), length, 
+                    new IComparableLessThanComparerNew<TKey>());
             }
         }
 
@@ -718,7 +718,7 @@ namespace System
                         //}
                         //else
                         {
-                            S.Sort(ref keys, length, new IComparableLessThanComparer());
+                            S.Sort(ref Unsafe.As<TKey, Reference>(ref keys), length, new IComparableLessThanComparer());
                         }
                     }
                 }

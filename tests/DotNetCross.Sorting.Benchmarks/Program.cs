@@ -125,8 +125,8 @@ namespace DotNetCross.Sorting.Benchmarks
                 //BenchmarkRunner.Run<Int32SortBench>();
                 //BenchmarkRunner.Run<SingleSortBench>();
                 //BenchmarkRunner.Run<ComparableStructInt32SortBench>();
-                //BenchmarkRunner.Run<ComparableClassInt32SortBench>();
-                BenchmarkRunner.Run<StringSortBench>();
+                BenchmarkRunner.Run<ComparableClassInt32SortBench>();
+                //BenchmarkRunner.Run<StringSortBench>();
                 
                 //BenchmarkRunner.Run<Int32StringSortBench>();
                 //BenchmarkRunner.Run<Int32SingleSortBench>();
@@ -144,8 +144,8 @@ namespace DotNetCross.Sorting.Benchmarks
             }
             else
             {
-                //var sut = new ComparableClassInt32SortBench();
-                var sut = new StringSortBench();
+                var sut = new ComparableClassInt32SortBench();
+                //var sut = new StringSortBench();
                 sut.Filler = new RandomSpanFiller(SpanFillers.RandomSeed);
                 sut.Length = 1000; // 1000000;
                 sut.GlobalSetup();

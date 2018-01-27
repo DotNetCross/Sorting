@@ -7,6 +7,18 @@ namespace System
     // TODO: Rename to SpanSortHelpers before move to corefx
     internal static partial class SpanSortHelpersHelperTypes
     {
+        // canonical instantiation of a generic type (is an issue for perf for reference types)
+        // since the value type generic comparer does not work for that...
+        // https://blogs.msdn.microsoft.com/carlos/2009/11/09/net-generics-and-code-bloat-or-its-lack-thereof/
+        // which I am not sure why because the comparer itself is a value type...
+
+        // To work around canonical instantiation of a generic type
+        // We use "Reference" as a placeholder...
+        internal struct Reference
+        {
+            internal object o;
+        }
+
         internal interface ILessThanComparer
         {
             bool LessThan<T>(T x, T y);
@@ -34,6 +46,13 @@ namespace System
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool LessThan<T>(T x, T y) => Unsafe.As<T, IComparable<T>>(ref x).CompareTo(y) < 0;
+        }
+        internal struct IComparableLessThanComparerNew<TKey> : ILessThanComparer
+            where TKey : class, IComparable<TKey>
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool LessThan<T>(T x, T y) => Unsafe.As<IComparable<TKey>>(Unsafe.As<T, Reference>(ref x).o).CompareTo(
+                Unsafe.As<TKey>(Unsafe.As<T, Reference>(ref y).o)) < 0;
         }
 
         internal interface ILessThanComparer<in T>
