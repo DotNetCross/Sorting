@@ -84,7 +84,7 @@ namespace DotNetCross.Sorting.Benchmarks
     public class ComparableClassInt32SortBench : SortBench<ComparableClassInt32>
     {
         public ComparableClassInt32SortBench()
-            : base(maxLength: 3000000, new[] { 2, 3, 10, 100, 10000, 1000000 },
+            : base(maxLength: 100000, new[] { 2, 3, 10, 100, 1000, 10000, 50000 },
                    SpanFillers.Default, i => new ComparableClassInt32(i))
         { }
     }
