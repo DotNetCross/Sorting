@@ -11,48 +11,12 @@ using System.Runtime.CompilerServices;
 //#endif
 
 using static System.SpanSortHelpersHelperTypes;
-using S = System.SpanSortHelpersKeysAndOrValues;
+using S = System.SpanSortHelpersKeysAndValues;
 
 namespace System
 {
-    internal static partial class SpanSortHelpersKeysAndOrValues
+    internal static partial class SpanSortHelpersKeysAndValues
     {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void Sort<TKey>(this Span<TKey> keys)
-        {
-            int length = keys.Length;
-            if (length < 2)
-                return;
-
-            // PERF: Try specialized here for optimal performance
-            // Code-gen is weird unless used in loop outside
-            if (!TrySortSpecialized(
-                ref keys.DangerousGetPinnableReference(), length))
-            {
-                Span<Void> values = default;
-                DefaultSpanSortHelper<TKey, Void>.s_default.Sort(
-                    ref keys.DangerousGetPinnableReference(),
-                    ref values.DangerousGetPinnableReference(),
-                    length);
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void Sort<TKey, TComparer>(
-            this Span<TKey> keys, TComparer comparer)
-            where TComparer : IComparer<TKey>
-        {
-            int length = keys.Length;
-            if (length < 2)
-                return;
-
-            Span<Void> values = default;
-            DefaultSpanSortHelper<TKey, Void, TComparer>.s_default.Sort(
-                ref keys.DangerousGetPinnableReference(),
-                ref values.DangerousGetPinnableReference(),
-                length, comparer);
-        }
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static void Sort<TKey, TValue>(this Span<TKey> keys, Span<TValue> values)
         {
@@ -64,7 +28,7 @@ namespace System
 
             // PERF: Try specialized here for optimal performance
             // Code-gen is weird unless used in loop outside
-            if (!TrySortSpecializedWithValues(
+            if (!TrySortSpecialized(
                 ref keys.DangerousGetPinnableReference(),
                 ref values.DangerousGetPinnableReference(),
                 length))
@@ -100,23 +64,6 @@ namespace System
         // Empirically, 16 seems to speed up most cases without slowing down others, at least for integers.
         // Large value types may benefit from a smaller number.
         internal const int IntrosortSizeThreshold = 16;
-
-        internal struct Void { }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static bool TrySortSpecialized<TKey>(
-            ref TKey keys, int length)
-        {
-            Void values;
-            return TrySortSpecialized(ref keys, ref values, length);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static bool TrySortSpecializedWithValues<TKey, TValue>(
-            ref TKey keys, ref TValue values, int length)
-        {
-            return TrySortSpecialized(ref keys, ref values, length);
-        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static bool TrySortSpecialized<TKey, TValue>(
@@ -286,13 +233,9 @@ namespace System
                     }
                     if (partitionSize == 3)
                     {
-                        // Unfortunately the jit outputs some unnecessary stack stuff
-                        // when passing ref values for Void it seems... despite inlining :|
                         Sort3(ref keys, ref values, lo, hi - 1, hi, comparer);
                         return;
                     }
-                    // Unfortunately the jit outputs some unnecessary stack stuff
-                    // when passing ref values for Void it seems... despite inlining :|
                     InsertionSort(ref keys, ref values, lo, hi, comparer);
                     return;
                 }
@@ -341,10 +284,7 @@ namespace System
             // We already partitioned lo and hi and put the pivot in hi - 1.  
             // And we pre-increment & decrement below.
             Swap(ref keysAtMiddle, ref Unsafe.Add(ref keys, right));
-            if (typeof(TValue) != typeof(Void))
-            {
-                Swap(ref values, middle, right);
-            }
+            Swap(ref values, middle, right);
 
             while (left < right)
             {
@@ -357,20 +297,14 @@ namespace System
                     break;
 
                 Swap(ref keys, left, right);
-                if (typeof(TValue) != typeof(Void))
-                {
-                    Swap(ref values, left, right);
-                }
+                Swap(ref values, left, right);
             }
             // Put pivot in the right location.
             right = hi - 1;
             if (left != right)
             {
                 Swap(ref keys, left, right);
-                if (typeof(TValue) != typeof(Void))
-                {
-                    Swap(ref values, left, right);
-                }
+                Swap(ref values, left, right);
             }
             return left;
         }
@@ -392,10 +326,7 @@ namespace System
             for (int i = n; i > 1; --i)
             {
                 Swap(ref keys, lo, lo + i - 1);
-                if (typeof(TValue) != typeof(Void))
-                {
-                    Swap(ref values, lo, lo + i - 1);
-                }
+                Swap(ref values, lo, lo + i - 1);
                 DownHeap(ref keys, ref values, 1, i - 1, lo, comparer);
             }
         }
@@ -412,10 +343,10 @@ namespace System
             ref TKey keysAtLo = ref Unsafe.Add(ref keys, lo);
             ref TKey keysAtLoMinus1 = ref Unsafe.Subtract(ref keysAtLo, 1);
 
-            ref TValue valuesAtLoMinus1 = ref typeof(TValue) != typeof(Void) ? ref Unsafe.Add(ref values, lo - 1) : ref values;
+            ref TValue valuesAtLoMinus1 = ref Unsafe.Add(ref values, lo - 1);
 
             TKey d = Unsafe.Add(ref keysAtLoMinus1, i);
-            TValue dValue = typeof(TValue) != typeof(Void) ? Unsafe.Add(ref valuesAtLoMinus1, i) : default;
+            TValue dValue = Unsafe.Add(ref valuesAtLoMinus1, i);
 
             var nHalf = n / 2;
             while (i <= nHalf)
@@ -435,19 +366,13 @@ namespace System
 
                 // keys[lo + i - 1] = keys[lo + child - 1]
                 Unsafe.Add(ref keysAtLoMinus1, i) = Unsafe.Add(ref keysAtLoMinus1, child);
-                if (typeof(TValue) != typeof(Void))
-                {
-                    Unsafe.Add(ref valuesAtLoMinus1, i) = Unsafe.Add(ref valuesAtLoMinus1, child);
-                }
+                Unsafe.Add(ref valuesAtLoMinus1, i) = Unsafe.Add(ref valuesAtLoMinus1, child);
 
                 i = child;
             }
             //keys[lo + i - 1] = d;
             Unsafe.Add(ref keysAtLoMinus1, i) = d;
-            if (typeof(TValue) != typeof(Void))
-            {
-                Unsafe.Add(ref values, lo + i - 1) = dValue;
-            }
+            Unsafe.Add(ref valuesAtLoMinus1, i) = dValue;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -467,23 +392,17 @@ namespace System
                 // TODO: Would be good to be able to update local ref here
                 if (j >= lo && comparer.LessThan(t, Unsafe.Add(ref keys, j)))
                 {
-                    var v = typeof(TValue) != typeof(Void) ? Unsafe.Add(ref values, j + 1) : default;
+                    var v = Unsafe.Add(ref values, j + 1);
                     do
                     {
                         Unsafe.Add(ref keys, j + 1) = Unsafe.Add(ref keys, j);
-                        if (typeof(TValue) != typeof(Void))
-                        {
-                            Unsafe.Add(ref values, j + 1) = Unsafe.Add(ref values, j);
-                        }
+                        Unsafe.Add(ref values, j + 1) = Unsafe.Add(ref values, j);
                         --j;
                     }
                     while (j >= lo && comparer.LessThan(t, Unsafe.Add(ref keys, j)));
 
                     Unsafe.Add(ref keys, j + 1) = t;
-                    if (typeof(TValue) != typeof(Void))
-                    {
-                        Unsafe.Add(ref values, j + 1) = v;
-                    }
+                    Unsafe.Add(ref values, j + 1) = v;
                 }
             }
         }
@@ -507,12 +426,9 @@ namespace System
                 else if (comparer.LessThan(r0, r2)) //(r0 < r2)
                 {
                     Swap(ref r1, ref r2);
-                    if (typeof(TValue) != typeof(Void))
-                    {
-                        ref var v1 = ref Unsafe.Add(ref values, i1);
-                        ref var v2 = ref Unsafe.Add(ref values, i2);
-                        Swap(ref v1, ref v2);
-                    }
+                    ref var v1 = ref Unsafe.Add(ref values, i1);
+                    ref var v2 = ref Unsafe.Add(ref values, i2);
+                    Swap(ref v1, ref v2);
                 }
                 else
                 {
@@ -520,16 +436,13 @@ namespace System
                     r0 = r2;
                     r2 = r1;
                     r1 = tmp;
-                    if (typeof(TValue) != typeof(Void))
-                    {
-                        ref var v0 = ref Unsafe.Add(ref values, i0);
-                        ref var v1 = ref Unsafe.Add(ref values, i1);
-                        ref var v2 = ref Unsafe.Add(ref values, i2);
-                        TValue vTemp = v0;
-                        v0 = v2;
-                        v2 = v1;
-                        v1 = vTemp;
-                    }
+                    ref var v0 = ref Unsafe.Add(ref values, i0);
+                    ref var v1 = ref Unsafe.Add(ref values, i1);
+                    ref var v2 = ref Unsafe.Add(ref values, i2);
+                    TValue vTemp = v0;
+                    v0 = v2;
+                    v2 = v1;
+                    v1 = vTemp;
                 }
             }
             else
@@ -537,22 +450,16 @@ namespace System
                 if (comparer.LessThan(r0, r2)) //(r0 < r2)
                 {
                     Swap(ref r0, ref r1);
-                    if (typeof(TValue) != typeof(Void))
-                    {
-                        ref var v0 = ref Unsafe.Add(ref values, i0);
-                        ref var v1 = ref Unsafe.Add(ref values, i1);
-                        Swap(ref v0, ref v1);
-                    }
+                    ref var v0 = ref Unsafe.Add(ref values, i0);
+                    ref var v1 = ref Unsafe.Add(ref values, i1);
+                    Swap(ref v0, ref v1);
                 }
                 else if (comparer.LessThan(r2, r1)) //(r2 < r1)
                 {
                     Swap(ref r0, ref r2);
-                    if (typeof(TValue) != typeof(Void))
-                    {
-                        ref var v0 = ref Unsafe.Add(ref values, i0);
-                        ref var v2 = ref Unsafe.Add(ref values, i2);
-                        Swap(ref v0, ref v2);
-                    }
+                    ref var v0 = ref Unsafe.Add(ref values, i0);
+                    ref var v2 = ref Unsafe.Add(ref values, i2);
+                    Swap(ref v0, ref v2);
                 }
                 else
                 {
@@ -560,16 +467,13 @@ namespace System
                     r0 = r1;
                     r1 = r2;
                     r2 = tmp;
-                    if (typeof(TValue) != typeof(Void))
-                    {
-                        ref var v0 = ref Unsafe.Add(ref values, i0);
-                        ref var v1 = ref Unsafe.Add(ref values, i1);
-                        ref var v2 = ref Unsafe.Add(ref values, i2);
-                        TValue vTemp = v0;
-                        v0 = v1;
-                        v1 = v2;
-                        v2 = vTemp;
-                    }
+                    ref var v0 = ref Unsafe.Add(ref values, i0);
+                    ref var v1 = ref Unsafe.Add(ref values, i1);
+                    ref var v2 = ref Unsafe.Add(ref values, i2);
+                    TValue vTemp = v0;
+                    v0 = v1;
+                    v1 = v2;
+                    v2 = vTemp;
                 }
             }
             return ref r1;
@@ -588,10 +492,7 @@ namespace System
             if (comparer.LessThan(b, a))
             {
                 Swap(ref a, ref b);
-                if (typeof(TValue) != typeof(Void))
-                {
-                    Swap(ref values, i, j);
-                }
+                Swap(ref values, i, j);
             }
         }
 
