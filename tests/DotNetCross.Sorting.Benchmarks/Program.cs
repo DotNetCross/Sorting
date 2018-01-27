@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using BenchmarkDotNet.Running;
 using DotNetCross.Sorting.Sequences;
@@ -119,13 +120,12 @@ namespace DotNetCross.Sorting.Benchmarks
     {
         static void Main(string[] args)
         {
-            bool benchOrProfile = true;
-            if (benchOrProfile)
+            if (true && !Debugger.IsAttached)
             {
-                BenchmarkRunner.Run<Int32SortBench>();
-                BenchmarkRunner.Run<SingleSortBench>();
-                BenchmarkRunner.Run<ComparableStructInt32SortBench>();
-                BenchmarkRunner.Run<ComparableClassInt32SortBench>();
+                //BenchmarkRunner.Run<Int32SortBench>();
+                //BenchmarkRunner.Run<SingleSortBench>();
+                //BenchmarkRunner.Run<ComparableStructInt32SortBench>();
+                //BenchmarkRunner.Run<ComparableClassInt32SortBench>();
                 BenchmarkRunner.Run<StringSortBench>();
                 
                 //BenchmarkRunner.Run<Int32StringSortBench>();
@@ -144,9 +144,10 @@ namespace DotNetCross.Sorting.Benchmarks
             }
             else
             {
-                var sut = new Int32SortBench();
+                //var sut = new ComparableClassInt32SortBench();
+                var sut = new StringSortBench();
                 sut.Filler = new RandomSpanFiller(SpanFillers.RandomSeed);
-                sut.Length = 100; // 1000000;
+                sut.Length = 1000; // 1000000;
                 sut.GlobalSetup();
                 sut.IterationSetup();
                 sut.SpanSort();

@@ -7,7 +7,7 @@ namespace System
     // TODO: Rename to SpanSortHelpers before move to corefx
     internal static partial class SpanSortHelpersHelperTypes
     {
-        internal interface ILessThanComparer<T>
+        internal interface ILessThanComparer<in T>
         {
             bool LessThan(T x, T y);
         }
@@ -64,6 +64,11 @@ namespace System
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool LessThan(double x, double y) => x < y;
         }
+        internal struct StringLessThanComparer : ILessThanComparer<string>
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool LessThan(string x, string y) => x.CompareTo(y) < 0;
+        }
 
         // Helper to allow sharing all code via inlineable functor for IComparer<T>
         internal struct ComparerLessThanComparer<T, TComparer> : ILessThanComparer<T>
@@ -85,6 +90,13 @@ namespace System
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool LessThan(T x, T y) => x.CompareTo(y) < 0;
+        }
+
+        internal struct IComparableLessThanComparer<T> : ILessThanComparer<IComparable<T>>
+            where T : class, IComparable<T> // Do we need to constrain? Not really
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool LessThan(IComparable<T> x, IComparable<T> y) => x.CompareTo(Unsafe.As<T>(y)) < 0; // Cast??
         }
 
 
