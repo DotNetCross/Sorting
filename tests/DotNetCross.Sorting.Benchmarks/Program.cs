@@ -37,6 +37,22 @@ namespace DotNetCross.Sorting.Benchmarks
         }
     }
 
+    public class ComparableClassInt32 : IComparable<ComparableClassInt32>
+    {
+        public readonly int Value;
+
+        public ComparableClassInt32(int value)
+        {
+            Value = value;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public int CompareTo(ComparableClassInt32 other)
+        {
+            return this.Value.CompareTo(other.Value);
+        }
+    }
+
     public class Int32SortBench : SortBench<int>
     {
         public Int32SortBench()
@@ -65,7 +81,13 @@ namespace DotNetCross.Sorting.Benchmarks
                    SpanFillers.Default, i => new ComparableStructInt32(i))
         { }
     }
-
+    public class ComparableClassInt32SortBench : SortBench<ComparableClassInt32>
+    {
+        public ComparableClassInt32SortBench()
+            : base(maxLength: 3000000, new[] { 2, 3, 10, 100, 10000, 1000000 },
+                   SpanFillers.Default, i => new ComparableClassInt32(i))
+        { }
+    }
     public class Int32Int32SortBench : SortBench<int, int>
     {
         public Int32Int32SortBench()
@@ -100,10 +122,11 @@ namespace DotNetCross.Sorting.Benchmarks
             bool benchOrProfile = true;
             if (benchOrProfile)
             {
-                //BenchmarkRunner.Run<Int32SortBench>();
-                //BenchmarkRunner.Run<ComparableStructInt32SortBench>();
+                BenchmarkRunner.Run<Int32SortBench>();
+                BenchmarkRunner.Run<SingleSortBench>();
+                BenchmarkRunner.Run<ComparableStructInt32SortBench>();
+                BenchmarkRunner.Run<ComparableClassInt32SortBench>();
                 BenchmarkRunner.Run<StringSortBench>();
-                //BenchmarkRunner.Run<SingleSortBench>();
                 
                 //BenchmarkRunner.Run<Int32StringSortBench>();
                 //BenchmarkRunner.Run<Int32SingleSortBench>();
