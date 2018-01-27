@@ -9,11 +9,13 @@ using System.Runtime.CompilerServices;
 //using Internal.Runtime.CompilerServices;
 //#endif
 
+using SHT = System.SpanSortHelpersHelperTypes;
+// Consolidated code
 //using SHK = System.SpanSortHelpersKeysAndOrValues;
 //using SHKV = System.SpanSortHelpersKeysAndOrValues;
+// Specialized for either only keys or keys and values
 using SHK = System.SpanSortHelpersKeys;
 using SHKV = System.SpanSortHelpersKeysAndValues;
-using SHT = System.SpanSortHelpersHelperTypes;
 
 namespace System
 {
