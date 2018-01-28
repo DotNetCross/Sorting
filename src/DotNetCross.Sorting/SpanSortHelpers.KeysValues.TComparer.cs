@@ -13,7 +13,7 @@ using static System.SpanSortHelpersCommon;
 
 namespace System
 {
-    internal static partial class SpanSortHelpersKeysAndValues
+    internal static partial class SpanSortHelpersKeysValues
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static void Sort<TKey, TValue, TComparer>(

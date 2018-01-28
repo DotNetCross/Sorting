@@ -10,11 +10,11 @@ using System.Runtime.CompilerServices;
 //#endif
 
 using static System.SpanSortHelpersCommon;
-using S = System.SpanSortHelpersKeysAndValues;
+using S = System.SpanSortHelpersKeysValues;
 
 namespace System
 {
-    internal static partial class SpanSortHelpersKeysAndValues
+    internal static partial class SpanSortHelpersKeysValues
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static void Sort<TKey, TValue>(this Span<TKey> keys, Span<TValue> values)

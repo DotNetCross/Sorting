@@ -9,13 +9,13 @@ using System.Runtime.CompilerServices;
 //using Internal.Runtime.CompilerServices;
 //#endif
 
-using SHT = System.SpanSortHelpersCommon;
+using SHC = System.SpanSortHelpersCommon;
 // Consolidated code
 //using SHK = System.SpanSortHelpersKeysAndOrValues;
 //using SHKV = System.SpanSortHelpersKeysAndOrValues;
 // Specialized for either only keys or keys and values and for comparable or not
 using SHK = System.SpanSortHelpersKeys;
-using SHKV = System.SpanSortHelpersKeysAndValues;
+using SHKV = System.SpanSortHelpersKeysValues;
 
 namespace System
 {
@@ -226,7 +226,7 @@ namespace System
             if (comparison == null)
                 ThrowHelper.ThrowArgumentNullException(ExceptionArgument.comparison);
 
-            SHK.Sort(span, new SHT.ComparisonComparer<T>(comparison));
+            SHK.Sort(span, new SHC.ComparisonComparer<T>(comparison));
         }
 
         /// <summary>
@@ -269,7 +269,7 @@ namespace System
         public static void Sort<TKey, TValue>(this Span<TKey> keys,
            Span<TValue> items, Comparison<TKey> comparison)
         {
-            SHKV.Sort(keys, items, new SHT.ComparisonComparer<TKey>(comparison));
+            SHKV.Sort(keys, items, new SHC.ComparisonComparer<TKey>(comparison));
         }
     }
 }
