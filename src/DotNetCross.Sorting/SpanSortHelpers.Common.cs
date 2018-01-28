@@ -107,7 +107,7 @@ namespace System
             public bool LessThan(string x, string y) => x.CompareTo(y) < 0;
         }
 
-        // Helper to allow sharing all code via inlineable functor for IComparer<T>
+        // Helper to allow sharing code
         // Does not work well for reference types
         internal struct ComparerLessThanComparer<T, TComparer> : ILessThanComparer<T>
             where TComparer : IComparer<T>
@@ -122,7 +122,7 @@ namespace System
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool LessThan(T x, T y) => _comparer.Compare(x, y) < 0;
         }
-        // Helper to allow sharing all code via inlineable functor for IComparable<T>
+        // Helper to allow sharing code
         // Does not work well for reference types
         internal struct ComparableLessThanComparer<T> : ILessThanComparer<T>
             where T : IComparable<T>
@@ -131,15 +131,7 @@ namespace System
             public bool LessThan(T x, T y) => x.CompareTo(y) < 0;
         }
 
-        //internal struct IComparableLessThanComparer<T> : ILessThanComparer<IComparable<T>>
-        //    where T : class, IComparable<T> // Do we need to constrain? Not really
-        //{
-        //    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        //    public bool LessThan(IComparable<T> x, IComparable<T> y) => x.CompareTo(Unsafe.As<T>(y)) < 0; // Cast??
-        //}
-
-
-        // Helper to allow sharing all code via IComparer<T> inlineable
+        // Helper to allow sharing code
         internal struct ComparisonComparer<T> : IComparer<T>
         {
             readonly Comparison<T> m_comparison;
