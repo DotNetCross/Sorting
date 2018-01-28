@@ -116,9 +116,17 @@ namespace System
             while (left < right)
             {
                 // TODO: Would be good to be able to update local ref here
-                while (LessThan(Unsafe.Add(ref keys, ++left), pivot)) ;
-                // TODO: Would be good to be able to update local ref here
-                while (LessThan(pivot, Unsafe.Add(ref keys, --right))) ;
+
+                if (pivot == null)
+                {
+                    while (left < (hi - 1) && Unsafe.Add(ref keys, ++left) == null) ;
+                    while (right > lo && Unsafe.Add(ref keys, --right) != null) ;
+                }
+                else
+                {
+                    while (LessThan(Unsafe.Add(ref keys, ++left), pivot)) ;
+                    while (LessThan(pivot, Unsafe.Add(ref keys, --right))) ;
+                }
 
                 if (left >= right)
                     break;
@@ -170,15 +178,17 @@ namespace System
             {
                 int child = i << 1;
 
-                //if (child < n && comparer(keys[lo + child - 1], keys[lo + child]) < 0)
-                if (child < n &&
-                    LessThan(Unsafe.Add(ref keysAtLoMinus1, child), Unsafe.Add(ref keysAtLo, child)))
+                //if (child < n && (keys[lo + child - 1] == null || keys[lo + child - 1].CompareTo(keys[lo + child]) < 0))
+                if (child < n && 
+                    (Unsafe.Add(ref keysAtLoMinus1, child) == null ||
+                     LessThan(Unsafe.Add(ref keysAtLoMinus1, child), Unsafe.Add(ref keysAtLo, child))))
                 {
                     ++child;
                 }
 
-                //if (!(comparer(d, keys[lo + child - 1]) < 0))
-                if (!(LessThan(d, Unsafe.Add(ref keysAtLoMinus1, child))))
+                //if (keys[lo + child - 1] == null || keys[lo + child - 1].CompareTo(d) < 0)
+                if (Unsafe.Add(ref keysAtLoMinus1, child) == null || 
+                    !(LessThan(d, Unsafe.Add(ref keysAtLoMinus1, child))))
                     break;
 
                 // keys[lo + i - 1] = keys[lo + child - 1]
@@ -204,14 +214,15 @@ namespace System
                 //t = keys[i + 1];
                 var t = Unsafe.Add(ref keys, j + 1);
                 // TODO: Would be good to be able to update local ref here
-                if (j >= lo && LessThan(t, Unsafe.Add(ref keys, j)))
+                if (j >= lo && (t == null || LessThan(t, Unsafe.Add(ref keys, j))))
                 {
                     do
                     {
                         Unsafe.Add(ref keys, j + 1) = Unsafe.Add(ref keys, j);
                         --j;
                     }
-                    while (j >= lo && LessThan(t, Unsafe.Add(ref keys, j)));
+                    while (j >= lo && (t == null || LessThan(t, Unsafe.Add(ref keys, j))));
+                    //while (j >= lo && (t == null || t.CompareTo(keys[j]) < 0))
 
                     Unsafe.Add(ref keys, j + 1) = t;
                 }

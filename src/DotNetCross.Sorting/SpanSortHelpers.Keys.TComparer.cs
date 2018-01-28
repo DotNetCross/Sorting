@@ -121,8 +121,8 @@ namespace System
             while (left < right)
             {
                 // TODO: Would be good to be able to update local ref here
+
                 while (comparer.LessThan(Unsafe.Add(ref keys, ++left), pivot)) ;
-                // TODO: Would be good to be able to update local ref here
                 while (comparer.LessThan(pivot, Unsafe.Add(ref keys, --right))) ;
 
                 if (left >= right)
