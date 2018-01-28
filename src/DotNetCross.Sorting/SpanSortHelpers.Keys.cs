@@ -56,30 +56,37 @@ namespace System
             {
                 if (typeof(IComparable<TKey>).IsAssignableFrom(typeof(TKey)))
                 {
-                    if (typeof(TKey).IsValueType)
-                    {
-                        // TODO: Is there a faster way? A way without heap alloc? 
-                        // Albeit, this only happens once for each type combination
-                        var ctor = typeof(ComparableSpanSortHelper<>)
-                        .MakeGenericType(new Type[] { typeof(TKey) })
-                        .GetConstructor(Array.Empty<Type>());
+                    // TODO: Is there a faster way? A way without heap alloc? 
+                    // Albeit, this only happens once for each type combination
+                    var ctor = typeof(ComparableSpanSortHelper<>)
+                    .MakeGenericType(new Type[] { typeof(TKey) })
+                    .GetConstructor(Array.Empty<Type>());
 
-                        return (ISpanSortHelper<TKey>)ctor.Invoke(Array.Empty<object>());
-                        // coreclr does the following:
-                        //return (IArraySortHelper<T, TComparer>)
-                        //    RuntimeTypeHandle.Allocate(
-                        //        .TypeHandle.Instantiate());
-                    }
-                    else
-                    {
-                        // TODO: Is there a faster way? A way without heap alloc? 
-                        // Albeit, this only happens once for each type combination
-                        var ctor = typeof(IComparableSpanSortHelper<>)
-                        .MakeGenericType(new Type[] { typeof(TKey) })
-                        .GetConstructor(Array.Empty<Type>());
+                    return (ISpanSortHelper<TKey>)ctor.Invoke(Array.Empty<object>());
+                    //if (typeof(TKey).IsValueType)
+                    //{
+                    //    // TODO: Is there a faster way? A way without heap alloc? 
+                    //    // Albeit, this only happens once for each type combination
+                    //    var ctor = typeof(ComparableSpanSortHelper<>)
+                    //    .MakeGenericType(new Type[] { typeof(TKey) })
+                    //    .GetConstructor(Array.Empty<Type>());
 
-                        return (ISpanSortHelper<TKey>)ctor.Invoke(Array.Empty<object>());
-                    }
+                    //    return (ISpanSortHelper<TKey>)ctor.Invoke(Array.Empty<object>());
+                    //    // coreclr does the following:
+                    //    //return (IArraySortHelper<T, TComparer>)
+                    //    //    RuntimeTypeHandle.Allocate(
+                    //    //        .TypeHandle.Instantiate());
+                    //}
+                    //else
+                    //{
+                    //    // TODO: Is there a faster way? A way without heap alloc? 
+                    //    // Albeit, this only happens once for each type combination
+                    //    var ctor = typeof(IComparableSpanSortHelper<>)
+                    //    .MakeGenericType(new Type[] { typeof(TKey) })
+                    //    .GetConstructor(Array.Empty<Type>());
+
+                    //    return (ISpanSortHelper<TKey>)ctor.Invoke(Array.Empty<object>());
+                    //}
                 }
                 else
                 {
@@ -104,23 +111,11 @@ namespace System
 
         internal class ComparableSpanSortHelper<TKey>
             : ISpanSortHelper<TKey>
-            where TKey : struct, IComparable<TKey>
+            where TKey : IComparable<TKey>
         {
             public void Sort(ref TKey keys, int length)
             {
-                S.Sort(ref keys, length, new ComparableLessThanComparer<TKey>());
-            }
-        }
-
-        internal class IComparableSpanSortHelper<TKey>
-            : ISpanSortHelper<TKey>
-            where TKey : class, IComparable<TKey>
-        {
-            public void Sort(ref TKey keys, int length)
-            {
-                S.Sort<IComparable<TKey>, IComparableLessThanComparer<TKey>>(
-                    ref Unsafe.As<TKey, IComparable<TKey>>(ref keys), length, 
-                    new IComparableLessThanComparer<TKey>());
+                S.Sort(ref keys, length);
             }
         }
 
@@ -283,15 +278,8 @@ namespace System
                 {
                     if (!S.TrySortSpecialized(ref keys, length))
                     {
-                        if (typeof(TKey).IsValueType)
-                        {
-                            S.Sort(ref keys, length, new ComparableLessThanComparer<TKey>());
-                        }
-                        else
-                        {
-                            S.Sort(ref Unsafe.As<TKey, IComparable<TKey>>(ref keys), length,
-                                new IComparableLessThanComparer<TKey>());
-                        }
+                        S.Sort(ref keys, length);
+                        //S.Sort(ref keys, length, new ComparableLessThanComparer<TKey>());
                     }
                 }
                 else

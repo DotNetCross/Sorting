@@ -122,13 +122,13 @@ namespace DotNetCross.Sorting.Benchmarks
         {
             if (true && !Debugger.IsAttached)
             {
-                BenchmarkRunner.Run<CompareToLessThanBench>();
+                //BenchmarkRunner.Run<CompareToLessThanBench>();
 
                 //BenchmarkRunner.Run<Int32SortBench>();
                 //BenchmarkRunner.Run<SingleSortBench>();
                 //BenchmarkRunner.Run<ComparableStructInt32SortBench>();
-                //BenchmarkRunner.Run<ComparableClassInt32SortBench>();
-                //BenchmarkRunner.Run<StringSortBench>();
+                BenchmarkRunner.Run<ComparableClassInt32SortBench>();
+                BenchmarkRunner.Run<StringSortBench>();
                 
                 //BenchmarkRunner.Run<Int32StringSortBench>();
                 //BenchmarkRunner.Run<Int32SingleSortBench>();
@@ -144,7 +144,7 @@ namespace DotNetCross.Sorting.Benchmarks
                 //BenchmarkRunner.Run<IntPtrHelperBenchmark>();
                 //BenchmarkRunner.Run<CompareAsm>();
             }
-            else if(false)
+            else if (true)
             {
                 var sut = new ComparableClassInt32SortBench();
                 //var sut = new StringSortBench();

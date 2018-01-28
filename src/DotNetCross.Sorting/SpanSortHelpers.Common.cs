@@ -27,6 +27,22 @@ namespace System
 
             return result;
         }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static void Swap<T>(ref T items, int i, int j)
+        {
+            Debug.Assert(i != j);
+            Swap(ref Unsafe.Add(ref items, i), ref Unsafe.Add(ref items, j));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static void Swap<T>(ref T a, ref T b)
+        {
+            T temp = a;
+            a = b;
+            b = temp;
+        }
+
 
         // canonical instantiation of a generic type (is an issue for perf for reference types)
         // since the value type generic comparer does not work for that...
@@ -140,6 +156,7 @@ namespace System
         }
 
         // Helper to allow sharing all code via inlineable functor for IComparer<T>
+        // Does not work well for reference types
         internal struct ComparerLessThanComparer<T, TComparer> : ILessThanComparer<T>
             where TComparer : IComparer<T>
         {
@@ -154,19 +171,20 @@ namespace System
             public bool LessThan(T x, T y) => _comparer.Compare(x, y) < 0;
         }
         // Helper to allow sharing all code via inlineable functor for IComparable<T>
-        internal struct ComparableLessThanComparer<T> : ILessThanComparer<T>//, IComparer<T>
+        // Does not work well for reference types
+        internal struct ComparableLessThanComparer<T> : ILessThanComparer<T>
             where T : IComparable<T>
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool LessThan(T x, T y) => x.CompareTo(y) < 0;
         }
 
-        internal struct IComparableLessThanComparer<T> : ILessThanComparer<IComparable<T>>
-            where T : class, IComparable<T> // Do we need to constrain? Not really
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public bool LessThan(IComparable<T> x, IComparable<T> y) => x.CompareTo(Unsafe.As<T>(y)) < 0; // Cast??
-        }
+        //internal struct IComparableLessThanComparer<T> : ILessThanComparer<IComparable<T>>
+        //    where T : class, IComparable<T> // Do we need to constrain? Not really
+        //{
+        //    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        //    public bool LessThan(IComparable<T> x, IComparable<T> y) => x.CompareTo(Unsafe.As<T>(y)) < 0; // Cast??
+        //}
 
 
         // Helper to allow sharing all code via IComparer<T> inlineable
