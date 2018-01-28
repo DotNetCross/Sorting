@@ -122,10 +122,12 @@ namespace DotNetCross.Sorting.Benchmarks
         {
             if (true && !Debugger.IsAttached)
             {
+                BenchmarkRunner.Run<CompareToLessThanBench>();
+
                 //BenchmarkRunner.Run<Int32SortBench>();
                 //BenchmarkRunner.Run<SingleSortBench>();
                 //BenchmarkRunner.Run<ComparableStructInt32SortBench>();
-                BenchmarkRunner.Run<ComparableClassInt32SortBench>();
+                //BenchmarkRunner.Run<ComparableClassInt32SortBench>();
                 //BenchmarkRunner.Run<StringSortBench>();
                 
                 //BenchmarkRunner.Run<Int32StringSortBench>();
@@ -142,7 +144,7 @@ namespace DotNetCross.Sorting.Benchmarks
                 //BenchmarkRunner.Run<IntPtrHelperBenchmark>();
                 //BenchmarkRunner.Run<CompareAsm>();
             }
-            else
+            else if(false)
             {
                 var sut = new ComparableClassInt32SortBench();
                 //var sut = new StringSortBench();
@@ -162,6 +164,71 @@ namespace DotNetCross.Sorting.Benchmarks
                     sut.IterationSetup();
                     sut.SpanSort();
                 }
+            }
+            else
+            {
+                var sut = new CompareToLessThanBench();
+                sut.OpenDelegate();
+                //var filler = new RandomSpanFiller(SpanFillers.RandomSeed);
+                //const int length = 1000000;
+                //var strings = new string[length];
+                //var keys = new Span<string>(strings);
+                //filler.Fill(keys, length, i => i.ToString("D9"));
+                //ref var keysRef = ref keys.DangerousGetPinnableReference();
+                //int count = Test.CountLessThan(ref Unsafe.As<string, Reference<string>>(ref keysRef),
+                //    length, new Test.IComparableLessThanComparer<string>());
+                //Console.WriteLine(count);
+                //Console.WriteLine("Enter key...");
+                //Console.ReadKey();
+                //int totalSum = 0;
+                //for (int i = 0; i < 1000; i++)
+                //{
+                //    totalSum += Test.CountLessThan(ref Unsafe.As<string, Reference<string>>(ref keysRef),
+                //        length, new Test.IComparableLessThanComparer<string>());
+
+                //}
+                //Console.WriteLine(totalSum);
+            }
+        }
+
+
+
+        internal struct Reference<T>
+        {
+            internal object o;
+        }
+
+        internal static class Test
+        {
+            internal interface ILessThanComparer<in T>
+            {
+                bool LessThan(T x, T y);
+            }
+
+            internal struct IComparableLessThanComparer<T>
+                : ILessThanComparer<Reference<T>>
+                where T : IComparable<T>
+            {
+                public bool LessThan(Reference<T> x, Reference<T> y)
+                {
+                    return Unsafe.As<IComparable<T>>(x.o).CompareTo(Unsafe.As<Reference<T>, T>(ref y)) < 0;
+                }
+            }
+
+            public static int CountLessThan<TReference, TComparer>(ref TReference keys, int length, TComparer comparer)
+                where TComparer : ILessThanComparer<TReference>
+            {
+                int count = 0;
+                for (int i = 0; i < length - 1; i++)
+                {
+                    ref var a = ref Unsafe.Add(ref keys, i);
+                    ref var b = ref Unsafe.Add(ref keys, i + 1);
+                    if (comparer.LessThan(a, b))
+                    {
+                        ++count;
+                    }
+                }
+                return count;
             }
         }
     }
