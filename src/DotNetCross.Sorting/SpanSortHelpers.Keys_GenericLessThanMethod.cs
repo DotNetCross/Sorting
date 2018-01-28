@@ -187,7 +187,7 @@ namespace System
         }
 
         private static void IntroSort<TKey, TComparer>(
-            ref TKey keys, 
+            ref TKey keys,
             int lo, int hi, int depthLimit,
             TComparer comparer)
             where TComparer : ILessThanComparer
@@ -529,7 +529,7 @@ namespace System
             public void Sort(ref TKey keys, int length)
             {
                 S.Sort<Reference, IComparableLessThanComparerNew<TKey>>(
-                    ref Unsafe.As<TKey, Reference>(ref keys), length, 
+                    ref Unsafe.As<TKey, Reference>(ref keys), length,
                     new IComparableLessThanComparerNew<TKey>());
             }
         }

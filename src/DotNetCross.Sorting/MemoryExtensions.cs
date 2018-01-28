@@ -202,8 +202,7 @@ namespace System
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Sort<T>(this Span<T> span)
         {
-            //SHK.Sort(span);
-            SpanSortHelpersKeys_GenericLessThanMethod.Sort(span);
+            SHK.Sort(span);
         }
 
         /// <summary>
