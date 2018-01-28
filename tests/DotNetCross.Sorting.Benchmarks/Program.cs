@@ -71,7 +71,7 @@ namespace DotNetCross.Sorting.Benchmarks
     public class StringSortBench : SortBench<string>
     {
         public StringSortBench()
-            : base(maxLength: 100000, new[] { 2, 3, 10, 100, 1000, 10000, 50000 },
+            : base(maxLength: 100000, new[] { 2, 3, 10, 100, 1000, 10000 },
                    SpanFillers.Default, i => i.ToString("D9"))
         { }
     }
@@ -85,7 +85,7 @@ namespace DotNetCross.Sorting.Benchmarks
     public class ComparableClassInt32SortBench : SortBench<ComparableClassInt32>
     {
         public ComparableClassInt32SortBench()
-            : base(maxLength: 100000, new[] { 2, 3, 10, 100, 1000, 10000, 50000 },
+            : base(maxLength: 100000, new[] { 2, 3, 10, 100, 10000, 100000 },
                    SpanFillers.Default, i => new ComparableClassInt32(i))
         { }
     }
@@ -113,7 +113,7 @@ namespace DotNetCross.Sorting.Benchmarks
     public class StringInt32SortBench : SortBench<string, int>
     {
         public StringInt32SortBench()
-            : base(maxLength: 100000, new[] { 2, 3, 10, 100, 1000, 10000, 50000 }, 
+            : base(maxLength: 100000, new[] { 2, 3, 10, 100, 1000, 10000 }, 
                    SpanFillers.Default, i => i.ToString("D9"), i => i)
         { }
     }
@@ -132,20 +132,23 @@ namespace DotNetCross.Sorting.Benchmarks
         {
             if (true && !Debugger.IsAttached)
             {
-                //BenchmarkRunner.Run<Int32SortBench>();
-                //BenchmarkRunner.Run<SingleSortBench>();
-                //BenchmarkRunner.Run<ComparableStructInt32SortBench>();
+                BenchmarkRunner.Run<Int32SortBench>();
+                BenchmarkRunner.Run<SingleSortBench>();
+                BenchmarkRunner.Run<ComparableStructInt32SortBench>();
                 BenchmarkRunner.Run<ComparableClassInt32SortBench>();
                 BenchmarkRunner.Run<StringSortBench>();
 
-                //BenchmarkRunner.Run<Int32StringSortBench>();
-                //BenchmarkRunner.Run<Int32SingleSortBench>();
-                //BenchmarkRunner.Run<Int32Int32SortBench>();
-                //BenchmarkRunner.Run<StringInt32SortBench>();
+                BenchmarkRunner.Run<Int32StringSortBench>();
+                BenchmarkRunner.Run<Int32SingleSortBench>();
+                BenchmarkRunner.Run<Int32Int32SortBench>();
+                BenchmarkRunner.Run<StringInt32SortBench>();
 
-                //BenchmarkRunner.Run<Int32SortDisassemblerBench>();
-                //BenchmarkRunner.Run<StringSortDisassemblerBench>();
-                //BenchmarkRunner.Run<Int32SortDisassemblerBench>();
+                BenchmarkRunner.Run<Int32SortDisassemblerBench>();
+                BenchmarkRunner.Run<StringSortDisassemblerBench>();
+
+                // TODO: Add disassembler for ComparableClassInt32
+
+                // TODO: Add disassembler for key and values
 
                 //BenchmarkRunner.Run<Int32SortDisassemblerBenchNotWorking>(); // Fails, probably due to generics...
 
