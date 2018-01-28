@@ -60,11 +60,6 @@ namespace System
         // https://github.com/dotnet/coreclr/blob/master/src/mscorlib/src/System/Collections/Generic/ArraySortHelper.cs
         // https://github.com/dotnet/coreclr/blob/master/src/classlibnative/bcltype/arrayhelpers.cpp
 
-        // This is the threshold where Introspective sort switches to Insertion sort.
-        // Empirically, 16 seems to speed up most cases without slowing down others, at least for integers.
-        // Large value types may benefit from a smaller number.
-        internal const int IntrosortSizeThreshold = 16;
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static bool TrySortSpecialized<TKey, TValue>(
             ref TKey keys, ref TValue values, int length)
@@ -192,20 +187,6 @@ namespace System
         {
             var depthLimit = 2 * FloorLog2PlusOne(length);
             IntroSort(ref keys, ref values, 0, length - 1, depthLimit, comparer);
-        }
-
-        private static int FloorLog2PlusOne(int n)
-        {
-            Debug.Assert(n >= 2);
-            int result = 0;
-            do
-            {
-                ++result;
-                n >>= 1;
-            }
-            while (n > 0);
-
-            return result;
         }
 
         private static void IntroSort<TKey, TValue, TComparer>(

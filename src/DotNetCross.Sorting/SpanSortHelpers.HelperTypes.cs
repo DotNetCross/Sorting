@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace System
@@ -7,6 +8,26 @@ namespace System
     // TODO: Rename to SpanSortHelpers before move to corefx
     internal static partial class SpanSortHelpersHelperTypes
     {
+
+        // This is the threshold where Introspective sort switches to Insertion sort.
+        // Empirically, 16 seems to speed up most cases without slowing down others, at least for integers.
+        // Large value types may benefit from a smaller number.
+        internal const int IntrosortSizeThreshold = 16;
+
+        internal static int FloorLog2PlusOne(int n)
+        {
+            Debug.Assert(n >= 2);
+            int result = 0;
+            do
+            {
+                ++result;
+                n >>= 1;
+            }
+            while (n > 0);
+
+            return result;
+        }
+
         // canonical instantiation of a generic type (is an issue for perf for reference types)
         // since the value type generic comparer does not work for that...
         // https://blogs.msdn.microsoft.com/carlos/2009/11/09/net-generics-and-code-bloat-or-its-lack-thereof/
