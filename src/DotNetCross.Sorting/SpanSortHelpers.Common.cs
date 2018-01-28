@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 namespace System
 {
     // TODO: Rename to SpanSortHelpers before move to corefx
-    internal static partial class SpanSortHelpersHelperTypes
+    internal static partial class SpanSortHelpersCommon
     {
 
         // This is the threshold where Introspective sort switches to Insertion sort.

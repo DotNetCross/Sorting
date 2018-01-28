@@ -10,7 +10,7 @@ using System.Runtime.CompilerServices;
 //using Internal.Runtime.CompilerServices;
 //#endif
 
-using static System.SpanSortHelpersHelperTypes;
+using static System.SpanSortHelpersCommon;
 using S = System.SpanSortHelpersKeysAndOrValues;
 
 namespace System
