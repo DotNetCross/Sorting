@@ -124,8 +124,8 @@ namespace System
                 }
                 else
                 {
-                    while (LessThan(Unsafe.Add(ref keys, ++left), pivot)) ;
-                    while (LessThan(pivot, Unsafe.Add(ref keys, --right))) ;
+                    while (Unsafe.Add(ref keys, ++left).CompareTo(pivot) < 0) ;
+                    while (pivot.CompareTo(Unsafe.Add(ref keys, --right)) < 0) ;
                 }
 
                 if (left >= right)
@@ -181,14 +181,14 @@ namespace System
                 //if (child < n && (keys[lo + child - 1] == null || keys[lo + child - 1].CompareTo(keys[lo + child]) < 0))
                 if (child < n && 
                     (Unsafe.Add(ref keysAtLoMinus1, child) == null ||
-                     LessThan(Unsafe.Add(ref keysAtLoMinus1, child), Unsafe.Add(ref keysAtLo, child))))
+                     Unsafe.Add(ref keysAtLoMinus1, child).CompareTo(Unsafe.Add(ref keysAtLo, child)) < 0))
                 {
                     ++child;
                 }
 
                 //if (keys[lo + child - 1] == null || keys[lo + child - 1].CompareTo(d) < 0)
                 if (Unsafe.Add(ref keysAtLoMinus1, child) == null || 
-                    !(LessThan(d, Unsafe.Add(ref keysAtLoMinus1, child))))
+                    !(d.CompareTo(Unsafe.Add(ref keysAtLoMinus1, child)) < 0))
                     break;
 
                 // keys[lo + i - 1] = keys[lo + child - 1]
@@ -214,14 +214,14 @@ namespace System
                 //t = keys[i + 1];
                 var t = Unsafe.Add(ref keys, j + 1);
                 // TODO: Would be good to be able to update local ref here
-                if (j >= lo && (t == null || LessThan(t, Unsafe.Add(ref keys, j))))
+                if (j >= lo && (t == null || t.CompareTo(Unsafe.Add(ref keys, j)) < 0))
                 {
                     do
                     {
                         Unsafe.Add(ref keys, j + 1) = Unsafe.Add(ref keys, j);
                         --j;
                     }
-                    while (j >= lo && (t == null || LessThan(t, Unsafe.Add(ref keys, j))));
+                    while (j >= lo && (t == null || t.CompareTo(Unsafe.Add(ref keys, j)) < 0));
                     //while (j >= lo && (t == null || t.CompareTo(keys[j]) < 0))
 
                     Unsafe.Add(ref keys, j + 1) = t;
@@ -234,13 +234,13 @@ namespace System
             ref TKey r0, ref TKey r1, ref TKey r2)
             where TKey : IComparable<TKey>
         {
-            if (LessThan(r0, r1)) //r0 < r1)
+            if (r0.CompareTo(r1) < 0) //r0 < r1)
             {
-                if (LessThan(r1, r2)) //(r1 < r2)
+                if (r1.CompareTo(r2) < 0) //(r1 < r2)
                 {
                     return;
                 }
-                else if (LessThan(r0, r2)) //(r0 < r2)
+                else if (r0.CompareTo(r2) < 0) //(r0 < r2)
                 {
                     Swap(ref r1, ref r2);
                 }
@@ -254,11 +254,11 @@ namespace System
             }
             else
             {
-                if (LessThan(r0, r2)) //(r0 < r2)
+                if (r0.CompareTo(r2) < 0) //(r0 < r2)
                 {
                     Swap(ref r0, ref r1);
                 }
-                else if (LessThan(r2, r1)) //(r2 < r1)
+                else if (r2.CompareTo(r1) < 0) //(r2 < r1)
                 {
                     Swap(ref r0, ref r2);
                 }
@@ -282,19 +282,12 @@ namespace System
 
             ref TKey a = ref Unsafe.Add(ref keys, i);
             ref TKey b = ref Unsafe.Add(ref keys, j);
-            if (LessThan(b, a))
+            if (b.CompareTo(a) < 0)
             {
                 TKey temp = a;
                 a = b;
                 b = temp;
             }
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static bool LessThan<TKey>(TKey x, TKey y) 
-            where TKey : IComparable<TKey>
-        {
-            return x.CompareTo(y) < 0;
         }
     }
 }
