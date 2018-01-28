@@ -26,7 +26,8 @@ namespace System
             // PERF: Try specialized here for optimal performance
             // Code-gen is weird unless used in loop outside
             if (!TrySortSpecialized(
-                ref keys.DangerousGetPinnableReference(), length))
+                ref keys.DangerousGetPinnableReference(),
+                length))
             {
                 DefaultSpanSortHelper<TKey>.s_default.Sort(
                     ref keys.DangerousGetPinnableReference(),
@@ -45,8 +46,9 @@ namespace System
 
             DefaultSpanSortHelper<TKey, TComparer>.s_default.Sort(
                 ref keys.DangerousGetPinnableReference(),
-                keys.Length, comparer);
+                length, comparer);
         }
+
 
         internal static class DefaultSpanSortHelper<TKey>
         {
@@ -56,37 +58,12 @@ namespace System
             {
                 if (typeof(IComparable<TKey>).IsAssignableFrom(typeof(TKey)))
                 {
-                    // TODO: Is there a faster way? A way without heap alloc? 
-                    // Albeit, this only happens once for each type combination
+                    // coreclr uses RuntimeTypeHandle.Allocate
                     var ctor = typeof(ComparableSpanSortHelper<>)
-                    .MakeGenericType(new Type[] { typeof(TKey) })
-                    .GetConstructor(Array.Empty<Type>());
+                        .MakeGenericType(new Type[] { typeof(TKey) })
+                        .GetConstructor(Array.Empty<Type>());
 
                     return (ISpanSortHelper<TKey>)ctor.Invoke(Array.Empty<object>());
-                    //if (typeof(TKey).IsValueType)
-                    //{
-                    //    // TODO: Is there a faster way? A way without heap alloc? 
-                    //    // Albeit, this only happens once for each type combination
-                    //    var ctor = typeof(ComparableSpanSortHelper<>)
-                    //    .MakeGenericType(new Type[] { typeof(TKey) })
-                    //    .GetConstructor(Array.Empty<Type>());
-
-                    //    return (ISpanSortHelper<TKey>)ctor.Invoke(Array.Empty<object>());
-                    //    // coreclr does the following:
-                    //    //return (IArraySortHelper<T, TComparer>)
-                    //    //    RuntimeTypeHandle.Allocate(
-                    //    //        .TypeHandle.Instantiate());
-                    //}
-                    //else
-                    //{
-                    //    // TODO: Is there a faster way? A way without heap alloc? 
-                    //    // Albeit, this only happens once for each type combination
-                    //    var ctor = typeof(IComparableSpanSortHelper<>)
-                    //    .MakeGenericType(new Type[] { typeof(TKey) })
-                    //    .GetConstructor(Array.Empty<Type>());
-
-                    //    return (ISpanSortHelper<TKey>)ctor.Invoke(Array.Empty<object>());
-                    //}
                 }
                 else
                 {
@@ -123,47 +100,18 @@ namespace System
         internal static class DefaultSpanSortHelper<TKey, TComparer>
             where TComparer : IComparer<TKey>
         {
-            //private static volatile ISpanSortHelper<T, TComparer> defaultArraySortHelper;
-            //public static ISpanSortHelper<T, TComparer> Default
-            //{
-            //    get
-            //    {
-            //        ISpanSortHelper<T, TComparer> sorter = defaultArraySortHelper;
-            //        if (sorter == null)
-            //            sorter = CreateArraySortHelper();
-            //        return sorter;
-            //    }
-            //}
             internal static readonly ISpanSortHelper<TKey, TComparer> s_default = CreateSortHelper();
 
             private static ISpanSortHelper<TKey, TComparer> CreateSortHelper()
             {
                 if (typeof(IComparable<TKey>).IsAssignableFrom(typeof(TKey)))
                 {
-                    if (typeof(TKey).IsValueType)
-                    {
-                        // TODO: Is there a faster way? A way without heap alloc? 
-                        // Albeit, this only happens once for each type combination
-                        var ctor = typeof(ComparableSpanSortHelper<,>)
-                            .MakeGenericType(new Type[] { typeof(TKey), typeof(TComparer) })
-                            .GetConstructor(Array.Empty<Type>());
+                    // coreclr uses RuntimeTypeHandle.Allocate
+                    var ctor = typeof(ComparableSpanSortHelper<,>)
+                        .MakeGenericType(new Type[] { typeof(TKey), typeof(TComparer) })
+                        .GetConstructor(Array.Empty<Type>());
 
-                        return (ISpanSortHelper<TKey, TComparer>)ctor.Invoke(Array.Empty<object>());
-                        // coreclr does the following:
-                        //return (IArraySortHelper<T, TComparer>)
-                        //    RuntimeTypeHandle.Allocate(
-                        //        .TypeHandle.Instantiate());
-                    }
-                    else
-                    {
-                        // TODO: Is there a faster way? A way without heap alloc? 
-                        // Albeit, this only happens once for each type combination
-                        var ctor = typeof(IComparableSpanSortHelper<,>)
-                            .MakeGenericType(new Type[] { typeof(TKey), typeof(TComparer) })
-                            .GetConstructor(Array.Empty<Type>());
-
-                        return (ISpanSortHelper<TKey, TComparer>)ctor.Invoke(Array.Empty<object>());
-                    }
+                    return (ISpanSortHelper<TKey, TComparer>)ctor.Invoke(Array.Empty<object>());
                 }
                 else
                 {
@@ -235,51 +183,7 @@ namespace System
                 {
                     if (!S.TrySortSpecialized(ref keys, length))
                     {
-                        S.Sort(ref keys, length,
-                            new ComparableLessThanComparer<TKey>());
-                    }
-                }
-                else
-                {
-                    S.Sort(ref keys, length,
-                        new ComparerLessThanComparer<TKey, TComparer>(comparer));
-                }
-                //}
-                //catch (IndexOutOfRangeException e)
-                //{
-                //    throw e;
-                //    //IntrospectiveSortUtilities.ThrowOrIgnoreBadComparer(comparer);
-                //}
-                //catch (Exception e)
-                //{
-                //    throw e;
-                //    //throw new InvalidOperationException(SR.InvalidOperation_IComparerFailed, e);
-                //}
-            }
-        }
-        internal class IComparableSpanSortHelper<TKey, TComparer>
-            : ISpanSortHelper<TKey, TComparer>
-            where TKey : class, IComparable<TKey>
-            where TComparer : IComparer<TKey>
-        {
-            public void Sort(ref TKey keys, int length,
-                TComparer comparer)
-            {
-                // Add a try block here to detect IComparers (or their
-                // underlying IComparables, etc) that are bogus.
-                //
-                // TODO: Do we need the try/catch?
-                //try
-                //{
-                if (comparer == null ||
-                    // Cache this in generic traits helper class perhaps
-                    (!typeof(TComparer).IsValueType &&
-                     object.ReferenceEquals(comparer, Comparer<TKey>.Default))) // Or "=="?
-                {
-                    if (!S.TrySortSpecialized(ref keys, length))
-                    {
                         S.Sort(ref keys, length);
-                        //S.Sort(ref keys, length, new ComparableLessThanComparer<TKey>());
                     }
                 }
                 else

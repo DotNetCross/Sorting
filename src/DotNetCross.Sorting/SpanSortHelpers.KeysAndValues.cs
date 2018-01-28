@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 //#if !netstandard
@@ -36,7 +35,7 @@ namespace System
                 DefaultSpanSortHelper<TKey, TValue>.s_default.Sort(
                     ref keys.DangerousGetPinnableReference(),
                     ref values.DangerousGetPinnableReference(),
-                    keys.Length);
+                    length);
             }
         }
 
@@ -54,7 +53,7 @@ namespace System
             DefaultSpanSortHelper<TKey, TValue, TComparer>.s_default.Sort(
                 ref keys.DangerousGetPinnableReference(),
                 ref values.DangerousGetPinnableReference(),
-                keys.Length, comparer);
+                length, comparer);
         }
 
 
@@ -66,17 +65,12 @@ namespace System
             {
                 if (typeof(IComparable<TKey>).IsAssignableFrom(typeof(TKey)))
                 {
-                    // TODO: Is there a faster way? A way without heap alloc? 
-                    // Albeit, this only happens once for each type combination
+                    // coreclr uses RuntimeTypeHandle.Allocate
                     var ctor = typeof(ComparableSpanSortHelper<,>)
                         .MakeGenericType(new Type[] { typeof(TKey), typeof(TValue) })
                         .GetConstructor(Array.Empty<Type>());
 
                     return (ISpanSortHelper<TKey, TValue>)ctor.Invoke(Array.Empty<object>());
-                    // coreclr does the following:
-                    //return (IArraySortHelper<T, TComparer>)
-                    //    RuntimeTypeHandle.Allocate(
-                    //        .TypeHandle.Instantiate());
                 }
                 else
                 {
@@ -105,8 +99,7 @@ namespace System
         {
             public void Sort(ref TKey keys, ref TValue values, int length)
             {
-                S.Sort(ref keys, ref values, length,
-                    new ComparableLessThanComparer<TKey>());
+                S.Sort(ref keys, ref values, length);
             }
         }
 
@@ -114,34 +107,18 @@ namespace System
         internal static class DefaultSpanSortHelper<TKey, TValue, TComparer>
             where TComparer : IComparer<TKey>
         {
-            //private static volatile ISpanSortHelper<T, TComparer> defaultArraySortHelper;
-            //public static ISpanSortHelper<T, TComparer> Default
-            //{
-            //    get
-            //    {
-            //        ISpanSortHelper<T, TComparer> sorter = defaultArraySortHelper;
-            //        if (sorter == null)
-            //            sorter = CreateArraySortHelper();
-            //        return sorter;
-            //    }
-            //}
             internal static readonly ISpanSortHelper<TKey, TValue, TComparer> s_default = CreateSortHelper();
 
             private static ISpanSortHelper<TKey, TValue, TComparer> CreateSortHelper()
             {
                 if (typeof(IComparable<TKey>).IsAssignableFrom(typeof(TKey)))
                 {
-                    // TODO: Is there a faster way? A way without heap alloc? 
-                    // Albeit, this only happens once for each type combination
+                    // coreclr uses RuntimeTypeHandle.Allocate
                     var ctor = typeof(ComparableSpanSortHelper<,,>)
                         .MakeGenericType(new Type[] { typeof(TKey), typeof(TValue), typeof(TComparer) })
                         .GetConstructor(Array.Empty<Type>());
 
                     return (ISpanSortHelper<TKey, TValue, TComparer>)ctor.Invoke(Array.Empty<object>());
-                    // coreclr does the following:
-                    //return (IArraySortHelper<T, TComparer>)
-                    //    RuntimeTypeHandle.Allocate(
-                    //        .TypeHandle.Instantiate());
                 }
                 else
                 {
@@ -213,8 +190,7 @@ namespace System
                 {
                     if (!S.TrySortSpecialized(ref keys, ref values, length))
                     {
-                        S.Sort(ref keys, ref values, length,
-                            new ComparableLessThanComparer<TKey>());
+                        S.Sort(ref keys, ref values, length);
                     }
                 }
                 else

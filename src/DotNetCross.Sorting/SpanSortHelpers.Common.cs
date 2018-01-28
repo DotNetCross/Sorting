@@ -44,54 +44,6 @@ namespace System
         }
 
 
-        // canonical instantiation of a generic type (is an issue for perf for reference types)
-        // since the value type generic comparer does not work for that...
-        // https://blogs.msdn.microsoft.com/carlos/2009/11/09/net-generics-and-code-bloat-or-its-lack-thereof/
-        // which I am not sure why because the comparer itself is a value type...
-
-        // To work around canonical instantiation of a generic type
-        // We use "Reference" as a placeholder...
-        internal struct Reference
-        {
-            internal object o;
-        }
-
-        internal interface ILessThanComparer
-        {
-            bool LessThan<T>(T x, T y);
-        }
-        internal struct ComparerLessThanComparerNew<TKey, TComparer> : ILessThanComparer
-            where TComparer : IComparer<TKey>
-        {
-            readonly TComparer _comparer;
-
-            public ComparerLessThanComparerNew(in TComparer comparer)
-            {
-                _comparer = comparer;
-            }
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public bool LessThan<T>(T x, T y) => _comparer.Compare(Unsafe.As<T, TKey>(ref x), Unsafe.As<T, TKey>(ref y)) < 0;
-        }
-        internal struct ComparableLessThanComparerNew<TKey> : ILessThanComparer
-            where TKey : struct, IComparable<TKey>
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public bool LessThan<T>(T x, T y) => Unsafe.As<T, TKey>(ref x).CompareTo(Unsafe.As<T, TKey>(ref y)) < 0;
-        }
-        internal struct IComparableLessThanComparer : ILessThanComparer
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public bool LessThan<T>(T x, T y) => Unsafe.As<T, IComparable<T>>(ref x).CompareTo(y) < 0;
-        }
-        internal struct IComparableLessThanComparerNew<TKey> : ILessThanComparer
-            where TKey : class, IComparable<TKey>
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public bool LessThan<T>(T x, T y) => Unsafe.As<IComparable<TKey>>(Unsafe.As<T, Reference>(ref x).o).CompareTo(
-                Unsafe.As<TKey>(Unsafe.As<T, Reference>(ref y).o)) < 0;
-        }
-
         internal interface ILessThanComparer<in T>
         {
             bool LessThan(T x, T y);

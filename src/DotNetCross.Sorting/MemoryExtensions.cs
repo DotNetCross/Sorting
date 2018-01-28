@@ -13,7 +13,7 @@ using SHT = System.SpanSortHelpersCommon;
 // Consolidated code
 //using SHK = System.SpanSortHelpersKeysAndOrValues;
 //using SHKV = System.SpanSortHelpersKeysAndOrValues;
-// Specialized for either only keys or keys and values
+// Specialized for either only keys or keys and values and for comparable or not
 using SHK = System.SpanSortHelpersKeys;
 using SHKV = System.SpanSortHelpersKeysAndValues;
 
