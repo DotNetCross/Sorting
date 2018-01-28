@@ -4,6 +4,10 @@
 
 using System.Runtime.CompilerServices;
 
+//#if !netstandard
+//using Internal.Runtime.CompilerServices;
+//#endif
+
 using static System.SpanSortHelpersCommon;
 
 namespace System
@@ -14,9 +18,8 @@ namespace System
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static bool TrySortSpecialized<TKey>(
-            ref TKey keys, int keysLength)
+            ref TKey keys, int length)
         {
-            int length = keysLength;
             // Type unfolding adopted from https://github.com/dotnet/coreclr/blob/master/src/classlibnative/bcltype/arrayhelpers.cpp#L268
             if (typeof(TKey) == typeof(sbyte))
             {

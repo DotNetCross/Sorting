@@ -2,8 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 //#if !netstandard
@@ -11,7 +9,6 @@ using System.Runtime.CompilerServices;
 //#endif
 
 using static System.SpanSortHelpersCommon;
-using S = System.SpanSortHelpersKeysAndValues;
 
 namespace System
 {
@@ -23,7 +20,7 @@ namespace System
         internal static bool TrySortSpecialized<TKey, TValue>(
             ref TKey keys, ref TValue values, int length)
         {
-            // Types unfolded adopted from https://github.com/dotnet/coreclr/blob/master/src/classlibnative/bcltype/arrayhelpers.cpp#L268
+            // Types unfolding adopted from https://github.com/dotnet/coreclr/blob/master/src/classlibnative/bcltype/arrayhelpers.cpp#L268
             if (typeof(TKey) == typeof(sbyte))
             {
                 ref var specificKeys = ref Unsafe.As<TKey, sbyte>(ref keys);

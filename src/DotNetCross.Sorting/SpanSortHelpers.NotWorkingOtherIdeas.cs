@@ -7,6 +7,8 @@ namespace DotNetCross.Sorting
 {
     public static class OtherIdeas
     {
+        // https://github.com/dotnet/coreclr/blob/master/src/mscorlib/src/System/Collections/Generic/ArraySortHelper.cs
+
         // Code-gen was poor when using this...
         //internal static class SortValues<T>
         //{
