@@ -391,7 +391,7 @@ namespace System
 
             //TKey d = keys[lo + i - 1];
             ref TKey keysAtLo = ref Unsafe.Add(ref keys, lo);
-            ref TKey keysAtLoMinus1 = ref Unsafe.Subtract(ref keysAtLo, 1);
+            ref TKey keysAtLoMinus1 = ref Unsafe.Add(ref keysAtLo, -1); // No Subtract??
 
             ref TValue valuesAtLoMinus1 = ref typeof(TValue) != typeof(Void) ? ref Unsafe.Add(ref values, lo - 1) : ref values;
 

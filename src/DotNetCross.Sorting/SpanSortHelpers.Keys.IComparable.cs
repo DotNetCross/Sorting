@@ -171,7 +171,7 @@ namespace System
 
             //TKey d = keys[lo + i - 1];
             ref TKey keysAtLo = ref Unsafe.Add(ref keys, lo);
-            ref TKey keysAtLoMinus1 = ref Unsafe.Subtract(ref keysAtLo, 1);
+            ref TKey keysAtLoMinus1 = ref Unsafe.Add(ref keysAtLo, -1); // No Subtract??
             TKey d = Unsafe.Add(ref keysAtLoMinus1, i);
             var nHalf = n / 2;
             while (i <= nHalf)
