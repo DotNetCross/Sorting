@@ -53,7 +53,7 @@ Minor bug fix for introspective depth limit, see https://github.com/dotnet/corec
 Code is currently, probably temporary, structured into multiple files 
 to allow for easier comparison of the different variants. 
 
-Consolidated:
+Consolidated (most likely will be removed):
 - `SpanSortHelpers.KeysAndOrValues.cs`
   - This is my futile attempt to consoladate the different variants into a single code base.
   - I originally had a plan involving `ref struct` and value type generic arguments to ensure
@@ -67,7 +67,7 @@ Consolidated:
     - https://github.com/dotnet/csharplang/issues/905
   - I was hoping for this to allow for "injecting" values or not with minimal overhead...
     but probably a bit too C++ template like.
-  - I even tried referencing `System.Ben` to see if it helped ;) 
+  - I even tried referencing [`System.Ben`](https://github.com/benaadams/System.Ben) to see if it helped ;) 
 
 Current:
 - `SpanSortHelpers.Common.cs`
