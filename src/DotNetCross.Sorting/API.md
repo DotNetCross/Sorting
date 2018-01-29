@@ -50,16 +50,57 @@ This PR is based mainly on the generic implementation and the native implementat
 Minor bug fix for introspective depth limit, see https://github.com/dotnet/coreclr/pull/16002
 
 #### Code Structure 
-Code is currently, probably temporary, structured into multiple files to allow for easier comparison of the different variants. 
+Code is currently, probably temporary, structured into multiple files 
+to allow for easier comparison of the different variants. 
 
-MENTION other repo
+- `SpanSortHelpers.KeysAndOrValues.cs`
+  - This is my futile attempt to consoladate the different variants into a single code base.
+  - I originally had a plan involving `ref struct` and value type generic arguments to ensure
+    this would could be done with neglible performance impact but a few things were in the way:
+    - https://github.com/dotnet/roslyn/issues/20226
+    - `ref struct`s can't contain `ref`s
+  - Proposals to improve related to this:
+    - https://github.com/dotnet/csharplang/issues/1147
+    - https://github.com/dotnet/csharplang/issues/1148
+  - And another proposal that would help:
+    - https://github.com/dotnet/csharplang/issues/905
+  - I was hoping for this to allow for "injecting" values or not with minimal overhead...
+    but probably a bit too C++ template like.
+  - I even tried referencing `System.Ben` to see if it helped ;) 
+- `SpanSortHelpers.Common.cs`
+  - A few commonly used constants, types and methods e.g. `Swap`.
+- `SpanSortHelpers.Keys.cs`
+  - Entry points and dispatch types for single span sort.
+- `SpanSortHelpers.Keys.IComparable.cs`
+  - IComparable variant
+- `SpanSortHelpers.Keys.Specialized.cs`
+  - Specialized switch for fast primitive versions and a little code sharing.
+- `SpanSortHelpers.Keys.TComparer.cs`
+  - TComparer variant
+- `SpanSortHelpers.KeysValues.cs`
+  - Entry points and dispatch types for two span sort (e.g. with items/values).
+- `SpanSortHelpers.KeysValues.IComparable.cs`
+  - IComparable variant
+- `SpanSortHelpers.KeysValues.Specialized.cs`
+  - Specialized switch for fast primitive versions and a little code sharing.
+- `SpanSortHelpers.KeysValues.TComparer.cs`
+  - TComparer variant
+
+Primary development was done in my DotNetCross.Sorting repo in the `span-sort` branch:
+https://github.com/DotNetCross/Sorting/tree/span-sort
+This was to get a better feedback loop and to use BenchmarkDotNet for benchmark testing
+and disassembly.
+
+NOTE: I understand that in `corefx` you might want to consolidate this into a single file,
+but for now it easier when comparing variants.
 
 #### Changes
 Many small changes have been made due to usings refs and Unsafe, but a couple notable changes are: 
-- Sort3 add a specific implementation for sorting three, used both for finding pivot and when sorting exactly 3 elements. 
+- `Sort3` add a specific implementation for sorting three, used both for finding pivot and when sorting exactly 3 elements. 
 - Remove unnecessary ifs on swaps, except for one place where it is now explicit. 
-- A few renames such as Sort2 instead of SwapIfGreater. 
-- Comparer based variant uses a specific ILessThanComparer allowing for better specialization for basic types. 
+- A few renames such as `Sort2` instead of `SwapIfGreater`. 
+- Comparer based variant uses a specific `ILessThanComparer` allowing for better 
+  specialization for basic types. 
 
 #### Benchmarks
 Since `Sort` is an in-place operation it is "destructive" and benchmarking is done a bit different than normal.
@@ -106,6 +147,7 @@ public void SpanSort()
     }
 }
 ```
+Results for this for specific commits will come in comments later.
 
 ##### Fillers
 As noted there are different fillers. Som fill the entire array not caring about the slice length.
@@ -122,6 +164,18 @@ i.e. 10% pairs have been swapped randomly. Seeded so each run is the same.
 
 For each different type, the `int` is converted to the given type e.g. using `ToString("D9")` for `string`.
 
+#### Difference to BinarySearch
+`BinarySearch` only has an overload without comparer for when `T : IComparable<T>`.
+That is, there is no overload where the value searched for is either not
+generically constrained or a reference type.
+
+ - Proposal https://github.com/dotnet/corefx/issues/15818
+ - Implementation https://github.com/dotnet/corefx/pull/25777
+
+This is unlike `Sort` where there is no generic constraint on the key type.
+If we had https://github.com/dotnet/csharplang/issues/905 this might not be
+that big an issue, but we might expect issues for some uses of `BinarySearch`.
+
 #### TODOs
 Overall, biggest to-do are tests. Feedback on whether it is OK to use Array.Sort as ground truth is needed. 
 
@@ -133,10 +187,11 @@ How can we succinctly define the many test cases that are needed?
   - Test all filler patterns.
   - Better separation between fast and slow (OuterLoop) tests, currently tests are slow. 
     - Need to know what lengths need testing for fast tests? 50 like in coreclr?
-- Add performance tests as per `corefx` standard.
+- Port performance tests as per `corefx` standard.
+  - Need to determine scope of these... a lot can be added.
 
 #### Review
-Right I need review feedback on the overall implementation. 
+I need review feedback on the overall implementation. 
 
 - Are the changes I have made acceptable? 
 - Are there any issues with how I have factored the code into the different types and generic methods?
