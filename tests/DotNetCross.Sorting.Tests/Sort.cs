@@ -1,4 +1,4 @@
-//#define OUTER_LOOP
+#define OUTER_LOOP
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
@@ -89,7 +89,7 @@ namespace System.SpanTests
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
         [MemberData(nameof(s_fastSortCases))]
-        public static void Sort_Keys_Int1616(SortCase sortCase)
+        public static void Sort_Keys_Int16(SortCase sortCase)
         {
             Test(sortCase, i => (short)i);
         }
@@ -97,7 +97,7 @@ namespace System.SpanTests
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
         [MemberData(nameof(s_fastSortCases))]
-        public static void Sort_Keys_UInt1616(SortCase sortCase)
+        public static void Sort_Keys_UInt16(SortCase sortCase)
         {
             Test(sortCase, i => (ushort)i);
         }
@@ -105,7 +105,7 @@ namespace System.SpanTests
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
         [MemberData(nameof(s_fastSortCases))]
-        public static void Sort_Keys_Int3216(SortCase sortCase)
+        public static void Sort_Keys_Int32(SortCase sortCase)
         {
             Test(sortCase, i => i);
         }
@@ -113,7 +113,7 @@ namespace System.SpanTests
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
         [MemberData(nameof(s_fastSortCases))]
-        public static void Sort_Keys_UInt3216(SortCase sortCase)
+        public static void Sort_Keys_UInt32(SortCase sortCase)
         {
             Test(sortCase, i => (uint)i);
         }
@@ -121,7 +121,7 @@ namespace System.SpanTests
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
         [MemberData(nameof(s_fastSortCases))]
-        public static void Sort_Keys_Int6416(SortCase sortCase)
+        public static void Sort_Keys_Int64(SortCase sortCase)
         {
             Test(sortCase, i => (long)i);
         }
@@ -129,7 +129,7 @@ namespace System.SpanTests
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
         [MemberData(nameof(s_fastSortCases))]
-        public static void Sort_Keys_UInt6416(SortCase sortCase)
+        public static void Sort_Keys_UInt64(SortCase sortCase)
         {
             Test(sortCase, i => (ulong)i);
         }
@@ -137,7 +137,7 @@ namespace System.SpanTests
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
         [MemberData(nameof(s_fastSortCases))]
-        public static void Sort_Keys_Single16(SortCase sortCase)
+        public static void Sort_Keys_Single(SortCase sortCase)
         {
             Test(sortCase, i => (float)i);
         }
@@ -145,7 +145,7 @@ namespace System.SpanTests
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
         [MemberData(nameof(s_fastSortCases))]
-        public static void Sort_Keys_Double16(SortCase sortCase)
+        public static void Sort_Keys_Double(SortCase sortCase)
         {
             Test(sortCase, i => (double)i);
         }
@@ -153,7 +153,7 @@ namespace System.SpanTests
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
         [MemberData(nameof(s_fastSortCases))]
-        public static void Sort_Keys_Boolean16(SortCase sortCase)
+        public static void Sort_Keys_Boolean(SortCase sortCase)
         {
             Test(sortCase, i => i % 2 == 0);
         }
@@ -161,7 +161,7 @@ namespace System.SpanTests
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
         [MemberData(nameof(s_fastSortCases))]
-        public static void Sort_Keys_Char16(SortCase sortCase)
+        public static void Sort_Keys_Char(SortCase sortCase)
         {
             Test(sortCase, i => (char)i);
         }
@@ -169,7 +169,7 @@ namespace System.SpanTests
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
         [MemberData(nameof(s_fastSortCases))]
-        public static void Sort_Keys_String16(SortCase sortCase)
+        public static void Sort_Keys_String(SortCase sortCase)
         {
             Test(sortCase, i => i.ToString("D9"));
         }
@@ -177,7 +177,7 @@ namespace System.SpanTests
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
         [MemberData(nameof(s_fastSortCases))]
-        public static void Sort_Keys_ComparableStructInt3216(SortCase sortCase)
+        public static void Sort_Keys_ComparableStructInt32(SortCase sortCase)
         {
             Test(sortCase, i => new ComparableStructInt32(i));
         }
@@ -185,7 +185,7 @@ namespace System.SpanTests
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
         [MemberData(nameof(s_fastSortCases))]
-        public static void Sort_Keys_ComparableClassInt3216(SortCase sortCase)
+        public static void Sort_Keys_ComparableClassInt32(SortCase sortCase)
         {
             Test(sortCase, i => new ComparableClassInt32(i));
         }
@@ -296,121 +296,7 @@ namespace System.SpanTests
         }
 #endif
 
-
-        //[Theory]
-        //[Trait("MyTrait", "MyTraitValue")]
-        //[InlineData(new uint[] { })]
-        //[InlineData(new uint[] { 1 })]
-        //[InlineData(new uint[] { 2, 1 })]
-        //[InlineData(new uint[] { 3, 1, 2 })]
-        //[InlineData(new uint[] { 3, 2, 1 })]
-        //[InlineData(new uint[] { 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 1, 2, 3, 4, 7, 6, 5 })]
-        //public static void Sort_UInt(uint[] unsorted)
-        //{
-        //    TestSortOverloads(unsorted);
-        //}
-
-
-
-        //// TODO: OuterLoop
-        //[Theory]
-        //[Trait("MyTrait", "MyTraitValue")]
-        //[InlineData(17, 1024)]
-        //[InlineData(42, 1024)]
-        //[InlineData(1873318, 1024)]
-        //public static void Sort_Random_Int(int seed, int maxCount)
-        //{
-        //    var random = new Random(seed);
-        //    for (int count = 0; count < maxCount; count++)
-        //    {
-        //        var unsorted = Enumerable.Range(0, count).Select(i => random.Next()).ToArray();
-        //        TestSortOverloads(unsorted);
-        //    }
-        //}
-
-        //[Theory]
-        //[Trait("MyTrait", "MyTraitValue")]
-        //[InlineData(17, 1024)]
-        //[InlineData(42, 1024)]
-        //[InlineData(1873318, 1024)]
-        //public static void Sort_Random_Float(int seed, int maxCount)
-        //{
-        //    var random = new Random(seed);
-        //    for (int count = 0; count < maxCount; count++)
-        //    {
-        //        var unsorted = Enumerable.Range(0, count).Select(i => (float)random.Next()).ToArray();
-        //        TestSortOverloads(unsorted);
-        //    }
-        //}
-
-        //[Theory]
-        //[Trait("MyTrait", "MyTraitValue")]
-        //[InlineData(17, 512)]
-        //[InlineData(42, 512)]
-        //[InlineData(1873318, 512)]
-        //public static void Sort_Random_String(int seed, int maxCount)
-        //{
-        //    var random = new Random(seed);
-        //    for (int count = 0; count < maxCount; count++)
-        //    {
-        //        var unsorted = Enumerable.Range(0, count).Select(i => random.Next().ToString("D9")).ToArray();
-        //        TestSortOverloads(unsorted);
-        //    }
-        //}
-
-        //[Theory]
-        //[Trait("MyTrait", "MyTraitValue")]
-        //[InlineData(1024)]
-        //public static void Sort_MedianOfThreeKiller_Int(int maxCount)
-        //{
-        //    var filler = new MedianOfThreeKillerSpanFiller();
-        //    for (int count = 0; count < maxCount; count++)
-        //    {
-        //        var unsorted = new int[count];
-        //        filler.Fill(unsorted, count, i => i);
-        //        TestSortOverloads(unsorted);
-        //    }
-        //}
-
-        //[Theory]
-        //[Trait("MyTrait", "MyTraitValue")]
-        //[InlineData(64)]
-        //public static void Sort_MedianOfThreeKiller_String(int maxCount)
-        //{
-        //    var filler = new MedianOfThreeKillerSpanFiller();
-        //    for (int count = 0; count < maxCount; count++)
-        //    {
-        //        var unsorted = new string[count];
-        //        filler.Fill(unsorted, count, i => i.ToString("D9"));
-        //        TestSortOverloads(unsorted);
-        //    }
-        //}
-
-        //// TODO: OuterLoop
-        //[Fact]
-        //[Trait("MyTrait", "MyTraitValue")]
-        //public static void Sort_Reverse_Int()
-        //{
-        //    for (int count = 1; count <= 256 * 1024; count <<= 1)
-        //    {
-        //        var unsorted = Enumerable.Range(0, count).Reverse().ToArray();
-        //        TestSortOverloads(unsorted);
-        //    }
-        //}
-
-        //// TODO: OuterLoop
-        //[Fact]
-        //[Trait("MyTrait", "MyTraitValue")]
-        //public static void Sort_AlreadySorted_Int()
-        //{
-        //    for (int count = 1; count <= 256 * 1024; count <<= 1)
-        //    {
-        //        var unsorted = Enumerable.Range(0, count).ToArray();
-        //        TestSortOverloads(unsorted);
-        //    }
-        //}
-
-#endregion
+        #endregion
 
         #region Keys and Values Tests
 
