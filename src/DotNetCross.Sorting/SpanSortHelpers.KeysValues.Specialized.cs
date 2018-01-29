@@ -34,14 +34,14 @@ namespace System
                 Sort(ref specificKeys, ref values, length, new ByteLessThanComparer());
                 return true;
             }
-            else if (typeof(TKey) == typeof(short) ||
-                     typeof(TKey) == typeof(char)) // Use short for chars to reduce code size
+            else if (typeof(TKey) == typeof(short))
             {
                 ref var specificKeys = ref Unsafe.As<TKey, short>(ref keys);
                 Sort(ref specificKeys, ref values, length, new Int16LessThanComparer());
                 return true;
             }
-            else if (typeof(TKey) == typeof(ushort))
+            else if (typeof(TKey) == typeof(ushort) ||
+                     typeof(TKey) == typeof(char)) // Use ushort for chars to reduce code size)
             {
                 ref var specificKeys = ref Unsafe.As<TKey, ushort>(ref keys);
                 Sort(ref specificKeys, ref values, length, new UInt16LessThanComparer());
