@@ -53,6 +53,7 @@ Minor bug fix for introspective depth limit, see https://github.com/dotnet/corec
 Code is currently, probably temporary, structured into multiple files 
 to allow for easier comparison of the different variants. 
 
+Consolidated:
 - `SpanSortHelpers.KeysAndOrValues.cs`
   - This is my futile attempt to consoladate the different variants into a single code base.
   - I originally had a plan involving `ref struct` and value type generic arguments to ensure
@@ -67,6 +68,8 @@ to allow for easier comparison of the different variants.
   - I was hoping for this to allow for "injecting" values or not with minimal overhead...
     but probably a bit too C++ template like.
   - I even tried referencing `System.Ben` to see if it helped ;) 
+
+Current:
 - `SpanSortHelpers.Common.cs`
   - A few commonly used constants, types and methods e.g. `Swap`.
 - `SpanSortHelpers.Keys.cs`

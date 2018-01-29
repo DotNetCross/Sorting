@@ -15,10 +15,42 @@ namespace System.SpanTests
         // https://github.com/dotnet/coreclr/tree/master/tests/src/CoreMangLib/cti/system/array
         // E.g. arraysort1.cs etc.
 
-        //public static readonly TheoryData<uint[]> s_sortCasesUInt =
-        //new TheoryData<uint[]> {
-        //    ,
-        //};
+        const int FastMaxLength = 50;
+        const int SlowMaxLength = 1024;
+
+        public static readonly TheoryData<SortCase> s_fastSortCases = CreateSortCases(FastMaxLength);
+        public static readonly TheoryData<SortCase> s_slowSortCases = CreateSortCases(SlowMaxLength);
+
+        public class SortCase
+        {
+            public SortCase(int maxLength, ISpanFiller filler)
+            {
+                if (filler == null) { throw new ArgumentNullException(nameof(filler)); }
+                MaxLength = maxLength;
+                Filler = filler;
+            }
+
+            public int MaxLength { get; }
+            public ISpanFiller Filler { get; }
+
+            public override string ToString()
+            {
+                return $"MaxLength={MaxLength,4} {nameof(Filler)}={Filler.GetType().Name.Replace("SpanFiller", "")} ";
+            }
+        }
+
+        static TheoryData<SortCase> CreateSortCases(int maxLength)
+        {
+            return new TheoryData<SortCase> {
+                new SortCase(maxLength, new ConstantSpanFiller(42) ),
+                new SortCase(maxLength, new DecrementingSpanFiller() ),
+                new SortCase(maxLength, new IncrementingSpanFiller() ),
+                new SortCase(maxLength, new MedianOfThreeKillerSpanFiller() ),
+                new SortCase(maxLength, new PartialRandomShuffleSpanFiller(new IncrementingSpanFiller(), 0.2, 16281) ),
+                new SortCase(maxLength, new RandomSpanFiller(1873318) ),
+                // TODO: Add with some -1 that can be replaced with null or NaN or something
+            };
+        }
 
         // To run just these tests append to command line:
         // -trait "MyTrait=MyTraitValue"
@@ -51,6 +83,69 @@ namespace System.SpanTests
             Assert.Throws<ArgumentNullException>(() => new Span<string>(new string[] { }).Sort((Comparison<string>)null));
         }
 
+
+        [Theory]
+        [Trait("MyTrait", "MyTraitValue")]
+        [MemberData(nameof(s_fastSortCases))]
+        public static void Sort_Keys_Int16(SortCase sortCase)
+        {
+            Test(sortCase, i => (short)i);
+        }
+        //[OuterLoop]
+        [Theory]
+        [Trait("MyTrait", "MyTraitValue")]
+        [MemberData(nameof(s_slowSortCases))]
+        public static void Sort_Keys_Int16_OuterLoop(SortCase sortCase)
+        {
+            Test(sortCase, i => (short)i);
+        }
+        [Theory]
+        [Trait("MyTrait", "MyTraitValue")]
+        [MemberData(nameof(s_fastSortCases))]
+        public static void Sort_Keys_UInt16(SortCase sortCase)
+        {
+            Test(sortCase, i => (ushort)i);
+        }
+        //[OuterLoop]
+        [Theory]
+        [Trait("MyTrait", "MyTraitValue")]
+        [MemberData(nameof(s_slowSortCases))]
+        public static void Sort_Keys_UInt16_OuterLoop(SortCase sortCase)
+        {
+            Test(sortCase, i => (ushort)i);
+        }
+
+        [Theory]
+        [Trait("MyTrait", "MyTraitValue")]
+        [MemberData(nameof(s_fastSortCases))]
+        public static void Sort_Keys_Int32(SortCase sortCase)
+        {
+            Test(sortCase, i => i);
+        }
+        //[OuterLoop]
+        [Theory]
+        [Trait("MyTrait", "MyTraitValue")]
+        [MemberData(nameof(s_slowSortCases))]
+        public static void Sort_Keys_Int32_OuterLoop(SortCase sortCase)
+        {
+            Test(sortCase, i => i);
+        }
+        [Theory]
+        [Trait("MyTrait", "MyTraitValue")]
+        [MemberData(nameof(s_fastSortCases))]
+        public static void Sort_Keys_UInt32(SortCase sortCase)
+        {
+            Test(sortCase, i => (uint)i);
+        }
+        //[OuterLoop]
+        [Theory]
+        [Trait("MyTrait", "MyTraitValue")]
+        [MemberData(nameof(s_slowSortCases))]
+        public static void Sort_Keys_UInt32_OuterLoop(SortCase sortCase)
+        {
+            Test(sortCase, i => (uint)i);
+        }
+
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
         [InlineData(new uint[] { })]
@@ -63,6 +158,8 @@ namespace System.SpanTests
         {
             TestSortOverloads(unsorted);
         }
+
+
 
         // TODO: OuterLoop
         [Theory]
@@ -165,7 +262,7 @@ namespace System.SpanTests
         // TODO: OuterLoop
         [Fact]
         [Trait("MyTrait", "MyTraitValue")]
-        public static void SortWithItems_Reverse_Int()
+        public static void SortWithItems_Reverse_Int_Int()
         {
             for (int count = 1; count <= 256 * 1024; count <<= 1)
             {
@@ -180,7 +277,7 @@ namespace System.SpanTests
         [InlineData(17, 1024)]
         [InlineData(42, 1024)]
         [InlineData(1873318, 1024)]
-        public static void SortWithItems_Random_Int(int seed, int maxCount)
+        public static void SortWithItems_Random_Int_Int(int seed, int maxCount)
         {
             var random = new Random(seed);
             for (int count = 0; count < maxCount; count++)
@@ -194,7 +291,7 @@ namespace System.SpanTests
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
         [InlineData(1024)]
-        public static void SortWithItems_MedianOfThreeKiller_Int(int maxCount)
+        public static void SortWithItems_MedianOfThreeKiller_Int_Int(int maxCount)
         {
             var filler = new MedianOfThreeKillerSpanFiller();
             for (int count = 0; count < maxCount; count++)
@@ -215,12 +312,43 @@ namespace System.SpanTests
         [InlineData(new uint[] { 3, 2, 1 })]
         [InlineData(new uint[] { 3, 2, 4, 1 })]
         [InlineData(new uint[] { 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 1, 2, 3, 4, 7, 6, 5 })]
-        public static void SortWithItems_UInt(uint[] unsorted)
+        public static void SortWithItems_UInt_UInt(uint[] unsorted)
         {
             var unsortedItems = Enumerable.Range(0, unsorted.Length).ToArray();
             TestSortOverloads(unsorted, unsortedItems);
         }
 
+        [Theory]
+        [Trait("MyTrait", "MyTraitValue")]
+        [InlineData(17, 1024)]
+        [InlineData(42, 1024)]
+        [InlineData(1873318, 1024)]
+        public static void SortWithItems_Random_String_Int(int seed, int maxCount)
+        {
+            var random = new Random(seed);
+            for (int count = 0; count < maxCount; count++)
+            {
+                var unsorted = Enumerable.Range(0, count).Select(i => random.Next().ToString("D9")).ToArray();
+                var unsortedItems = Enumerable.Range(0, count).ToArray();
+                TestSortOverloads(unsorted, unsortedItems);
+            }
+        }
+
+        [Theory]
+        [Trait("MyTrait", "MyTraitValue")]
+        [InlineData(17, 1024)]
+        [InlineData(42, 1024)]
+        [InlineData(1873318, 1024)]
+        public static void SortWithItems_Random_Int_String(int seed, int maxCount)
+        {
+            var random = new Random(seed);
+            for (int count = 0; count < maxCount; count++)
+            {
+                var unsorted = Enumerable.Range(0, count).Select(i => random.Next()).ToArray();
+                var unsortedItems = Enumerable.Range(0, count).Select(i => i.ToString("D9")).ToArray();
+                TestSortOverloads(unsorted, unsortedItems);
+            }
+        }
 
         // NOTE: Sort_MaxLength_NoOverflow test is constrained to run on Windows and MacOSX because it causes
         //       problems on Linux due to the way deferred memory allocation works. On Linux, the allocation can
@@ -270,6 +398,30 @@ namespace System.SpanTests
         //    }
         //}
 
+
+        private static void Test<TKey>(SortCase sortCase, Func<int, TKey> toKey)
+            where TKey : IComparable<TKey>
+        {
+            for (int length = 0; length < sortCase.MaxLength; length++)
+            {
+                var unsorted = new TKey[length];
+                sortCase.Filler.Fill(unsorted, length, toKey);
+                TestSortOverloads(unsorted);
+            }
+        }
+        private static void Test<TKey, TValue>(SortCase sortCase, Func<int, TKey> toKey, Func<int, TValue> toValue)
+            where TKey : IComparable<TKey>
+        {
+            for (int length = 0; length < sortCase.MaxLength; length++)
+            {
+                var unsortedKeys = new TKey[length];
+                var unsortedValues = new TValue[length];
+                sortCase.Filler.Fill(unsortedKeys, length, toKey);
+                // Items are always "unique" values
+                new IncrementingSpanFiller().Fill(unsortedValues, length, toValue);
+                TestSortOverloads(unsortedKeys, unsortedValues);
+            }
+        }
 
         private static void TestSortOverloads<T>(T[] array)
             where T : IComparable<T>
