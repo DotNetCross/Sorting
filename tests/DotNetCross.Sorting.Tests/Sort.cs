@@ -20,6 +20,9 @@ namespace System.SpanTests
         //    ,
         //};
 
+        // To run just these tests append to command line:
+        // -trait "MyTrait=MyTraitValue"
+
         // How do we create a not comparable? I.e. something Comparer<T>.Default fails on?
         //struct NotComparable { int i; string s; IntPtr p; }
         //[Fact]
@@ -52,9 +55,9 @@ namespace System.SpanTests
         [Trait("MyTrait", "MyTraitValue")]
         [InlineData(new uint[] { })]
         [InlineData(new uint[] { 1 })]
-        [InlineData(new uint[] { 2, 1})]
-        [InlineData(new uint[] { 3, 1, 2})]
-        [InlineData(new uint[] { 3, 2, 1})]
+        [InlineData(new uint[] { 2, 1 })]
+        [InlineData(new uint[] { 3, 1, 2 })]
+        [InlineData(new uint[] { 3, 2, 1 })]
         [InlineData(new uint[] { 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 1, 2, 3, 4, 7, 6, 5 })]
         public static void Sort_UInt(uint[] unsorted)
         {
@@ -218,41 +221,13 @@ namespace System.SpanTests
             TestSortOverloads(unsorted, unsortedItems);
         }
 
-        //[Fact]
-        //public static void Sort_Slice()
-        //{
-        //    var array = new int[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
-        //    var span = new ReadOnlySpan<int>(array, 1, array.Length - 2);
-
-        //    Assert.Equal(-1, span.Sort(1));
-        //    Assert.Equal(0, span.Sort(2));
-        //    Assert.Equal(3, span.Sort(5));
-        //    Assert.Equal(6, span.Sort(8));
-        //    Assert.Equal(-8, span.Sort(9));
-        //}
-
-        //[Fact]
-        //public static void Sort_NullComparableThrows()
-        //{
-        //    Assert.Throws<ArgumentNullException>(() => new Span<int>(new int[] { }).Sort<int>(null));
-        //    Assert.Throws<ArgumentNullException>(() => new ReadOnlySpan<int>(new int[] { }).Sort<int>(null));
-        //    Assert.Throws<ArgumentNullException>(() => new Span<int>(new int[] { }).Sort<int, IComparable<int>>(null));
-        //    Assert.Throws<ArgumentNullException>(() => new ReadOnlySpan<int>(new int[] { }).Sort<int, IComparable<int>>(null));
-        //}
-
-        //// TODO: Revise whether this should actually throw
-        //[Fact]
-        //public static void Sort_NullComparerThrows()
-        //{
-        //    Assert.Throws<ArgumentNullException>(() => new Span<int>(new int[] { }).Sort<int, IComparer<int>>(0, null));
-        //    Assert.Throws<ArgumentNullException>(() => new ReadOnlySpan<int>(new int[] { }).Sort<int, IComparer<int>>(0, null));
-        //}
 
         // NOTE: Sort_MaxLength_NoOverflow test is constrained to run on Windows and MacOSX because it causes
         //       problems on Linux due to the way deferred memory allocation works. On Linux, the allocation can
         //       succeed even if there is not enough memory but then the test may get killed by the OOM killer at the
         //       time the memory is accessed which triggers the full memory allocation.
         //[Fact]
+        //[Trait("MyTrait", "MyTraitValue")]
         //[OuterLoop]
         //[PlatformSpecific(TestPlatforms.Windows | TestPlatforms.OSX)]
         //public unsafe static void Sort_MaxLength_NoOverflow()
@@ -269,17 +244,24 @@ namespace System.SpanTests
         //        try
         //        {
         //            var span = new Span<byte>(memory.ToPointer(), length);
-        //            //span.Fill(0);
-        //            //// Fill last two elements
-        //            //span[int.MaxValue - 2] = 2;
-        //            //span[int.MaxValue - 1] = 3;
-
-        //            //Assert.Equal(int.MaxValue / 2, span.Sort((byte)0));
-        //            //// Search at end and assert no overflow
-        //            //Assert.Equal(~(int.MaxValue - 2), span.Sort((byte)1));
-        //            //Assert.Equal(int.MaxValue - 2, span.Sort((byte)2));
-        //            //Assert.Equal(int.MaxValue - 1, span.Sort((byte)3));
-        //            //Assert.Equal(int.MinValue, span.Sort((byte)4));
+        //            var filler = new DecrementingSpanFiller();
+        //            const byte fill = 42;
+        //            span.Fill(fill);
+        //            span[0] = 255;
+        //            span[1] = 254;
+        //            span[span.Length - 2] = 1;
+        //            span[span.Length - 1] = 0;
+        //
+        //            span.Sort();
+        //
+        //            Assert.Equal(span[0], (byte)0);
+        //            Assert.Equal(span[1], (byte)1);
+        //            Assert.Equal(span[span.Length - 2], (byte)254);
+        //            Assert.Equal(span[span.Length - 1], (byte)255);
+        //            for (int i = 2; i < length - 2; i++)
+        //            {
+        //                Assert.Equal(span[i], fill);
+        //            }
         //        }
         //        finally
         //        {
@@ -288,12 +270,15 @@ namespace System.SpanTests
         //    }
         //}
 
+
         private static void TestSortOverloads<T>(T[] array)
             where T : IComparable<T>
         {
             TestSpan(array);
             TestComparerSpan(array);
             TestComparisonSpan(array);
+            TestCustomComparerSpan(array);
+            TestNullComparerSpan(array);
         }
 
         private static void TestSpan<T>(T[] array)
@@ -340,6 +325,17 @@ namespace System.SpanTests
 
             Assert.Equal(expected, array);
         }
+        private static void TestNullComparerSpan<T>(T[] array)
+            where T : IComparable<T>
+        {
+            var span = new Span<T>(array);
+            var expected = (T[])array.Clone();
+            Array.Sort(expected);
+
+            span.Sort((IComparer<T>)null);
+
+            Assert.Equal(expected, array);
+        }
 
 
         private static void TestSortOverloads<TKey, TValue>(TKey[] keys, TValue[] values)
@@ -349,6 +345,7 @@ namespace System.SpanTests
             TestComparerSpan(keys, values);
             TestComparisonSpan(keys, values);
             TestCustomComparerSpan(keys, values);
+            TestNullComparerSpan(keys, values);
         }
 
         private static void TestSpan<TKey, TValue>(TKey[] keys, TValue[] values)
@@ -403,6 +400,20 @@ namespace System.SpanTests
             var spanKeys = new Span<TKey>(keys);
             var spanValues = new Span<TValue>(values);
             spanKeys.Sort(spanValues, new CustomComparer<TKey>());
+
+            Assert.Equal(expectedKeys, keys);
+            Assert.Equal(expectedValues, values);
+        }
+        private static void TestNullComparerSpan<TKey, TValue>(TKey[] keys, TValue[] values)
+            where TKey : IComparable<TKey>
+        {
+            var expectedKeys = (TKey[])keys.Clone();
+            var expectedValues = (TValue[])values.Clone();
+            Array.Sort(expectedKeys, expectedValues);
+
+            var spanKeys = new Span<TKey>(keys);
+            var spanValues = new Span<TValue>(values);
+            spanKeys.Sort(spanValues, (IComparer<TKey>)null);
 
             Assert.Equal(expectedKeys, keys);
             Assert.Equal(expectedValues, values);

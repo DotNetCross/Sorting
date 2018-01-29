@@ -46,22 +46,22 @@ Array.Sort is implemented as both managed code and native code (for some primiti
 
 This PR is based mainly on the generic implementation and the native implementation.
 
-# Minor Bug Fix
+#### Minor Bug Fix
 Minor bug fix for introspective depth limit, see https://github.com/dotnet/coreclr/pull/16002
 
-# Code Structure 
+#### Code Structure 
 Code is currently, probably temporary, structured into multiple files to allow for easier comparison of the different variants. 
 
 MENTION other repo
 
-# Changes
+#### Changes
 Many small changes have been made due to usings refs and Unsafe, but a couple notable changes are: 
 - Sort3 add a specific implementation for sorting three, used both for finding pivot and when sorting exactly 3 elements. 
 - Remove unnecessary ifs on swaps, except for one place where it is now explicit. 
 - A few renames such as Sort2 instead of SwapIfGreater. 
 - Comparer based variant uses a specific ILessThanComparer allowing for better specialization for basic types. 
 
-# Benchmarks
+#### Benchmarks
 Since `Sort` is an in-place operation it is "destructive" and benchmarking is done a bit different than normal.
 The basic code for benchmarks is shown below, this uses https://github.com/dotnet/BenchmarkDotNet and was
 done in the https://github.com/DotNetCross/Sorting/tree/span-sort git repo. Porting these to
@@ -107,7 +107,7 @@ public void SpanSort()
 }
 ```
 
-## Fillers
+##### Fillers
 As noted there are different fillers. Som fill the entire array not caring about the slice length.
 Others fill based on slice length. This is particularly important for **MedianOfThreeKiller**.
 
@@ -120,7 +120,9 @@ Others fill based on slice length. This is particularly important for **MedianOf
 Random pairs are then swapped, as a ratio of length. In this case 10%, 
 i.e. 10% pairs have been swapped randomly. Seeded so each run is the same.
 
-# TODOs
+For each different type, the `int` is converted to the given type e.g. using `ToString("D9")` for `string`.
+
+#### TODOs
 Overall, biggest to-do are tests. Feedback on whether it is OK to use Array.Sort as ground truth is needed. 
 
 How can we succinctly define the many test cases that are needed?
@@ -128,6 +130,18 @@ How can we succinctly define the many test cases that are needed?
 - Tests, tests tests. 
   - Each specialized path needs tests. 
   - More error condition tests.
+  - Test all filler patterns.
   - Better separation between fast and slow (OuterLoop) tests, currently tests are slow. 
     - Need to know what lengths need testing for fast tests? 50 like in coreclr?
 - Add performance tests as per `corefx` standard.
+
+#### Review
+Right I need review feedback on the overall implementation. 
+
+- Are the changes I have made acceptable? 
+- Are there any issues with how I have factored the code into the different types and generic methods?
+- Any way to make reference type code faster?
+  - Is there any way one can circumvent the canonical representation of generic types and methods
+when a type is a reference type? So we can avoid `JIT_GenericHandleMethod` or `JIT_GenericHandleClass`, which shows
+up during profiling? This is the reason for the `IComparable` variant of the code...
+
