@@ -15,6 +15,11 @@ using S = System.SpanSortHelpersKeysAndOrValues;
 
 namespace System
 {
+    // TODO: This is my futile attempt to consolidate all variants into a 
+    //       single code base. Performance suffered though and this
+    //       would still have the issues with canonical representation of 
+    //       generic types and methods when using a reference type.
+
     internal static partial class SpanSortHelpersKeysAndOrValues
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
