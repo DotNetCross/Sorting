@@ -141,7 +141,8 @@ namespace System.SpanTests
                 {
                     for (int k = 0; k < length; k++)
                     {
-                        TestSortOverloads(new[] { toKey(0, i), toKey(1, j), toKey(2, k) });
+                        var keys = new[] { toKey(i, 3), toKey(j, 4), toKey(k, 5) };
+                        TestSortOverloads(keys);
                     }
                 }
             }
