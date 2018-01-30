@@ -1,4 +1,4 @@
-#define OUTER_LOOP
+//#define OUTER_LOOP
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
@@ -82,6 +82,86 @@ namespace System.SpanTests
         {
             Assert.Throws<ArgumentNullException>(() => new Span<int>(new int[] { }).Sort((Comparison<int>)null));
             Assert.Throws<ArgumentNullException>(() => new Span<string>(new string[] { }).Sort((Comparison<string>)null));
+        }
+
+
+        [Fact]
+        public static void Sort_Pattern_Failure()
+        {
+            var keys = new int[] { 26, 1, 2, 3, 4, 5, 6, 31, 8, 0, 10, 33, 25, 13, 14, 15, 16, 29, 18, 19, 20, 34, 22, 23, 24, 12, 9, 27, 28, 17, 30, 7, 32, 11, 21 };
+            var values = Enumerable.Range(0, keys.Length).ToArray();
+            TestSortOverloads(keys, values);
+        }
+        [Fact]
+        public static void Sort_Pattern_Failure2()
+        {
+            var keys = new int[] { 0, 0, 1 };
+            var values = Enumerable.Range(0, keys.Length).ToArray();
+            TestSortOverloads(keys, values);
+        }
+
+        [Fact]
+        public static void Sort_Sort3_Keys_Int32()
+        {
+            TestAllSort3_Keys((value, id) => value);
+        }
+        [Fact]
+        public static void Sort_Sort3_KeysValues_Int32_Int32()
+        {
+            TestAllSort3_KeysValues((value, id) => value);
+        }
+        [Fact]
+        public static void Sort_Sort3_Keys_ValueIdentityStruct()
+        {
+            TestAllSort3_Keys((value, id) => new ValueIdentityStruct(value, id));
+        }
+        [Fact]
+        public static void Sort_Sort3_KeysValues_ValueIdentityStruct()
+        {
+            TestAllSort3_KeysValues((value, id) => new ValueIdentityStruct(value, id));
+        }
+        [Fact]
+        public static void Sort_Sort3_Keys_ValueIdentityClass()
+        {
+            TestAllSort3_Keys((value, id) => new ValueIdentityClass(value, id));
+        }
+        [Fact]
+        public static void Sort_Sort3_KeysValues_ValueIdentityClass()
+        {
+            TestAllSort3_KeysValues((value, id) => new ValueIdentityClass(value, id));
+        }
+
+        static void TestAllSort3_Keys<TKey>(Func<int, int, TKey> toKey)
+            where TKey : IComparable<TKey>
+        {
+            const int length = 3;
+            for (int i = 0; i < length; i++)
+            {
+                for (int j = 0; j < length; j++)
+                {
+                    for (int k = 0; k < length; k++)
+                    {
+                        TestSortOverloads(new[] { toKey(0, i), toKey(1, j), toKey(2, k) });
+                    }
+                }
+            }
+        }
+        static void TestAllSort3_KeysValues<TKey>(Func<int, int, TKey> toKey)
+            where TKey : IComparable<TKey>
+        {
+            const int length = 3;
+            for (int i = 0; i < length; i++)
+            {
+                for (int j = 0; j < length; j++)
+                {
+                    for (int k = 0; k < length; k++)
+                    {
+                        var keys = new[] { toKey(i, 3), toKey(j, 4), toKey(k, 5) };
+                        var values = new[] { 6, 7, 8 };
+                        TestSortOverloads(keys, values);
+                    }
+                }
+            }
         }
 
         #region Keys Tests
@@ -515,97 +595,6 @@ namespace System.SpanTests
             Test(sortCase, i => new ComparableClassInt32(i), v => v);
         }
 #endif
-        //// TODO: OuterLoop
-        //[Fact]
-        //[Trait("MyTrait", "MyTraitValue")]
-        //public static void SortWithItems_Reverse_Int_Int()
-        //{
-        //    for (int count = 1; count <= 256 * 1024; count <<= 1)
-        //    {
-        //        var unsorted = Enumerable.Range(0, count).Reverse().ToArray();
-        //        var unsortedItems = Enumerable.Range(0, count).ToArray();
-        //        TestSortOverloads(unsorted, unsortedItems);
-        //    }
-        //}
-
-        //[Theory]
-        //[Trait("MyTrait", "MyTraitValue")]
-        //[InlineData(17, 1024)]
-        //[InlineData(42, 1024)]
-        //[InlineData(1873318, 1024)]
-        //public static void SortWithItems_Random_Int_Int(int seed, int maxCount)
-        //{
-        //    var random = new Random(seed);
-        //    for (int count = 0; count < maxCount; count++)
-        //    {
-        //        var unsorted = Enumerable.Range(0, count).Select(i => random.Next()).ToArray();
-        //        var unsortedItems = Enumerable.Range(0, count).ToArray();
-        //        TestSortOverloads(unsorted, unsortedItems);
-        //    }
-        //}
-
-        //[Theory]
-        //[Trait("MyTrait", "MyTraitValue")]
-        //[InlineData(1024)]
-        //public static void SortWithItems_MedianOfThreeKiller_Int_Int(int maxCount)
-        //{
-        //    var filler = new MedianOfThreeKillerSpanFiller();
-        //    for (int count = 0; count < maxCount; count++)
-        //    {
-        //        var unsorted = new int[count];
-        //        filler.Fill(unsorted, count, i => i);
-        //        var unsortedItems = Enumerable.Range(0, count).ToArray();
-        //        TestSortOverloads(unsorted, unsortedItems);
-        //    }
-        //}
-
-        //[Theory]
-        //[Trait("MyTrait", "MyTraitValue")]
-        //[InlineData(new uint[] { })]
-        //[InlineData(new uint[] { 1 })]
-        //[InlineData(new uint[] { 2, 1 })]
-        //[InlineData(new uint[] { 3, 1, 2 })]
-        //[InlineData(new uint[] { 3, 2, 1 })]
-        //[InlineData(new uint[] { 3, 2, 4, 1 })]
-        //[InlineData(new uint[] { 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 1, 2, 3, 4, 7, 6, 5 })]
-        //public static void SortWithItems_UInt_UInt(uint[] unsorted)
-        //{
-        //    var unsortedItems = Enumerable.Range(0, unsorted.Length).ToArray();
-        //    TestSortOverloads(unsorted, unsortedItems);
-        //}
-
-        //[Theory]
-        //[Trait("MyTrait", "MyTraitValue")]
-        //[InlineData(17, 1024)]
-        //[InlineData(42, 1024)]
-        //[InlineData(1873318, 1024)]
-        //public static void SortWithItems_Random_String_Int(int seed, int maxCount)
-        //{
-        //    var random = new Random(seed);
-        //    for (int count = 0; count < maxCount; count++)
-        //    {
-        //        var unsorted = Enumerable.Range(0, count).Select(i => random.Next().ToString("D9")).ToArray();
-        //        var unsortedItems = Enumerable.Range(0, count).ToArray();
-        //        TestSortOverloads(unsorted, unsortedItems);
-        //    }
-        //}
-
-        //[Theory]
-        //[Trait("MyTrait", "MyTraitValue")]
-        //[InlineData(17, 1024)]
-        //[InlineData(42, 1024)]
-        //[InlineData(1873318, 1024)]
-        //public static void SortWithItems_Random_Int_String(int seed, int maxCount)
-        //{
-        //    var random = new Random(seed);
-        //    for (int count = 0; count < maxCount; count++)
-        //    {
-        //        var unsorted = Enumerable.Range(0, count).Select(i => random.Next()).ToArray();
-        //        var unsortedItems = Enumerable.Range(0, count).Select(i => i.ToString("D9")).ToArray();
-        //        TestSortOverloads(unsorted, unsortedItems);
-        //    }
-        //}
-
         #endregion
 
         // NOTE: Sort_MaxLength_NoOverflow test is constrained to run on Windows and MacOSX because it causes
@@ -762,6 +751,7 @@ namespace System.SpanTests
         private static void TestSpan<TKey, TValue>(TKey[] keys, TValue[] values)
             where TKey : IComparable<TKey>
         {
+            var copy = (TKey[])keys.Clone();
             var expectedKeys = (TKey[])keys.Clone();
             var expectedValues = (TValue[])values.Clone();
             Array.Sort(expectedKeys, expectedValues);
@@ -864,6 +854,68 @@ namespace System.SpanTests
             {
                 return this.Value.CompareTo(other.Value);
             }
+        }
+
+        public struct ValueIdentityStruct : IComparable<ValueIdentityStruct>, IEquatable<ValueIdentityStruct>
+        {
+            public ValueIdentityStruct(int value, int identity)
+            {
+                Value = value;
+                Identity = identity;
+            }
+
+            public int Value { get; }
+            public int Identity { get; }
+
+            // Sort by value
+            public int CompareTo(ValueIdentityStruct other) =>
+                Value.CompareTo(other.Value);
+
+            // Check equality by both
+            public bool Equals(ValueIdentityStruct other) =>
+                Value.Equals(other.Value) && Identity.Equals(other.Identity);
+
+            public override bool Equals(object obj)
+            {
+                if (obj is ValueIdentityStruct)
+                {
+                    return Equals((ValueIdentityStruct)obj);
+                }
+                return false;
+            }
+
+            public override int GetHashCode() => Value.GetHashCode();
+
+            public override string ToString() => $"{Value} Id:{Identity}";
+        }
+
+        public class ValueIdentityClass : IComparable<ValueIdentityClass>, IEquatable<ValueIdentityClass>
+        {
+            public ValueIdentityClass(int value, int identity)
+            {
+                Value = value;
+                Identity = identity;
+            }
+
+            public int Value { get; }
+            public int Identity { get; }
+
+            // Sort by value
+            public int CompareTo(ValueIdentityClass other) =>
+                Value.CompareTo(other.Value);
+
+            // Check equality by both
+            public bool Equals(ValueIdentityClass other) =>
+                other != null && Value.Equals(other.Value) && Identity.Equals(other.Identity);
+
+            public override bool Equals(object obj)
+            {
+                return Equals(obj as ValueIdentityClass);
+            }
+
+            public override int GetHashCode() => Value.GetHashCode();
+
+            public override string ToString() => $"{Value} Id:{Identity}";
         }
     }
 }

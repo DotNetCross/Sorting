@@ -232,42 +232,101 @@ namespace System
             TComparer comparer)
             where TComparer : ILessThanComparer<TKey>
         {
-            if (comparer.LessThan(r0, r1)) //r0 < r1)
+            // 3 times Sort2 would mean either computing values refs if not needed or more times
+            //if (comparer.LessThan(r1, r0))
+            //{
+            //    Swap(ref r0, ref r1);
+            //}
+            //if (comparer.LessThan(r2, r0))
+            //{
+            //    Swap(ref r0, ref r2);
+            //}
+            //if (comparer.LessThan(r2, r1))
+            //{
+            //    Swap(ref r1, ref r2);
+            //}
+
+            // TODO: This needs to handle if values are same too...
+
+            if (comparer.LessThan(r1, r0))
             {
-                if (comparer.LessThan(r1, r2)) //(r1 < r2)
+                if (comparer.LessThan(r2, r1))
                 {
-                    return;
+                    // r2 < r1 < r0
+                    Swap(ref r2, ref r0);
                 }
-                else if (comparer.LessThan(r0, r2)) //(r0 < r2)
+                else if (comparer.LessThan(r2, r0))
                 {
-                    Swap(ref r1, ref r2);
-                }
-                else
-                {
-                    TKey tmp = r0;
-                    r0 = r2;
-                    r2 = r1;
-                    r1 = tmp;
-                }
-            }
-            else
-            {
-                if (comparer.LessThan(r0, r2)) //(r0 < r2)
-                {
-                    Swap(ref r0, ref r1);
-                }
-                else if (comparer.LessThan(r2, r1)) //(r2 < r1)
-                {
-                    Swap(ref r0, ref r2);
-                }
-                else
-                {
+                    // r1 <= r2 < r0
                     TKey tmp = r0;
                     r0 = r1;
                     r1 = r2;
                     r2 = tmp;
                 }
+                else
+                {
+                    // r1 < r0 <= r2
+                    Swap(ref r1, ref r0);
+                }
             }
+            else // r0 <= r1
+            {
+                if (comparer.LessThan(r1, r2)) // Can't check if r2 >= r1, which is what we really want
+                {
+                    // r0 <= r1 < r2  // should really be r1 <= r2, but it is not
+                    // Nothing to do
+                }
+                else if (comparer.LessThan(r2, r0))
+                {
+                    // r2 < r0 <= r1
+                    TKey tmp = r0;
+                    r0 = r2;
+                    r2 = r1;
+                    r1 = tmp;
+                }
+                else if (comparer.LessThan(r2, r1)) // Since we can't check equal, we need to do extra check here
+                {
+                    // r0 <= r2 < r1
+                    Swap(ref r2, ref r1);
+                }
+            }
+
+            //if (comparer.LessThan(r0, r1)) //r0 < r1)
+            //{
+            //    if (comparer.LessThan(r1, r2)) //(r1 < r2)
+            //    {
+            //        return;
+            //    }
+            //    else if (comparer.LessThan(r0, r2)) //(r0 < r2)
+            //    {
+            //        Swap(ref r1, ref r2);
+            //    }
+            //    else
+            //    {
+            //        TKey tmp = r0;
+            //        r0 = r2;
+            //        r2 = r1;
+            //        r1 = tmp;
+            //    }
+            //}
+            //else
+            //{
+            //    if (comparer.LessThan(r0, r2)) //(r0 < r2)
+            //    {
+            //        Swap(ref r0, ref r1);
+            //    }
+            //    else if (comparer.LessThan(r2, r1)) //(r2 < r1)
+            //    {
+            //        Swap(ref r0, ref r2);
+            //    }
+            //    else
+            //    {
+            //        TKey tmp = r0;
+            //        r0 = r1;
+            //        r1 = r2;
+            //        r2 = tmp;
+            //    }
+            //}
         }
 
 

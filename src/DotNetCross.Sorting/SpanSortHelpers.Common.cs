@@ -51,6 +51,7 @@ namespace System
         internal interface ILessThanComparer<in T>
         {
             bool LessThan(T x, T y);
+            bool LessThanEqual(T x, T y); // This is needed for Sort3 only, if we drop that remove this
         }
         //
         // Type specific LessThanComparer(s) to ensure optimal code-gen
@@ -59,56 +60,78 @@ namespace System
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool LessThan(sbyte x, sbyte y) => x < y;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool LessThanEqual(sbyte x, sbyte y) => x <= y;
         }
         internal struct ByteLessThanComparer : ILessThanComparer<byte>
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool LessThan(byte x, byte y) => x < y;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool LessThanEqual(byte x, byte y) => x <= y;
         }
         internal struct Int16LessThanComparer : ILessThanComparer<short>
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool LessThan(short x, short y) => x < y;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool LessThanEqual(short x, short y) => x <= y;
         }
         internal struct UInt16LessThanComparer : ILessThanComparer<ushort>
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool LessThan(ushort x, ushort y) => x < y;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool LessThanEqual(ushort x, ushort y) => x <= y;
         }
         internal struct Int32LessThanComparer : ILessThanComparer<int>
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool LessThan(int x, int y) => x < y;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool LessThanEqual(int x, int y) => x <= y;
         }
         internal struct UInt32LessThanComparer : ILessThanComparer<uint>
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool LessThan(uint x, uint y) => x < y;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool LessThanEqual(uint x, uint y) => x <= y;
         }
         internal struct Int64LessThanComparer : ILessThanComparer<long>
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool LessThan(long x, long y) => x < y;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool LessThanEqual(long x, long y) => x <= y;
         }
         internal struct UInt64LessThanComparer : ILessThanComparer<ulong>
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool LessThan(ulong x, ulong y) => x < y;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool LessThanEqual(ulong x, ulong y) => x <= y;
         }
         internal struct SingleLessThanComparer : ILessThanComparer<float>
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool LessThan(float x, float y) => x < y;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool LessThanEqual(float x, float y) => x <= y;
         }
         internal struct DoubleLessThanComparer : ILessThanComparer<double>
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool LessThan(double x, double y) => x < y;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool LessThanEqual(double x, double y) => x <= y;
         }
         internal struct StringLessThanComparer : ILessThanComparer<string>
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool LessThan(string x, string y) => x.CompareTo(y) < 0;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool LessThanEqual(string x, string y) => x.CompareTo(y) <= 0;
         }
 
         // Helper to allow sharing code
@@ -125,6 +148,8 @@ namespace System
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool LessThan(T x, T y) => _comparer.Compare(x, y) < 0;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool LessThanEqual(T x, T y) => _comparer.Compare(x, y) <= 0;
         }
         // Helper to allow sharing code
         // Does not work well for reference types
@@ -133,9 +158,11 @@ namespace System
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool LessThan(T x, T y) => x.CompareTo(y) < 0;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool LessThanEqual(T x, T y) => x.CompareTo(y) <= 0;
         }
 
-        // Helper to allow sharing code
+        // Helper to allow sharing code (TODO: This probably has issues for reference types...)
         internal struct ComparisonComparer<T> : IComparer<T>
         {
             readonly Comparison<T> m_comparison;

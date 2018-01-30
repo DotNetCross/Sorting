@@ -234,9 +234,9 @@ namespace System
             ref TKey r0, ref TKey r1, ref TKey r2)
             where TKey : IComparable<TKey>
         {
-            if (r0 != null && r0.CompareTo(r1) < 0) //r0 < r1)
+            if (r0 != null && r0.CompareTo(r1) <= 0) //r0 <= r1)
             {
-                if (r1 != null && r1.CompareTo(r2) < 0) //(r1 < r2)
+                if (r1 != null && r1.CompareTo(r2) <= 0) //(r1 <= r2)
                 {
                     return;
                 }

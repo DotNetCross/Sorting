@@ -245,9 +245,10 @@ namespace System
             ref var r1 = ref Unsafe.Add(ref keys, i1);
             ref var r2 = ref Unsafe.Add(ref keys, i2);
 
-            if (r0 != null && r0.CompareTo(r1) < 0) //r0 < r1)
+
+            if (r0 != null && r0.CompareTo(r1) <= 0) //r0 <= r1)
             {
-                if (r1 != null && r1.CompareTo(r2) < 0) //(r1 < r2)
+                if (r1 != null && r1.CompareTo(r2) <= 0) //(r1 <= r2)
                 {
                     return ref r1;
                 }
