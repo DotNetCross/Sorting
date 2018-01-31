@@ -1,4 +1,4 @@
-//#define OUTER_LOOP
+#define OUTER_LOOP
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
@@ -15,10 +15,14 @@ namespace System.SpanTests
         // Existing coreclr tests seem to be in here:
         // https://github.com/dotnet/coreclr/tree/master/tests/src/CoreMangLib/cti/system/array
         // E.g. arraysort1.cs etc.
+        // These have not been used for the tests below,
+        // instead all tests are based on using Array.Sort for computing the expected.
+
+        const string SortTrait = nameof(SortTrait);
+        const string SortTraitValue = nameof(SortTraitValue);
 
         const int FastMaxLength = 50;
         const int SlowMaxLength = 512;
-
         public static readonly TheoryData<ISortCases> s_fastSortTests = CreateSortCases(FastMaxLength);
         public static readonly TheoryData<ISortCases> s_slowSortTests = CreateSortCases(SlowMaxLength);
 
@@ -62,14 +66,14 @@ namespace System.SpanTests
         //}
 
         [Fact]
-        [Trait("MyTrait", "MyTraitValue")]
+        [Trait(SortTrait, SortTraitValue)]
         public static void Sort_NullComparerDoesNotThrow()
         {
             new Span<int>(new int[] { 3 }).Sort((IComparer<int>)null);
         }
 
         [Fact]
-        [Trait("MyTrait", "MyTraitValue")]
+        [Trait(SortTrait, SortTraitValue)]
         public static void Sort_NullComparisonThrows()
         {
             Assert.Throws<ArgumentNullException>(() => new Span<int>(new int[] { }).Sort((Comparison<int>)null));
@@ -79,7 +83,7 @@ namespace System.SpanTests
         #region Keys Tests
 
         [Theory]
-        [Trait("MyTrait", "MyTraitValue")]
+        [Trait(SortTrait, SortTraitValue)]
         [MemberData(nameof(s_fastSortTests))]
         public static void Sort_Keys_Int16(ISortCases sortCases)
         {
@@ -87,7 +91,7 @@ namespace System.SpanTests
         }
         
         [Theory]
-        [Trait("MyTrait", "MyTraitValue")]
+        [Trait(SortTrait, SortTraitValue)]
         [MemberData(nameof(s_fastSortTests))]
         public static void Sort_Keys_UInt16(ISortCases sortCases)
         {
@@ -95,7 +99,7 @@ namespace System.SpanTests
         }
         
         [Theory]
-        [Trait("MyTrait", "MyTraitValue")]
+        [Trait(SortTrait, SortTraitValue)]
         [MemberData(nameof(s_fastSortTests))]
         public static void Sort_Keys_Int32(ISortCases sortCases)
         {
@@ -103,7 +107,7 @@ namespace System.SpanTests
         }
         
         [Theory]
-        [Trait("MyTrait", "MyTraitValue")]
+        [Trait(SortTrait, SortTraitValue)]
         [MemberData(nameof(s_fastSortTests))]
         public static void Sort_Keys_UInt32(ISortCases sortCases)
         {
@@ -111,7 +115,7 @@ namespace System.SpanTests
         }
         
         [Theory]
-        [Trait("MyTrait", "MyTraitValue")]
+        [Trait(SortTrait, SortTraitValue)]
         [MemberData(nameof(s_fastSortTests))]
         public static void Sort_Keys_Int64(ISortCases sortCases)
         {
@@ -119,7 +123,7 @@ namespace System.SpanTests
         }
         
         [Theory]
-        [Trait("MyTrait", "MyTraitValue")]
+        [Trait(SortTrait, SortTraitValue)]
         [MemberData(nameof(s_fastSortTests))]
         public static void Sort_Keys_UInt64(ISortCases sortCases)
         {
@@ -127,7 +131,7 @@ namespace System.SpanTests
         }
         
         [Theory]
-        [Trait("MyTrait", "MyTraitValue")]
+        [Trait(SortTrait, SortTraitValue)]
         [MemberData(nameof(s_fastSortTests))]
         public static void Sort_Keys_Single(ISortCases sortCases)
         {
@@ -135,7 +139,7 @@ namespace System.SpanTests
         }
         
         [Theory]
-        [Trait("MyTrait", "MyTraitValue")]
+        [Trait(SortTrait, SortTraitValue)]
         [MemberData(nameof(s_fastSortTests))]
         public static void Sort_Keys_Double(ISortCases sortCases)
         {
@@ -143,7 +147,7 @@ namespace System.SpanTests
         }
         
         [Theory]
-        [Trait("MyTrait", "MyTraitValue")]
+        [Trait(SortTrait, SortTraitValue)]
         [MemberData(nameof(s_fastSortTests))]
         public static void Sort_Keys_Boolean(ISortCases sortCases)
         {
@@ -151,7 +155,7 @@ namespace System.SpanTests
         }
         
         [Theory]
-        [Trait("MyTrait", "MyTraitValue")]
+        [Trait(SortTrait, SortTraitValue)]
         [MemberData(nameof(s_fastSortTests))]
         public static void Sort_Keys_Char(ISortCases sortCases)
         {
@@ -159,7 +163,7 @@ namespace System.SpanTests
         }
         
         [Theory]
-        [Trait("MyTrait", "MyTraitValue")]
+        [Trait(SortTrait, SortTraitValue)]
         [MemberData(nameof(s_fastSortTests))]
         public static void Sort_Keys_String(ISortCases sortCases)
         {
@@ -167,7 +171,7 @@ namespace System.SpanTests
         }
         
         [Theory]
-        [Trait("MyTrait", "MyTraitValue")]
+        [Trait(SortTrait, SortTraitValue)]
         [MemberData(nameof(s_fastSortTests))]
         public static void Sort_Keys_ComparableStructInt32(ISortCases sortCases)
         {
@@ -175,7 +179,7 @@ namespace System.SpanTests
         }
         
         [Theory]
-        [Trait("MyTrait", "MyTraitValue")]
+        [Trait(SortTrait, SortTraitValue)]
         [MemberData(nameof(s_fastSortTests))]
         public static void Sort_Keys_ComparableClassInt32(ISortCases sortCases)
         {
@@ -184,7 +188,7 @@ namespace System.SpanTests
 #if OUTER_LOOP
         //[OuterLoop]
         [Theory]
-        [Trait("MyTrait", "MyTraitValue")]
+        [Trait(SortTrait, SortTraitValue)]
         [MemberData(nameof(s_slowSortTests))]
         public static void Sort_Keys_Int16_OuterLoop(ISortCases sortCases)
         {
@@ -192,7 +196,7 @@ namespace System.SpanTests
         }
         //[OuterLoop]
         [Theory]
-        [Trait("MyTrait", "MyTraitValue")]
+        [Trait(SortTrait, SortTraitValue)]
         [MemberData(nameof(s_slowSortTests))]
         public static void Sort_Keys_UInt16_OuterLoop(ISortCases sortCases)
         {
@@ -200,7 +204,7 @@ namespace System.SpanTests
         }
         //[OuterLoop]
         [Theory]
-        [Trait("MyTrait", "MyTraitValue")]
+        [Trait(SortTrait, SortTraitValue)]
         [MemberData(nameof(s_slowSortTests))]
         public static void Sort_Keys_Int32_OuterLoop(ISortCases sortCases)
         {
@@ -208,7 +212,7 @@ namespace System.SpanTests
         }
         //[OuterLoop]
         [Theory]
-        [Trait("MyTrait", "MyTraitValue")]
+        [Trait(SortTrait, SortTraitValue)]
         [MemberData(nameof(s_slowSortTests))]
         public static void Sort_Keys_UInt32_OuterLoop(ISortCases sortCases)
         {
@@ -216,7 +220,7 @@ namespace System.SpanTests
         }
         //[OuterLoop]
         [Theory]
-        [Trait("MyTrait", "MyTraitValue")]
+        [Trait(SortTrait, SortTraitValue)]
         [MemberData(nameof(s_slowSortTests))]
         public static void Sort_Keys_Int64_OuterLoop(ISortCases sortCases)
         {
@@ -224,7 +228,7 @@ namespace System.SpanTests
         }
         //[OuterLoop]
         [Theory]
-        [Trait("MyTrait", "MyTraitValue")]
+        [Trait(SortTrait, SortTraitValue)]
         [MemberData(nameof(s_slowSortTests))]
         public static void Sort_Keys_UInt64_OuterLoop(ISortCases sortCases)
         {
@@ -232,7 +236,7 @@ namespace System.SpanTests
         }
         //[OuterLoop]
         [Theory]
-        [Trait("MyTrait", "MyTraitValue")]
+        [Trait(SortTrait, SortTraitValue)]
         [MemberData(nameof(s_slowSortTests))]
         public static void Sort_Keys_Single_OuterLoop(ISortCases sortCases)
         {
@@ -240,7 +244,7 @@ namespace System.SpanTests
         }
         //[OuterLoop]
         [Theory]
-        [Trait("MyTrait", "MyTraitValue")]
+        [Trait(SortTrait, SortTraitValue)]
         [MemberData(nameof(s_slowSortTests))]
         public static void Sort_Keys_Double_OuterLoop(ISortCases sortCases)
         {
@@ -248,7 +252,7 @@ namespace System.SpanTests
         }
         //[OuterLoop]
         [Theory]
-        [Trait("MyTrait", "MyTraitValue")]
+        [Trait(SortTrait, SortTraitValue)]
         [MemberData(nameof(s_slowSortTests))]
         public static void Sort_Keys_Boolean_OuterLoop(ISortCases sortCases)
         {
@@ -256,7 +260,7 @@ namespace System.SpanTests
         }
         //[OuterLoop]
         [Theory]
-        [Trait("MyTrait", "MyTraitValue")]
+        [Trait(SortTrait, SortTraitValue)]
         [MemberData(nameof(s_slowSortTests))]
         public static void Sort_Keys_Char_OuterLoop(ISortCases sortCases)
         {
@@ -264,7 +268,7 @@ namespace System.SpanTests
         }
         //[OuterLoop]
         [Theory]
-        [Trait("MyTrait", "MyTraitValue")]
+        [Trait(SortTrait, SortTraitValue)]
         [MemberData(nameof(s_slowSortTests))]
         public static void Sort_Keys_String_OuterLoop(ISortCases sortCases)
         {
@@ -272,7 +276,7 @@ namespace System.SpanTests
         }
         //[OuterLoop]
         [Theory]
-        [Trait("MyTrait", "MyTraitValue")]
+        [Trait(SortTrait, SortTraitValue)]
         [MemberData(nameof(s_slowSortTests))]
         public static void Sort_Keys_ComparableStructInt32_OuterLoop(ISortCases sortCases)
         {
@@ -280,7 +284,7 @@ namespace System.SpanTests
         }
         //[OuterLoop]
         [Theory]
-        [Trait("MyTrait", "MyTraitValue")]
+        [Trait(SortTrait, SortTraitValue)]
         [MemberData(nameof(s_slowSortTests))]
         public static void Sort_Keys_ComparableClassInt32_OuterLoop(ISortCases sortCases)
         {
@@ -293,7 +297,7 @@ namespace System.SpanTests
         #region Keys and Values Tests
 
         [Theory]
-        [Trait("MyTrait", "MyTraitValue")]
+        [Trait(SortTrait, SortTraitValue)]
         [MemberData(nameof(s_fastSortTests))]
         public static void Sort_KeysValues_Int16_Int32(ISortCases sortCases)
         {
@@ -301,7 +305,7 @@ namespace System.SpanTests
         }
         
         [Theory]
-        [Trait("MyTrait", "MyTraitValue")]
+        [Trait(SortTrait, SortTraitValue)]
         [MemberData(nameof(s_fastSortTests))]
         public static void Sort_KeysValues_UInt16_Int32(ISortCases sortCases)
         {
@@ -309,7 +313,7 @@ namespace System.SpanTests
         }
         
         [Theory]
-        [Trait("MyTrait", "MyTraitValue")]
+        [Trait(SortTrait, SortTraitValue)]
         [MemberData(nameof(s_fastSortTests))]
         public static void Sort_KeysValues_Int32_Int32(ISortCases sortCases)
         {
@@ -317,7 +321,7 @@ namespace System.SpanTests
         }
         
         [Theory]
-        [Trait("MyTrait", "MyTraitValue")]
+        [Trait(SortTrait, SortTraitValue)]
         [MemberData(nameof(s_fastSortTests))]
         public static void Sort_KeysValues_UInt32_Int32(ISortCases sortCases)
         {
@@ -325,7 +329,7 @@ namespace System.SpanTests
         }
         
         [Theory]
-        [Trait("MyTrait", "MyTraitValue")]
+        [Trait(SortTrait, SortTraitValue)]
         [MemberData(nameof(s_fastSortTests))]
         public static void Sort_KeysValues_Int64_Int32(ISortCases sortCases)
         {
@@ -333,7 +337,7 @@ namespace System.SpanTests
         }
         
         [Theory]
-        [Trait("MyTrait", "MyTraitValue")]
+        [Trait(SortTrait, SortTraitValue)]
         [MemberData(nameof(s_fastSortTests))]
         public static void Sort_KeysValues_UInt64_Int32(ISortCases sortCases)
         {
@@ -341,7 +345,7 @@ namespace System.SpanTests
         }
         
         [Theory]
-        [Trait("MyTrait", "MyTraitValue")]
+        [Trait(SortTrait, SortTraitValue)]
         [MemberData(nameof(s_fastSortTests))]
         public static void Sort_KeysValues_Single_Int32(ISortCases sortCases)
         {
@@ -349,7 +353,7 @@ namespace System.SpanTests
         }
         
         [Theory]
-        [Trait("MyTrait", "MyTraitValue")]
+        [Trait(SortTrait, SortTraitValue)]
         [MemberData(nameof(s_fastSortTests))]
         public static void Sort_KeysValues_Double_Int32(ISortCases sortCases)
         {
@@ -357,7 +361,7 @@ namespace System.SpanTests
         }
         
         [Theory]
-        [Trait("MyTrait", "MyTraitValue")]
+        [Trait(SortTrait, SortTraitValue)]
         [MemberData(nameof(s_fastSortTests))]
         public static void Sort_KeysValues_Boolean_Int32(ISortCases sortCases)
         {
@@ -365,7 +369,7 @@ namespace System.SpanTests
         }
         
         [Theory]
-        [Trait("MyTrait", "MyTraitValue")]
+        [Trait(SortTrait, SortTraitValue)]
         [MemberData(nameof(s_fastSortTests))]
         public static void Sort_KeysValues_Char_Int32(ISortCases sortCases)
         {
@@ -373,7 +377,7 @@ namespace System.SpanTests
         }
         
         [Theory]
-        [Trait("MyTrait", "MyTraitValue")]
+        [Trait(SortTrait, SortTraitValue)]
         [MemberData(nameof(s_fastSortTests))]
         public static void Sort_KeysValues_String_Int32(ISortCases sortCases)
         {
@@ -381,7 +385,7 @@ namespace System.SpanTests
         }
         
         [Theory]
-        [Trait("MyTrait", "MyTraitValue")]
+        [Trait(SortTrait, SortTraitValue)]
         [MemberData(nameof(s_fastSortTests))]
         public static void Sort_KeysValues_ComparableStructInt32_Int32(ISortCases sortCases)
         {
@@ -389,7 +393,7 @@ namespace System.SpanTests
         }
         
         [Theory]
-        [Trait("MyTrait", "MyTraitValue")]
+        [Trait(SortTrait, SortTraitValue)]
         [MemberData(nameof(s_fastSortTests))]
         public static void Sort_KeysValues_ComparableClassInt32_Int32(ISortCases sortCases)
         {
@@ -398,7 +402,7 @@ namespace System.SpanTests
 #if OUTER_LOOP
         //[OuterLoop]
         [Theory]
-        [Trait("MyTrait", "MyTraitValue")]
+        [Trait(SortTrait, SortTraitValue)]
         [MemberData(nameof(s_slowSortTests))]
         public static void Sort_KeysValues_Int16_Int32_OuterLoop(ISortCases sortCases)
         {
@@ -406,7 +410,7 @@ namespace System.SpanTests
         }
         //[OuterLoop]
         [Theory]
-        [Trait("MyTrait", "MyTraitValue")]
+        [Trait(SortTrait, SortTraitValue)]
         [MemberData(nameof(s_slowSortTests))]
         public static void Sort_KeysValues_UInt16_Int32_OuterLoop(ISortCases sortCases)
         {
@@ -414,7 +418,7 @@ namespace System.SpanTests
         }
         //[OuterLoop]
         [Theory]
-        [Trait("MyTrait", "MyTraitValue")]
+        [Trait(SortTrait, SortTraitValue)]
         [MemberData(nameof(s_slowSortTests))]
         public static void Sort_KeysValues_Int32_Int32_OuterLoop(ISortCases sortCases)
         {
@@ -422,7 +426,7 @@ namespace System.SpanTests
         }
         //[OuterLoop]
         [Theory]
-        [Trait("MyTrait", "MyTraitValue")]
+        [Trait(SortTrait, SortTraitValue)]
         [MemberData(nameof(s_slowSortTests))]
         public static void Sort_KeysValues_UInt32_Int32_OuterLoop(ISortCases sortCases)
         {
@@ -430,7 +434,7 @@ namespace System.SpanTests
         }
         //[OuterLoop]
         [Theory]
-        [Trait("MyTrait", "MyTraitValue")]
+        [Trait(SortTrait, SortTraitValue)]
         [MemberData(nameof(s_slowSortTests))]
         public static void Sort_KeysValues_Int64_Int32_OuterLoop(ISortCases sortCases)
         {
@@ -438,7 +442,7 @@ namespace System.SpanTests
         }
         //[OuterLoop]
         [Theory]
-        [Trait("MyTrait", "MyTraitValue")]
+        [Trait(SortTrait, SortTraitValue)]
         [MemberData(nameof(s_slowSortTests))]
         public static void Sort_KeysValues_UInt64_Int32_OuterLoop(ISortCases sortCases)
         {
@@ -446,7 +450,7 @@ namespace System.SpanTests
         }
         //[OuterLoop]
         [Theory]
-        [Trait("MyTrait", "MyTraitValue")]
+        [Trait(SortTrait, SortTraitValue)]
         [MemberData(nameof(s_slowSortTests))]
         public static void Sort_KeysValues_Single_Int32_OuterLoop(ISortCases sortCases)
         {
@@ -454,7 +458,7 @@ namespace System.SpanTests
         }
         //[OuterLoop]
         [Theory]
-        [Trait("MyTrait", "MyTraitValue")]
+        [Trait(SortTrait, SortTraitValue)]
         [MemberData(nameof(s_slowSortTests))]
         public static void Sort_KeysValues_Double_Int32_OuterLoop(ISortCases sortCases)
         {
@@ -462,7 +466,7 @@ namespace System.SpanTests
         }
         //[OuterLoop]
         [Theory]
-        [Trait("MyTrait", "MyTraitValue")]
+        [Trait(SortTrait, SortTraitValue)]
         [MemberData(nameof(s_slowSortTests))]
         public static void Sort_KeysValues_Boolean_Int32_OuterLoop(ISortCases sortCases)
         {
@@ -470,7 +474,7 @@ namespace System.SpanTests
         }
         //[OuterLoop]
         [Theory]
-        [Trait("MyTrait", "MyTraitValue")]
+        [Trait(SortTrait, SortTraitValue)]
         [MemberData(nameof(s_slowSortTests))]
         public static void Sort_KeysValues_Char_Int32_OuterLoop(ISortCases sortCases)
         {
@@ -478,7 +482,7 @@ namespace System.SpanTests
         }
         //[OuterLoop]
         [Theory]
-        [Trait("MyTrait", "MyTraitValue")]
+        [Trait(SortTrait, SortTraitValue)]
         [MemberData(nameof(s_slowSortTests))]
         public static void Sort_KeysValues_String_Int32_OuterLoop(ISortCases sortCases)
         {
@@ -486,7 +490,7 @@ namespace System.SpanTests
         }
         //[OuterLoop]
         [Theory]
-        [Trait("MyTrait", "MyTraitValue")]
+        [Trait(SortTrait, SortTraitValue)]
         [MemberData(nameof(s_slowSortTests))]
         public static void Sort_KeysValues_ComparableStructInt32_Int32_OuterLoop(ISortCases sortCases)
         {
@@ -494,7 +498,7 @@ namespace System.SpanTests
         }
         //[OuterLoop]
         [Theory]
-        [Trait("MyTrait", "MyTraitValue")]
+        [Trait(SortTrait, SortTraitValue)]
         [MemberData(nameof(s_slowSortTests))]
         public static void Sort_KeysValues_ComparableClassInt32_Int32_OuterLoop(ISortCases sortCases)
         {
