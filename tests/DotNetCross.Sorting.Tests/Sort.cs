@@ -19,58 +19,36 @@ namespace System.SpanTests
         const int FastMaxLength = 50;
         const int SlowMaxLength = 512;
 
-        public static readonly TheoryData<ISortCase> s_fastSortCases = CreateSortCases(FastMaxLength);
-        public static readonly TheoryData<ISortCase> s_slowSortCases = CreateSortCases(SlowMaxLength);
+        public static readonly TheoryData<ISortCases> s_fastSortTests = CreateSortCases(FastMaxLength);
+        public static readonly TheoryData<ISortCases> s_slowSortTests = CreateSortCases(SlowMaxLength);
 
-        public interface ISortCase
+        static TheoryData<ISortCases> CreateSortCases(int maxLength)
         {
-            IEnumerable<int> TestLengths { get; }
-
-            void Fill<TKey>(Span<TKey> keys, Func<int, TKey> toKey);
-        }
-
-        public class SortCase : ISortCase
-        {
-            public SortCase(int maxLength, ISpanFiller filler)
-            {
-                if (filler == null) { throw new ArgumentNullException(nameof(filler)); }
-                MaxLength = maxLength;
-                Filler = filler;
-            }
-
-            public int MaxLength { get; }
-            public ISpanFiller Filler { get; }
-
-            public IEnumerable<int> TestLengths => Enumerable.Range(0, MaxLength);
-
-            public void Fill<TKey>(Span<TKey> keys, Func<int, TKey> toKey)
-            {
-                Filler.Fill(keys, keys.Length, toKey);
-            }
-
-            public override string ToString()
-            {
-                return $"MaxLength={MaxLength,4} {nameof(Filler)}={Filler.GetType().Name.Replace("SpanFiller", "")} ";
-            }
-        }
-
-        static TheoryData<ISortCase> CreateSortCases(int maxLength)
-        {
-            return new TheoryData<ISortCase> {
-                new SortCase(maxLength, new ConstantSpanFiller(42) ),
-                new SortCase(maxLength, new DecrementingSpanFiller() ),
-                new SortCase(maxLength, new IncrementingSpanFiller() ),
-                new SortCase(maxLength, new MedianOfThreeKillerSpanFiller() ),
-                new SortCase(maxLength, new PartialRandomShuffleSpanFiller(new IncrementingSpanFiller(), 0.2, 16281) ),
-                new SortCase(maxLength, new RandomSpanFiller(1873318) ),
+            var cases = new ISortCases[] {
+                new AllLengthTwoSortCases(),
+                new AllLengthThreeSortCases(),
+                new AllLengthFourSortCases(),
+                new FillerSortCases(maxLength, new ConstantSpanFiller(42) ),
+                new FillerSortCases(maxLength, new DecrementingSpanFiller() ),
+                new FillerSortCases(maxLength, new IncrementingSpanFiller() ),
+                new FillerSortCases(maxLength, new MedianOfThreeKillerSpanFiller() ),
+                new FillerSortCases(maxLength, new PartialRandomShuffleSpanFiller(new IncrementingSpanFiller(), 0.2, 16281) ),
+                new FillerSortCases(maxLength, new RandomSpanFiller(1873318) ),
                 // TODO: Add with some -1 that can be replaced with null or NaN or something
             };
+            var allCases = cases.Concat(cases.Select(c => new PadAndSliceSortCases(c, 2)));
+            var theoryData = new TheoryData<ISortCases>();
+            foreach (var c in allCases)
+            {
+                theoryData.Add(c);
+            }
+            return theoryData;
         }
 
         // To run just these tests append to command line:
         // -trait "MyTrait=MyTraitValue"
 
-        // How do we create a not comparable? I.e. something Comparer<T>.Default fails on?
+        // How do we create a not comparable? I.e. something Comparer<TKey>.Default fails on?
         //struct NotComparable { int i; string s; IntPtr p; }
         //[Fact]
         //[Trait("MyTrait", "MyTraitValue")]
@@ -98,482 +76,429 @@ namespace System.SpanTests
             Assert.Throws<ArgumentNullException>(() => new Span<string>(new string[] { }).Sort((Comparison<string>)null));
         }
 
-
-        [Fact]
-        public static void Sort_Pattern_Failure()
-        {
-            var keys = new int[] { 26, 1, 2, 3, 4, 5, 6, 31, 8, 0, 10, 33, 25, 13, 14, 15, 16, 29, 18, 19, 20, 34, 22, 23, 24, 12, 9, 27, 28, 17, 30, 7, 32, 11, 21 };
-            var values = Enumerable.Range(0, keys.Length).ToArray();
-            TestSortOverloads(keys, values);
-        }
-        [Fact]
-        public static void Sort_Pattern_Failure2()
-        {
-            var keys = new int[] { 0, 0, 1 };
-            var values = Enumerable.Range(0, keys.Length).ToArray();
-            TestSortOverloads(keys, values);
-        }
-
-        [Fact]
-        public static void Sort_Sort3_Keys_Int32()
-        {
-            TestAllSort3_Keys((value, id) => value);
-        }
-        [Fact]
-        public static void Sort_Sort3_KeysValues_Int32_Int32()
-        {
-            TestAllSort3_KeysValues((value, id) => value);
-        }
-        [Fact]
-        public static void Sort_Sort3_Keys_ValueIdentityStruct()
-        {
-            TestAllSort3_Keys((value, id) => new ValueIdentityStruct(value, id));
-        }
-        [Fact]
-        public static void Sort_Sort3_KeysValues_ValueIdentityStruct()
-        {
-            TestAllSort3_KeysValues((value, id) => new ValueIdentityStruct(value, id));
-        }
-        [Fact]
-        public static void Sort_Sort3_Keys_ValueIdentityClass()
-        {
-            TestAllSort3_Keys((value, id) => new ValueIdentityClass(value, id));
-        }
-        [Fact]
-        public static void Sort_Sort3_KeysValues_ValueIdentityClass()
-        {
-            TestAllSort3_KeysValues((value, id) => new ValueIdentityClass(value, id));
-        }
-
         #region Keys Tests
 
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
-        [MemberData(nameof(s_fastSortCases))]
-        public static void Sort_Keys_Int16(ISortCase sortCase)
+        [MemberData(nameof(s_fastSortTests))]
+        public static void Sort_Keys_Int16(ISortCases sortCases)
         {
-            Test(sortCase, i => (short)i);
+            Test(sortCases, i => (short)i);
         }
         
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
-        [MemberData(nameof(s_fastSortCases))]
-        public static void Sort_Keys_UInt16(ISortCase sortCase)
+        [MemberData(nameof(s_fastSortTests))]
+        public static void Sort_Keys_UInt16(ISortCases sortCases)
         {
-            Test(sortCase, i => (ushort)i);
+            Test(sortCases, i => (ushort)i);
         }
         
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
-        [MemberData(nameof(s_fastSortCases))]
-        public static void Sort_Keys_Int32(ISortCase sortCase)
+        [MemberData(nameof(s_fastSortTests))]
+        public static void Sort_Keys_Int32(ISortCases sortCases)
         {
-            Test(sortCase, i => i);
+            Test(sortCases, i => i);
         }
         
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
-        [MemberData(nameof(s_fastSortCases))]
-        public static void Sort_Keys_UInt32(ISortCase sortCase)
+        [MemberData(nameof(s_fastSortTests))]
+        public static void Sort_Keys_UInt32(ISortCases sortCases)
         {
-            Test(sortCase, i => (uint)i);
+            Test(sortCases, i => (uint)i);
         }
         
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
-        [MemberData(nameof(s_fastSortCases))]
-        public static void Sort_Keys_Int64(ISortCase sortCase)
+        [MemberData(nameof(s_fastSortTests))]
+        public static void Sort_Keys_Int64(ISortCases sortCases)
         {
-            Test(sortCase, i => (long)i);
+            Test(sortCases, i => (long)i);
         }
         
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
-        [MemberData(nameof(s_fastSortCases))]
-        public static void Sort_Keys_UInt64(ISortCase sortCase)
+        [MemberData(nameof(s_fastSortTests))]
+        public static void Sort_Keys_UInt64(ISortCases sortCases)
         {
-            Test(sortCase, i => (ulong)i);
+            Test(sortCases, i => (ulong)i);
         }
         
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
-        [MemberData(nameof(s_fastSortCases))]
-        public static void Sort_Keys_Single(ISortCase sortCase)
+        [MemberData(nameof(s_fastSortTests))]
+        public static void Sort_Keys_Single(ISortCases sortCases)
         {
-            Test(sortCase, i => (float)i);
+            Test(sortCases, i => (float)i);
         }
         
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
-        [MemberData(nameof(s_fastSortCases))]
-        public static void Sort_Keys_Double(ISortCase sortCase)
+        [MemberData(nameof(s_fastSortTests))]
+        public static void Sort_Keys_Double(ISortCases sortCases)
         {
-            Test(sortCase, i => (double)i);
+            Test(sortCases, i => (double)i);
         }
         
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
-        [MemberData(nameof(s_fastSortCases))]
-        public static void Sort_Keys_Boolean(ISortCase sortCase)
+        [MemberData(nameof(s_fastSortTests))]
+        public static void Sort_Keys_Boolean(ISortCases sortCases)
         {
-            Test(sortCase, i => i % 2 == 0);
+            Test(sortCases, i => i % 2 == 0);
         }
         
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
-        [MemberData(nameof(s_fastSortCases))]
-        public static void Sort_Keys_Char(ISortCase sortCase)
+        [MemberData(nameof(s_fastSortTests))]
+        public static void Sort_Keys_Char(ISortCases sortCases)
         {
-            Test(sortCase, i => (char)i);
+            Test(sortCases, i => (char)i);
         }
         
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
-        [MemberData(nameof(s_fastSortCases))]
-        public static void Sort_Keys_String(ISortCase sortCase)
+        [MemberData(nameof(s_fastSortTests))]
+        public static void Sort_Keys_String(ISortCases sortCases)
         {
-            Test(sortCase, i => i.ToString("D9"));
+            Test(sortCases, i => i.ToString("D9"));
         }
         
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
-        [MemberData(nameof(s_fastSortCases))]
-        public static void Sort_Keys_ComparableStructInt32(ISortCase sortCase)
+        [MemberData(nameof(s_fastSortTests))]
+        public static void Sort_Keys_ComparableStructInt32(ISortCases sortCases)
         {
-            Test(sortCase, i => new ComparableStructInt32(i));
+            Test(sortCases, i => new ComparableStructInt32(i));
         }
         
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
-        [MemberData(nameof(s_fastSortCases))]
-        public static void Sort_Keys_ComparableClassInt32(ISortCase sortCase)
+        [MemberData(nameof(s_fastSortTests))]
+        public static void Sort_Keys_ComparableClassInt32(ISortCases sortCases)
         {
-            Test(sortCase, i => new ComparableClassInt32(i));
+            Test(sortCases, i => new ComparableClassInt32(i));
         }
 #if OUTER_LOOP
         //[OuterLoop]
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
-        [MemberData(nameof(s_slowSortCases))]
-        public static void Sort_Keys_Int16_OuterLoop(ISortCase sortCase)
+        [MemberData(nameof(s_slowSortTests))]
+        public static void Sort_Keys_Int16_OuterLoop(ISortCases sortCases)
         {
-            Test(sortCase, i => (short)i);
+            Test(sortCases, i => (short)i);
         }
         //[OuterLoop]
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
-        [MemberData(nameof(s_slowSortCases))]
-        public static void Sort_Keys_UInt16_OuterLoop(ISortCase sortCase)
+        [MemberData(nameof(s_slowSortTests))]
+        public static void Sort_Keys_UInt16_OuterLoop(ISortCases sortCases)
         {
-            Test(sortCase, i => (ushort)i);
+            Test(sortCases, i => (ushort)i);
         }
         //[OuterLoop]
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
-        [MemberData(nameof(s_slowSortCases))]
-        public static void Sort_Keys_Int32_OuterLoop(ISortCase sortCase)
+        [MemberData(nameof(s_slowSortTests))]
+        public static void Sort_Keys_Int32_OuterLoop(ISortCases sortCases)
         {
-            Test(sortCase, i => i);
+            Test(sortCases, i => i);
         }
         //[OuterLoop]
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
-        [MemberData(nameof(s_slowSortCases))]
-        public static void Sort_Keys_UInt32_OuterLoop(ISortCase sortCase)
+        [MemberData(nameof(s_slowSortTests))]
+        public static void Sort_Keys_UInt32_OuterLoop(ISortCases sortCases)
         {
-            Test(sortCase, i => (uint)i);
+            Test(sortCases, i => (uint)i);
         }
         //[OuterLoop]
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
-        [MemberData(nameof(s_slowSortCases))]
-        public static void Sort_Keys_Int64_OuterLoop(ISortCase sortCase)
+        [MemberData(nameof(s_slowSortTests))]
+        public static void Sort_Keys_Int64_OuterLoop(ISortCases sortCases)
         {
-            Test(sortCase, i => (long)i);
+            Test(sortCases, i => (long)i);
         }
         //[OuterLoop]
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
-        [MemberData(nameof(s_slowSortCases))]
-        public static void Sort_Keys_UInt64_OuterLoop(ISortCase sortCase)
+        [MemberData(nameof(s_slowSortTests))]
+        public static void Sort_Keys_UInt64_OuterLoop(ISortCases sortCases)
         {
-            Test(sortCase, i => (ulong)i);
+            Test(sortCases, i => (ulong)i);
         }
         //[OuterLoop]
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
-        [MemberData(nameof(s_slowSortCases))]
-        public static void Sort_Keys_Single_OuterLoop(ISortCase sortCase)
+        [MemberData(nameof(s_slowSortTests))]
+        public static void Sort_Keys_Single_OuterLoop(ISortCases sortCases)
         {
-            Test(sortCase, i => (float)i);
+            Test(sortCases, i => (float)i);
         }
         //[OuterLoop]
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
-        [MemberData(nameof(s_slowSortCases))]
-        public static void Sort_Keys_Double_OuterLoop(ISortCase sortCase)
+        [MemberData(nameof(s_slowSortTests))]
+        public static void Sort_Keys_Double_OuterLoop(ISortCases sortCases)
         {
-            Test(sortCase, i => (double)i);
+            Test(sortCases, i => (double)i);
         }
         //[OuterLoop]
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
-        [MemberData(nameof(s_slowSortCases))]
-        public static void Sort_Keys_Boolean_OuterLoop(ISortCase sortCase)
+        [MemberData(nameof(s_slowSortTests))]
+        public static void Sort_Keys_Boolean_OuterLoop(ISortCases sortCases)
         {
-            Test(sortCase, i => i % 2 == 0);
+            Test(sortCases, i => i % 2 == 0);
         }
         //[OuterLoop]
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
-        [MemberData(nameof(s_slowSortCases))]
-        public static void Sort_Keys_Char_OuterLoop(ISortCase sortCase)
+        [MemberData(nameof(s_slowSortTests))]
+        public static void Sort_Keys_Char_OuterLoop(ISortCases sortCases)
         {
-            Test(sortCase, i => (char)i);
+            Test(sortCases, i => (char)i);
         }
         //[OuterLoop]
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
-        [MemberData(nameof(s_slowSortCases))]
-        public static void Sort_Keys_String_OuterLoop(ISortCase sortCase)
+        [MemberData(nameof(s_slowSortTests))]
+        public static void Sort_Keys_String_OuterLoop(ISortCases sortCases)
         {
-            Test(sortCase, i => i.ToString("D9"));
+            Test(sortCases, i => i.ToString("D9"));
         }
         //[OuterLoop]
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
-        [MemberData(nameof(s_slowSortCases))]
-        public static void Sort_Keys_ComparableStructInt32_OuterLoop(ISortCase sortCase)
+        [MemberData(nameof(s_slowSortTests))]
+        public static void Sort_Keys_ComparableStructInt32_OuterLoop(ISortCases sortCases)
         {
-            Test(sortCase, i => new ComparableStructInt32(i));
+            Test(sortCases, i => new ComparableStructInt32(i));
         }
         //[OuterLoop]
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
-        [MemberData(nameof(s_slowSortCases))]
-        public static void Sort_Keys_ComparableClassInt32_OuterLoop(ISortCase sortCase)
+        [MemberData(nameof(s_slowSortTests))]
+        public static void Sort_Keys_ComparableClassInt32_OuterLoop(ISortCases sortCases)
         {
-            Test(sortCase, i => new ComparableClassInt32(i));
+            Test(sortCases, i => new ComparableClassInt32(i));
         }
 #endif
 
         #endregion
 
         #region Keys and Values Tests
-        [Fact]
-        public static void Sort_KeysValues_Int16_Int32_SwapsIfSameValuesShouldnt()
-        {
-            TestSortOverloads(new short[] { 42, 42, 42 }, new int[] { 0, 1, 2 });
-        }
-
 
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
-        [MemberData(nameof(s_fastSortCases))]
-        public static void Sort_KeysValues_Int16_Int32(ISortCase sortCase)
+        [MemberData(nameof(s_fastSortTests))]
+        public static void Sort_KeysValues_Int16_Int32(ISortCases sortCases)
         {
-            Test(sortCase, i => (short)i, v => v);
+            Test(sortCases, i => (short)i, v => v);
         }
         
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
-        [MemberData(nameof(s_fastSortCases))]
-        public static void Sort_KeysValues_UInt16_Int32(ISortCase sortCase)
+        [MemberData(nameof(s_fastSortTests))]
+        public static void Sort_KeysValues_UInt16_Int32(ISortCases sortCases)
         {
-            Test(sortCase, i => (ushort)i, v => v);
+            Test(sortCases, i => (ushort)i, v => v);
         }
         
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
-        [MemberData(nameof(s_fastSortCases))]
-        public static void Sort_KeysValues_Int32_Int32(ISortCase sortCase)
+        [MemberData(nameof(s_fastSortTests))]
+        public static void Sort_KeysValues_Int32_Int32(ISortCases sortCases)
         {
-            Test(sortCase, i => i, v => v);
+            Test(sortCases, i => i, v => v);
         }
         
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
-        [MemberData(nameof(s_fastSortCases))]
-        public static void Sort_KeysValues_UInt32_Int32(ISortCase sortCase)
+        [MemberData(nameof(s_fastSortTests))]
+        public static void Sort_KeysValues_UInt32_Int32(ISortCases sortCases)
         {
-            Test(sortCase, i => (uint)i, v => v);
+            Test(sortCases, i => (uint)i, v => v);
         }
         
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
-        [MemberData(nameof(s_fastSortCases))]
-        public static void Sort_KeysValues_Int64_Int32(ISortCase sortCase)
+        [MemberData(nameof(s_fastSortTests))]
+        public static void Sort_KeysValues_Int64_Int32(ISortCases sortCases)
         {
-            Test(sortCase, i => (long)i, v => v);
+            Test(sortCases, i => (long)i, v => v);
         }
         
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
-        [MemberData(nameof(s_fastSortCases))]
-        public static void Sort_KeysValues_UInt64_Int32(ISortCase sortCase)
+        [MemberData(nameof(s_fastSortTests))]
+        public static void Sort_KeysValues_UInt64_Int32(ISortCases sortCases)
         {
-            Test(sortCase, i => (ulong)i, v => v);
+            Test(sortCases, i => (ulong)i, v => v);
         }
         
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
-        [MemberData(nameof(s_fastSortCases))]
-        public static void Sort_KeysValues_Single_Int32(ISortCase sortCase)
+        [MemberData(nameof(s_fastSortTests))]
+        public static void Sort_KeysValues_Single_Int32(ISortCases sortCases)
         {
-            Test(sortCase, i => (float)i, v => v);
+            Test(sortCases, i => (float)i, v => v);
         }
         
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
-        [MemberData(nameof(s_fastSortCases))]
-        public static void Sort_KeysValues_Double_Int32(ISortCase sortCase)
+        [MemberData(nameof(s_fastSortTests))]
+        public static void Sort_KeysValues_Double_Int32(ISortCases sortCases)
         {
-            Test(sortCase, i => (double)i, v => v);
+            Test(sortCases, i => (double)i, v => v);
         }
         
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
-        [MemberData(nameof(s_fastSortCases))]
-        public static void Sort_KeysValues_Boolean_Int32(ISortCase sortCase)
+        [MemberData(nameof(s_fastSortTests))]
+        public static void Sort_KeysValues_Boolean_Int32(ISortCases sortCases)
         {
-            Test(sortCase, i => i % 2 == 0, v => v);
+            Test(sortCases, i => i % 2 == 0, v => v);
         }
         
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
-        [MemberData(nameof(s_fastSortCases))]
-        public static void Sort_KeysValues_Char_Int32(ISortCase sortCase)
+        [MemberData(nameof(s_fastSortTests))]
+        public static void Sort_KeysValues_Char_Int32(ISortCases sortCases)
         {
-            Test(sortCase, i => (char)i, v => v);
+            Test(sortCases, i => (char)i, v => v);
         }
         
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
-        [MemberData(nameof(s_fastSortCases))]
-        public static void Sort_KeysValues_String_Int32(ISortCase sortCase)
+        [MemberData(nameof(s_fastSortTests))]
+        public static void Sort_KeysValues_String_Int32(ISortCases sortCases)
         {
-            Test(sortCase, i => i.ToString("D9"), v => v);
+            Test(sortCases, i => i.ToString("D9"), v => v);
         }
         
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
-        [MemberData(nameof(s_fastSortCases))]
-        public static void Sort_KeysValues_ComparableStructInt32_Int32(ISortCase sortCase)
+        [MemberData(nameof(s_fastSortTests))]
+        public static void Sort_KeysValues_ComparableStructInt32_Int32(ISortCases sortCases)
         {
-            Test(sortCase, i => new ComparableStructInt32(i), v => v);
+            Test(sortCases, i => new ComparableStructInt32(i), v => v);
         }
         
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
-        [MemberData(nameof(s_fastSortCases))]
-        public static void Sort_KeysValues_ComparableClassInt32_Int32(ISortCase sortCase)
+        [MemberData(nameof(s_fastSortTests))]
+        public static void Sort_KeysValues_ComparableClassInt32_Int32(ISortCases sortCases)
         {
-            Test(sortCase, i => new ComparableClassInt32(i), v => v);
+            Test(sortCases, i => new ComparableClassInt32(i), v => v);
         }
 #if OUTER_LOOP
         //[OuterLoop]
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
-        [MemberData(nameof(s_slowSortCases))]
-        public static void Sort_KeysValues_Int16_Int32_OuterLoop(ISortCase sortCase)
+        [MemberData(nameof(s_slowSortTests))]
+        public static void Sort_KeysValues_Int16_Int32_OuterLoop(ISortCases sortCases)
         {
-            Test(sortCase, i => (short)i, v => v);
+            Test(sortCases, i => (short)i, v => v);
         }
         //[OuterLoop]
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
-        [MemberData(nameof(s_slowSortCases))]
-        public static void Sort_KeysValues_UInt16_Int32_OuterLoop(ISortCase sortCase)
+        [MemberData(nameof(s_slowSortTests))]
+        public static void Sort_KeysValues_UInt16_Int32_OuterLoop(ISortCases sortCases)
         {
-            Test(sortCase, i => (ushort)i, v => v);
+            Test(sortCases, i => (ushort)i, v => v);
         }
         //[OuterLoop]
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
-        [MemberData(nameof(s_slowSortCases))]
-        public static void Sort_KeysValues_Int32_Int32_OuterLoop(ISortCase sortCase)
+        [MemberData(nameof(s_slowSortTests))]
+        public static void Sort_KeysValues_Int32_Int32_OuterLoop(ISortCases sortCases)
         {
-            Test(sortCase, i => i, v => v);
+            Test(sortCases, i => i, v => v);
         }
         //[OuterLoop]
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
-        [MemberData(nameof(s_slowSortCases))]
-        public static void Sort_KeysValues_UInt32_Int32_OuterLoop(ISortCase sortCase)
+        [MemberData(nameof(s_slowSortTests))]
+        public static void Sort_KeysValues_UInt32_Int32_OuterLoop(ISortCases sortCases)
         {
-            Test(sortCase, i => (uint)i, v => v);
+            Test(sortCases, i => (uint)i, v => v);
         }
         //[OuterLoop]
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
-        [MemberData(nameof(s_slowSortCases))]
-        public static void Sort_KeysValues_Int64_Int32_OuterLoop(ISortCase sortCase)
+        [MemberData(nameof(s_slowSortTests))]
+        public static void Sort_KeysValues_Int64_Int32_OuterLoop(ISortCases sortCases)
         {
-            Test(sortCase, i => (long)i, v => v);
+            Test(sortCases, i => (long)i, v => v);
         }
         //[OuterLoop]
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
-        [MemberData(nameof(s_slowSortCases))]
-        public static void Sort_KeysValues_UInt64_Int32_OuterLoop(ISortCase sortCase)
+        [MemberData(nameof(s_slowSortTests))]
+        public static void Sort_KeysValues_UInt64_Int32_OuterLoop(ISortCases sortCases)
         {
-            Test(sortCase, i => (ulong)i, v => v);
+            Test(sortCases, i => (ulong)i, v => v);
         }
         //[OuterLoop]
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
-        [MemberData(nameof(s_slowSortCases))]
-        public static void Sort_KeysValues_Single_Int32_OuterLoop(ISortCase sortCase)
+        [MemberData(nameof(s_slowSortTests))]
+        public static void Sort_KeysValues_Single_Int32_OuterLoop(ISortCases sortCases)
         {
-            Test(sortCase, i => (float)i, v => v);
+            Test(sortCases, i => (float)i, v => v);
         }
         //[OuterLoop]
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
-        [MemberData(nameof(s_slowSortCases))]
-        public static void Sort_KeysValues_Double_Int32_OuterLoop(ISortCase sortCase)
+        [MemberData(nameof(s_slowSortTests))]
+        public static void Sort_KeysValues_Double_Int32_OuterLoop(ISortCases sortCases)
         {
-            Test(sortCase, i => (double)i, v => v);
+            Test(sortCases, i => (double)i, v => v);
         }
         //[OuterLoop]
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
-        [MemberData(nameof(s_slowSortCases))]
-        public static void Sort_KeysValues_Boolean_Int32_OuterLoop(ISortCase sortCase)
+        [MemberData(nameof(s_slowSortTests))]
+        public static void Sort_KeysValues_Boolean_Int32_OuterLoop(ISortCases sortCases)
         {
-            Test(sortCase, i => i % 2 == 0, v => v);
+            Test(sortCases, i => i % 2 == 0, v => v);
         }
         //[OuterLoop]
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
-        [MemberData(nameof(s_slowSortCases))]
-        public static void Sort_KeysValues_Char_Int32_OuterLoop(ISortCase sortCase)
+        [MemberData(nameof(s_slowSortTests))]
+        public static void Sort_KeysValues_Char_Int32_OuterLoop(ISortCases sortCases)
         {
-            Test(sortCase, i => (char)i, v => v);
+            Test(sortCases, i => (char)i, v => v);
         }
         //[OuterLoop]
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
-        [MemberData(nameof(s_slowSortCases))]
-        public static void Sort_KeysValues_String_Int32_OuterLoop(ISortCase sortCase)
+        [MemberData(nameof(s_slowSortTests))]
+        public static void Sort_KeysValues_String_Int32_OuterLoop(ISortCases sortCases)
         {
-            Test(sortCase, i => i.ToString("D9"), v => v);
+            Test(sortCases, i => i.ToString("D9"), v => v);
         }
         //[OuterLoop]
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
-        [MemberData(nameof(s_slowSortCases))]
-        public static void Sort_KeysValues_ComparableStructInt32_Int32_OuterLoop(ISortCase sortCase)
+        [MemberData(nameof(s_slowSortTests))]
+        public static void Sort_KeysValues_ComparableStructInt32_Int32_OuterLoop(ISortCases sortCases)
         {
-            Test(sortCase, i => new ComparableStructInt32(i), v => v);
+            Test(sortCases, i => new ComparableStructInt32(i), v => v);
         }
         //[OuterLoop]
         [Theory]
         [Trait("MyTrait", "MyTraitValue")]
-        [MemberData(nameof(s_slowSortCases))]
-        public static void Sort_KeysValues_ComparableClassInt32_Int32_OuterLoop(ISortCase sortCase)
+        [MemberData(nameof(s_slowSortTests))]
+        public static void Sort_KeysValues_ComparableClassInt32_Int32_OuterLoop(ISortCases sortCases)
         {
-            Test(sortCase, i => new ComparableClassInt32(i), v => v);
+            Test(sortCases, i => new ComparableClassInt32(i), v => v);
         }
 #endif
         #endregion
@@ -627,221 +552,208 @@ namespace System.SpanTests
         //}
 
 
-        private static void Test<TKey>(ISortCase sortCase, Func<int, TKey> toKey)
+        private static void Test<TKey>(ISortCases sortCase, Func<int, TKey> toKey)
             where TKey : IComparable<TKey>
         {
-            foreach (int length in sortCase.TestLengths)
+            foreach (var unsorted in sortCase.EnumerateTests(toKey))
             {
-                var unsorted = new TKey[length];
-                sortCase.Fill(unsorted, toKey);
                 TestSortOverloads(unsorted);
             }
         }
-        private static void Test<TKey, TValue>(ISortCase sortCase, Func<int, TKey> toKey, Func<int, TValue> toValue)
+        private static void TestSortOverloads<TKey>(ArraySegment<TKey> keys)
             where TKey : IComparable<TKey>
         {
-            foreach (int length in sortCase.TestLengths)
+            TestSort(keys, s => ((Span<TKey>)s).Sort());
+            TestSort(keys, s => ((Span<TKey>)s).Sort(Comparer<TKey>.Default));
+            TestSort(keys, s => ((Span<TKey>)s).Sort(Comparer<TKey>.Default.Compare));
+            TestSort(keys, s => ((Span<TKey>)s).Sort(new CustomComparer<TKey>()));
+            TestSort(keys, s => ((Span<TKey>)s).Sort((IComparer<TKey>)null));
+        }
+        private static void TestSort<TKey>(
+            ArraySegment<TKey> keysToSort, 
+            Action<ArraySegment<TKey>> sort)
+            where TKey : IComparable<TKey>
+        {
+            var expected = new ArraySegment<TKey>((TKey[])keysToSort.Array.Clone(),
+                keysToSort.Offset, keysToSort.Count);
+            Array.Sort(expected.Array, expected.Offset, expected.Count);
+
+            sort(keysToSort);
+
+            // We assert the full arrays are as expected, to check for possible under/overflow
+            Assert.Equal(expected.Array, keysToSort.Array);
+        }
+
+        private static void Test<TKey, TValue>(ISortCases sortCase, Func<int, TKey> toKey, Func<int, TValue> toValue)
+            where TKey : IComparable<TKey>
+        {
+            foreach (var unsortedKeys in sortCase.EnumerateTests(toKey))
             {
-                var unsortedKeys = new TKey[length];
-                var unsortedValues = new TValue[length];
-                sortCase.Fill(unsortedKeys, toKey);
+                var length = unsortedKeys.Array.Length;
+                var values = new TValue[length];
                 // Items are always based on "unique" int values
-                new IncrementingSpanFiller().Fill(unsortedValues, length, toValue);
+                new IncrementingSpanFiller().Fill(values, length, toValue);
+                var unsortedValues = new ArraySegment<TValue>(values, unsortedKeys.Offset, unsortedKeys.Count);
                 TestSortOverloads(unsortedKeys, unsortedValues);
             }
         }
-
-        private static void TestSortOverloads<T>(T[] array)
-            where T : IComparable<T>
-        {
-            TestSpan(array);
-            TestComparerSpan(array);
-            TestComparisonSpan(array);
-            TestCustomComparerSpan(array);
-            TestNullComparerSpan(array);
-        }
-
-        private static void TestSpan<T>(T[] array)
-            where T : IComparable<T>
-        {
-            var copy = (T[])array.Clone();
-            var span = new Span<T>(array);
-            var expected = (T[])array.Clone();
-            Array.Sort(expected);
-
-            span.Sort();
-
-            Assert.Equal(expected, array);
-        }
-        private static void TestComparerSpan<T>(T[] array)
-            where T : IComparable<T>
-        {
-            var span = new Span<T>(array);
-            var expected = (T[])array.Clone();
-            Array.Sort(expected);
-
-            span.Sort(Comparer<T>.Default);
-
-            Assert.Equal(expected, array);
-        }
-        private static void TestComparisonSpan<T>(T[] array)
-            where T : IComparable<T>
-        {
-            var span = new Span<T>(array);
-            var expected = (T[])array.Clone();
-            Array.Sort(expected);
-
-            span.Sort(Comparer<T>.Default.Compare);
-
-            Assert.Equal(expected, array);
-        }
-        private static void TestCustomComparerSpan<T>(T[] array)
-            where T : IComparable<T>
-        {
-            var copy = (T[])array.Clone();
-            var span = new Span<T>(array);
-            var expected = (T[])array.Clone();
-            Array.Sort(expected);
-
-            span.Sort(new CustomComparer<T>());
-
-            Assert.Equal(expected, array);
-        }
-        private static void TestNullComparerSpan<T>(T[] array)
-            where T : IComparable<T>
-        {
-            var span = new Span<T>(array);
-            var expected = (T[])array.Clone();
-            Array.Sort(expected);
-
-            span.Sort((IComparer<T>)null);
-
-            Assert.Equal(expected, array);
-        }
-
-
-        private static void TestSortOverloads<TKey, TValue>(TKey[] keys, TValue[] values)
+        private static void TestSortOverloads<TKey, TValue>(ArraySegment<TKey> keys, ArraySegment<TValue> values)
             where TKey : IComparable<TKey>
         {
-            TestSpan(keys, values);
-            TestComparerSpan(keys, values);
-            TestComparisonSpan(keys, values);
-            TestCustomComparerSpan(keys, values);
-            TestNullComparerSpan(keys, values);
+            TestSort(keys, values, (ks, vs) => ((Span<TKey>)ks).Sort((Span<TValue>)vs));
+            TestSort(keys, values, (ks, vs) => ((Span<TKey>)ks).Sort((Span<TValue>)vs, Comparer<TKey>.Default));
+            TestSort(keys, values, (ks, vs) => ((Span<TKey>)ks).Sort((Span<TValue>)vs, Comparer<TKey>.Default.Compare));
+            TestSort(keys, values, (ks, vs) => ((Span<TKey>)ks).Sort((Span<TValue>)vs, new CustomComparer<TKey>()));
+            TestSort(keys, values, (ks, vs) => ((Span<TKey>)ks).Sort((Span<TValue>)vs, (IComparer<TKey>)null));
         }
-
-        private static void TestSpan<TKey, TValue>(TKey[] keys, TValue[] values)
+        private static void TestSort<TKey, TValue>(
+            ArraySegment<TKey> keysToSort, ArraySegment<TValue> valuesToSort, 
+            Action<ArraySegment<TKey>, ArraySegment<TValue>> sort)
             where TKey : IComparable<TKey>
         {
-            var copy = (TKey[])keys.Clone();
-            var expectedKeys = (TKey[])keys.Clone();
-            var expectedValues = (TValue[])values.Clone();
-            Array.Sort(expectedKeys, expectedValues);
+            var expectedKeys = new ArraySegment<TKey>((TKey[])keysToSort.Array.Clone(),
+                keysToSort.Offset, keysToSort.Count);
+            var expectedValues = new ArraySegment<TValue>((TValue[])valuesToSort.Array.Clone(),
+                valuesToSort.Offset, valuesToSort.Count);
+            Assert.Equal(expectedKeys.Offset, expectedValues.Offset);
+            Assert.Equal(expectedKeys.Count, expectedValues.Count);
+            Array.Sort(expectedKeys.Array, expectedValues.Array, expectedKeys.Offset, expectedKeys.Count);
 
-            var spanKeys = new Span<TKey>(keys);
-            var spanValues = new Span<TValue>(values);
-            spanKeys.Sort(spanValues);
+            sort(keysToSort, valuesToSort);
 
-            Assert.Equal(expectedKeys, keys);
-            Assert.Equal(expectedValues, values);
-        }
-        private static void TestComparerSpan<TKey, TValue>(TKey[] keys, TValue[] values)
-            where TKey : IComparable<TKey>
-        {
-            var expectedKeys = (TKey[])keys.Clone();
-            var expectedValues = (TValue[])values.Clone();
-            Array.Sort(expectedKeys, expectedValues);
-
-            var spanKeys = new Span<TKey>(keys);
-            var spanValues = new Span<TValue>(values);
-            spanKeys.Sort(spanValues, Comparer<TKey>.Default);
-
-            Assert.Equal(expectedKeys, keys);
-            Assert.Equal(expectedValues, values);
-        }
-        private static void TestComparisonSpan<TKey, TValue>(TKey[] keys, TValue[] values)
-            where TKey : IComparable<TKey>
-        {
-            var expectedKeys = (TKey[])keys.Clone();
-            var expectedValues = (TValue[])values.Clone();
-            Array.Sort(expectedKeys, expectedValues);
-
-            var spanKeys = new Span<TKey>(keys);
-            var spanValues = new Span<TValue>(values);
-            spanKeys.Sort(spanValues, Comparer<TKey>.Default.Compare);
-
-            Assert.Equal(expectedKeys, keys);
-            Assert.Equal(expectedValues, values);
-        }
-        private static void TestCustomComparerSpan<TKey, TValue>(TKey[] keys, TValue[] values)
-            where TKey : IComparable<TKey>
-        {
-            var expectedKeys = (TKey[])keys.Clone();
-            var expectedValues = (TValue[])values.Clone();
-            Array.Sort(expectedKeys, expectedValues);
-
-            var spanKeys = new Span<TKey>(keys);
-            var spanValues = new Span<TValue>(values);
-            spanKeys.Sort(spanValues, new CustomComparer<TKey>());
-
-            Assert.Equal(expectedKeys, keys);
-            Assert.Equal(expectedValues, values);
-        }
-        private static void TestNullComparerSpan<TKey, TValue>(TKey[] keys, TValue[] values)
-            where TKey : IComparable<TKey>
-        {
-            var expectedKeys = (TKey[])keys.Clone();
-            var expectedValues = (TValue[])values.Clone();
-            Array.Sort(expectedKeys, expectedValues);
-
-            var spanKeys = new Span<TKey>(keys);
-            var spanValues = new Span<TValue>(values);
-            spanKeys.Sort(spanValues, (IComparer<TKey>)null);
-
-            Assert.Equal(expectedKeys, keys);
-            Assert.Equal(expectedValues, values);
+            // We assert the full arrays are as expected, to check for possible under/overflow
+            Assert.Equal(expectedKeys.Array, keysToSort.Array);
+            Assert.Equal(expectedValues.Array, valuesToSort.Array);
         }
 
-
-        static void TestAllSort3_Keys<TKey>(Func<int, int, TKey> toKey)
-            where TKey : IComparable<TKey>
+        public interface ISortCases
         {
-            const int length = 3;
-            for (int i = 0; i < length; i++)
+            IEnumerable<ArraySegment<TKey>> EnumerateTests<TKey>(Func<int, TKey> toKey);
+        }
+        public class FillerSortCases : ISortCases
+        {
+            public FillerSortCases(int maxLength, ISpanFiller filler)
             {
-                for (int j = 0; j < length; j++)
+                MaxLength = maxLength;
+                Filler = filler ?? throw new ArgumentNullException(nameof(filler));
+            }
+
+            public int MinLength => 2;
+            public int MaxLength { get; }
+            public ISpanFiller Filler { get; }
+
+            public IEnumerable<ArraySegment<TKey>> EnumerateTests<TKey>(Func<int, TKey> toKey)
+            {
+                for (int length = MinLength; length <= MaxLength; length++)
                 {
-                    for (int k = 0; k < length; k++)
+                    var unsorted = new TKey[length];
+                    Filler.Fill(unsorted, length, toKey);
+                    yield return unsorted;
+                }
+            }
+
+            public override string ToString()
+            {
+                return $"Lengths [{MinLength}, {MaxLength,4}] {nameof(Filler)}={Filler.GetType().Name.Replace("SpanFiller", "")} ";
+            }
+        }
+        public class AllLengthTwoSortCases : ISortCases
+        {
+            public IEnumerable<ArraySegment<TKey>> EnumerateTests<TKey>(Func<int, TKey> toKey)
+            {
+                const int length = 2;
+                for (int i = 0; i < length; i++)
+                {
+                    for (int j = 0; j < length; j++)
                     {
-                        var keys = new[] { toKey(i, 3), toKey(j, 4), toKey(k, 5) };
-                        TestSortOverloads(keys);
+                        yield return new[] { toKey(i), toKey(j) };
                     }
                 }
             }
+
+            public override string ToString()
+                => GetType().Name.Replace(nameof(ISortCases).Remove(0, 1), string.Empty);
         }
-        static void TestAllSort3_KeysValues<TKey>(Func<int, int, TKey> toKey)
-            where TKey : IComparable<TKey>
+        public class AllLengthThreeSortCases : ISortCases
         {
-            const int length = 3;
-            for (int i = 0; i < length; i++)
+            public IEnumerable<ArraySegment<TKey>> EnumerateTests<TKey>(Func<int, TKey> toKey)
             {
-                for (int j = 0; j < length; j++)
+                const int length = 3;
+                for (int i = 0; i < length; i++)
                 {
-                    for (int k = 0; k < length; k++)
+                    for (int j = 0; j < length; j++)
                     {
-                        var keys = new[] { toKey(i, 3), toKey(j, 4), toKey(k, 5) };
-                        var values = new[] { 6, 7, 8 };
-                        TestSortOverloads(keys, values);
+                        for (int k = 0; k < length; k++)
+                        {
+                            yield return new[] { toKey(i), toKey(j), toKey(k) };
+                        }
                     }
                 }
             }
+
+            public override string ToString()
+                => GetType().Name.Replace(nameof(ISortCases).Remove(0, 1), string.Empty);
+        }
+        public class AllLengthFourSortCases : ISortCases
+        {
+            public IEnumerable<ArraySegment<TKey>> EnumerateTests<TKey>(Func<int, TKey> toKey)
+            {
+                const int length = 4;
+                for (int i = 0; i < length; i++)
+                {
+                    for (int j = 0; j < length; j++)
+                    {
+                        for (int k = 0; k < length; k++)
+                        {
+                            for (int l = 0; l < length; l++)
+                            {
+                                yield return new[] { toKey(i), toKey(j), toKey(k), toKey(l) };
+                            }
+                        }
+                    }
+                }
+            }
+
+            public override string ToString()
+                => GetType().Name.Replace(nameof(ISortCases).Remove(0, 1), string.Empty);
+        }
+        public class PadAndSliceSortCases : ISortCases
+        {
+            readonly ISortCases _sortCases;
+            readonly int _slicePadding;
+
+            public PadAndSliceSortCases(ISortCases sortCases, int slicePadding)
+            {
+                _sortCases = sortCases ?? throw new ArgumentNullException(nameof(sortCases));
+                _slicePadding = slicePadding;
+            }
+
+            public IEnumerable<ArraySegment<TKey>> EnumerateTests<TKey>(Func<int, TKey> toKey)
+            {
+                return _sortCases.EnumerateTests(toKey).Select(ks =>
+                {
+                    var newKeys = new TKey[ks.Count + 2 * _slicePadding];
+                    Array.Copy(ks.Array, ks.Offset, newKeys, _slicePadding, ks.Count);
+                    var padKey = toKey(unchecked((int)0xCDCDCDCD));
+                    for (int i = 0; i < _slicePadding; i++)
+                    {
+                        newKeys[i] = padKey;
+                        newKeys[newKeys.Length - i - 1] = padKey;
+                    }
+                    return new ArraySegment<TKey>(newKeys, _slicePadding, ks.Count);
+                });
+            }
+
+            public override string ToString()
+                => GetType().Name.Replace(nameof(ISortCases).Remove(0, 1), string.Empty) + 
+                $":{_slicePadding} " + _sortCases.ToString();
         }
 
 
-        internal struct CustomComparer<T> : IComparer<T>
-            where T : IComparable<T>
+        internal struct CustomComparer<TKey> : IComparer<TKey>
+            where TKey : IComparable<TKey>
         {
-            public int Compare(T x, T y) => x.CompareTo(y);
+            public int Compare(TKey x, TKey y) => x.CompareTo(y);
         }
 
         public struct ComparableStructInt32 : IComparable<ComparableStructInt32>
@@ -874,66 +786,66 @@ namespace System.SpanTests
             }
         }
 
-        public struct ValueIdentityStruct : IComparable<ValueIdentityStruct>, IEquatable<ValueIdentityStruct>
+        public struct ValueIdStruct : IComparable<ValueIdStruct>, IEquatable<ValueIdStruct>
         {
-            public ValueIdentityStruct(int value, int identity)
+            public ValueIdStruct(int value, int identity)
             {
                 Value = value;
-                Identity = identity;
+                Id = identity;
             }
 
             public int Value { get; }
-            public int Identity { get; }
+            public int Id { get; }
 
             // Sort by value
-            public int CompareTo(ValueIdentityStruct other) =>
+            public int CompareTo(ValueIdStruct other) =>
                 Value.CompareTo(other.Value);
 
             // Check equality by both
-            public bool Equals(ValueIdentityStruct other) =>
-                Value.Equals(other.Value) && Identity.Equals(other.Identity);
+            public bool Equals(ValueIdStruct other) =>
+                Value.Equals(other.Value) && Id.Equals(other.Id);
 
             public override bool Equals(object obj)
             {
-                if (obj is ValueIdentityStruct)
+                if (obj is ValueIdStruct)
                 {
-                    return Equals((ValueIdentityStruct)obj);
+                    return Equals((ValueIdStruct)obj);
                 }
                 return false;
             }
 
             public override int GetHashCode() => Value.GetHashCode();
 
-            public override string ToString() => $"{Value} Id:{Identity}";
+            public override string ToString() => $"{Value} Id:{Id}";
         }
 
-        public class ValueIdentityClass : IComparable<ValueIdentityClass>, IEquatable<ValueIdentityClass>
+        public class ValueIdClass : IComparable<ValueIdClass>, IEquatable<ValueIdClass>
         {
-            public ValueIdentityClass(int value, int identity)
+            public ValueIdClass(int value, int identity)
             {
                 Value = value;
-                Identity = identity;
+                Id = identity;
             }
 
             public int Value { get; }
-            public int Identity { get; }
+            public int Id { get; }
 
             // Sort by value
-            public int CompareTo(ValueIdentityClass other) =>
+            public int CompareTo(ValueIdClass other) =>
                 Value.CompareTo(other.Value);
 
             // Check equality by both
-            public bool Equals(ValueIdentityClass other) =>
-                other != null && Value.Equals(other.Value) && Identity.Equals(other.Identity);
+            public bool Equals(ValueIdClass other) =>
+                other != null && Value.Equals(other.Value) && Id.Equals(other.Id);
 
             public override bool Equals(object obj)
             {
-                return Equals(obj as ValueIdentityClass);
+                return Equals(obj as ValueIdClass);
             }
 
             public override int GetHashCode() => Value.GetHashCode();
 
-            public override string ToString() => $"{Value} Id:{Identity}";
+            public override string ToString() => $"{Value} Id:{Id}";
         }
     }
 }
