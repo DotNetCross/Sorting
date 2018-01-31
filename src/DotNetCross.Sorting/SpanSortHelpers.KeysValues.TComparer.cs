@@ -339,71 +339,71 @@ namespace System
             //    }
             //}
 
-            if (comparer.LessThan(r1, r0))
-            {
-                if (comparer.LessThan(r2, r1))
-                {
-                    // r2 < r1 < r0
-                    Swap(ref r2, ref r0);
-                    ref var v0 = ref Unsafe.Add(ref values, i0);
-                    ref var v2 = ref Unsafe.Add(ref values, i2);
-                    Swap(ref v2, ref v0);
-                }
-                else if (comparer.LessThan(r2, r0))
-                {
-                    // r1 <= r2 < r0
-                    TKey tmp = r0;
-                    r0 = r1;
-                    r1 = r2;
-                    r2 = tmp;
-                    ref var v0 = ref Unsafe.Add(ref values, i0);
-                    ref var v1 = ref Unsafe.Add(ref values, i1);
-                    ref var v2 = ref Unsafe.Add(ref values, i2);
-                    TValue vTemp = v0;
-                    v0 = v1;
-                    v1 = v2;
-                    v2 = vTemp;
-                }
-                else
-                {
-                    // r1 < r0 <= r2
-                    Swap(ref r1, ref r0);
-                    ref var v0 = ref Unsafe.Add(ref values, i0);
-                    ref var v1 = ref Unsafe.Add(ref values, i1);
-                    Swap(ref v1, ref v0);
-                }
-            }
-            else // r0 <= r1
-            {
-                if (comparer.LessThan(r1, r2)) // Can't check if r2 >= r1, which is what we really want
-                {
-                    // r0 <= r1 < r2  // should really be r1 <= r2, but it is not
-                    // Nothing to do
-                }
-                else if (comparer.LessThan(r2, r0))
-                {
-                    // r2 < r0 <= r1
-                    TKey tmp = r0;
-                    r0 = r2;
-                    r2 = r1;
-                    r1 = tmp;
-                    ref var v0 = ref Unsafe.Add(ref values, i0);
-                    ref var v1 = ref Unsafe.Add(ref values, i1);
-                    ref var v2 = ref Unsafe.Add(ref values, i2);
-                    TValue vTemp = v0;
-                    v0 = v2;
-                    v2 = v1;
-                    v1 = vTemp;
-                }
-                else if (comparer.LessThan(r2, r1)) // Since we can't check equal, we need to do extra check here
-                {
-                    // r0 <= r2 < r1
-                    Swap(ref r2, ref r1);
-                    ref var v1 = ref Unsafe.Add(ref values, i1);
-                    ref var v2 = ref Unsafe.Add(ref values, i2);
-                    Swap(ref v2, ref v1);
-                }
-            }
+            //if (comparer.LessThan(r1, r0))
+            //{
+            //    if (comparer.LessThan(r2, r1))
+            //    {
+            //        // r2 < r1 < r0
+            //        Swap(ref r2, ref r0);
+            //        ref var v0 = ref Unsafe.Add(ref values, i0);
+            //        ref var v2 = ref Unsafe.Add(ref values, i2);
+            //        Swap(ref v2, ref v0);
+            //    }
+            //    else if (comparer.LessThan(r2, r0))
+            //    {
+            //        // r1 <= r2 < r0
+            //        TKey tmp = r0;
+            //        r0 = r1;
+            //        r1 = r2;
+            //        r2 = tmp;
+            //        ref var v0 = ref Unsafe.Add(ref values, i0);
+            //        ref var v1 = ref Unsafe.Add(ref values, i1);
+            //        ref var v2 = ref Unsafe.Add(ref values, i2);
+            //        TValue vTemp = v0;
+            //        v0 = v1;
+            //        v1 = v2;
+            //        v2 = vTemp;
+            //    }
+            //    else
+            //    {
+            //        // r1 < r0 <= r2
+            //        Swap(ref r1, ref r0);
+            //        ref var v0 = ref Unsafe.Add(ref values, i0);
+            //        ref var v1 = ref Unsafe.Add(ref values, i1);
+            //        Swap(ref v1, ref v0);
+            //    }
+            //}
+            //else // r0 <= r1
+            //{
+            //    if (comparer.LessThan(r1, r2)) // Can't check if r2 >= r1, which is what we really want
+            //    {
+            //        // r0 <= r1 < r2  // should really be r1 <= r2, but it is not
+            //        // Nothing to do
+            //    }
+            //    else if (comparer.LessThan(r2, r0))
+            //    {
+            //        // r2 < r0 <= r1
+            //        TKey tmp = r0;
+            //        r0 = r2;
+            //        r2 = r1;
+            //        r1 = tmp;
+            //        ref var v0 = ref Unsafe.Add(ref values, i0);
+            //        ref var v1 = ref Unsafe.Add(ref values, i1);
+            //        ref var v2 = ref Unsafe.Add(ref values, i2);
+            //        TValue vTemp = v0;
+            //        v0 = v2;
+            //        v2 = v1;
+            //        v1 = vTemp;
+            //    }
+            //    else if (comparer.LessThan(r2, r1)) // Since we can't check equal, we need to do extra check here
+            //    {
+            //        // r0 <= r2 < r1
+            //        Swap(ref r2, ref r1);
+            //        ref var v1 = ref Unsafe.Add(ref values, i1);
+            //        ref var v2 = ref Unsafe.Add(ref values, i2);
+            //        Swap(ref v2, ref v1);
+            //    }
+            //}
 
             //if (comparer.LessThanEqual(r0, r1)) //(r0 <= r1)
             //{

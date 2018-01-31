@@ -232,99 +232,64 @@ namespace System
             TComparer comparer)
             where TComparer : ILessThanComparer<TKey>
         {
-            // 3 times Sort2 would mean either computing values refs if not needed or more times
-            //if (comparer.LessThan(r1, r0))
-            //{
-            //    Swap(ref r0, ref r1);
-            //}
-            //if (comparer.LessThan(r2, r0))
-            //{
-            //    Swap(ref r0, ref r2);
-            //}
-            //if (comparer.LessThan(r2, r1))
-            //{
-            //    Swap(ref r1, ref r2);
-            //}
+            Sort2(ref r0, ref r1, comparer);
+            Sort2(ref r0, ref r2, comparer);
+            Sort2(ref r1, ref r2, comparer);
 
-            // TODO: This needs to handle if values are same too...
-
-            if (comparer.LessThan(r1, r0))
-            {
-                if (comparer.LessThan(r2, r1))
-                {
-                    // r2 < r1 < r0
-                    Swap(ref r2, ref r0);
-                }
-                else if (comparer.LessThan(r2, r0))
-                {
-                    // r1 <= r2 < r0
-                    TKey tmp = r0;
-                    r0 = r1;
-                    r1 = r2;
-                    r2 = tmp;
-                }
-                else
-                {
-                    // r1 < r0 <= r2
-                    Swap(ref r1, ref r0);
-                }
-            }
-            else // r0 <= r1
-            {
-                if (comparer.LessThan(r1, r2)) // Can't check if r2 >= r1, which is what we really want
-                {
-                    // r0 <= r1 < r2  // should really be r1 <= r2, but it is not
-                    // Nothing to do
-                }
-                else if (comparer.LessThan(r2, r0))
-                {
-                    // r2 < r0 <= r1
-                    TKey tmp = r0;
-                    r0 = r2;
-                    r2 = r1;
-                    r1 = tmp;
-                }
-                else if (comparer.LessThan(r2, r1)) // Since we can't check equal, we need to do extra check here
-                {
-                    // r0 <= r2 < r1
-                    Swap(ref r2, ref r1);
-                }
-            }
-
-            //if (comparer.LessThan(r0, r1)) //r0 < r1)
+            // Below works but does not give exactly the same result as Array.Sort
+            // i.e. order could be a bit different for keys that are equal
+            //if (comparer.LessThanEqual(r0, r1)) 
             //{
-            //    if (comparer.LessThan(r1, r2)) //(r1 < r2)
+            //    // r0 <= r1
+            //    if (comparer.LessThanEqual(r1, r2)) 
             //    {
-            //        return;
+            //        // r0 <= r1 <= r2
+            //        return; // Is this return good or bad for perf?
             //    }
-            //    else if (comparer.LessThan(r0, r2)) //(r0 < r2)
+            //    // r0 <= r1
+            //    // r2 < r1
+            //    else if (comparer.LessThanEqual(r0, r2)) 
             //    {
+            //        // r0 <= r2 < r1
             //        Swap(ref r1, ref r2);
             //    }
+            //    // r0 <= r1
+            //    // r2 < r1
+            //    // r2 < r0
             //    else
             //    {
+            //        // r2 < r0 <= r1
             //        TKey tmp = r0;
             //        r0 = r2;
             //        r2 = r1;
             //        r1 = tmp;
             //    }
             //}
-            //else
+            //else 
             //{
-            //    if (comparer.LessThan(r0, r2)) //(r0 < r2)
+            //    // r1 < r0
+            //    if (comparer.LessThan(r2, r1)) 
             //    {
-            //        Swap(ref r0, ref r1);
-            //    }
-            //    else if (comparer.LessThan(r2, r1)) //(r2 < r1)
-            //    {
+            //        // r2 < r1 < r0
             //        Swap(ref r0, ref r2);
             //    }
-            //    else
+            //    // r1 < r0
+            //    // r1 <= r2
+            //    else if (comparer.LessThan(r2, r0)) 
             //    {
+            //        // r1 <= r2 < r0
             //        TKey tmp = r0;
             //        r0 = r1;
             //        r1 = r2;
             //        r2 = tmp;
+            //    }
+            //    // r1 < r0
+            //    // r1 <= r2
+            //    // r0 <= r2
+            //    else 
+            //    {
+            //        // r1 < r0 <= r2
+            //        Swap(ref r0, ref r1);
             //    }
             //}
         }
@@ -340,6 +305,14 @@ namespace System
 
             ref TKey a = ref Unsafe.Add(ref keys, i);
             ref TKey b = ref Unsafe.Add(ref keys, j);
+            Sort2(ref a, ref b, comparer);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void Sort2<TKey, TComparer>(
+            ref TKey a, ref TKey b, TComparer comparer)
+            where TComparer : ILessThanComparer<TKey>
+        {
             if (comparer.LessThan(b, a))
             {
                 TKey temp = a;

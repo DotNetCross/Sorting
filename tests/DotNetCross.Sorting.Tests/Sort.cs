@@ -718,6 +718,7 @@ namespace System.SpanTests
         private static void TestCustomComparerSpan<T>(T[] array)
             where T : IComparable<T>
         {
+            var copy = (T[])array.Clone();
             var span = new Span<T>(array);
             var expected = (T[])array.Clone();
             Array.Sort(expected);
