@@ -1,4 +1,4 @@
-//#define OUTER_LOOP
+#define OUTER_LOOP
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
@@ -129,40 +129,6 @@ namespace System.SpanTests
         public static void Sort_Sort3_KeysValues_ValueIdentityClass()
         {
             TestAllSort3_KeysValues((value, id) => new ValueIdentityClass(value, id));
-        }
-
-        static void TestAllSort3_Keys<TKey>(Func<int, int, TKey> toKey)
-            where TKey : IComparable<TKey>
-        {
-            const int length = 3;
-            for (int i = 0; i < length; i++)
-            {
-                for (int j = 0; j < length; j++)
-                {
-                    for (int k = 0; k < length; k++)
-                    {
-                        var keys = new[] { toKey(i, 3), toKey(j, 4), toKey(k, 5) };
-                        TestSortOverloads(keys);
-                    }
-                }
-            }
-        }
-        static void TestAllSort3_KeysValues<TKey>(Func<int, int, TKey> toKey)
-            where TKey : IComparable<TKey>
-        {
-            const int length = 3;
-            for (int i = 0; i < length; i++)
-            {
-                for (int j = 0; j < length; j++)
-                {
-                    for (int k = 0; k < length; k++)
-                    {
-                        var keys = new[] { toKey(i, 3), toKey(j, 4), toKey(k, 5) };
-                        var values = new[] { 6, 7, 8 };
-                        TestSortOverloads(keys, values);
-                    }
-                }
-            }
         }
 
         #region Keys Tests
@@ -821,6 +787,42 @@ namespace System.SpanTests
             Assert.Equal(expectedKeys, keys);
             Assert.Equal(expectedValues, values);
         }
+
+
+        static void TestAllSort3_Keys<TKey>(Func<int, int, TKey> toKey)
+            where TKey : IComparable<TKey>
+        {
+            const int length = 3;
+            for (int i = 0; i < length; i++)
+            {
+                for (int j = 0; j < length; j++)
+                {
+                    for (int k = 0; k < length; k++)
+                    {
+                        var keys = new[] { toKey(i, 3), toKey(j, 4), toKey(k, 5) };
+                        TestSortOverloads(keys);
+                    }
+                }
+            }
+        }
+        static void TestAllSort3_KeysValues<TKey>(Func<int, int, TKey> toKey)
+            where TKey : IComparable<TKey>
+        {
+            const int length = 3;
+            for (int i = 0; i < length; i++)
+            {
+                for (int j = 0; j < length; j++)
+                {
+                    for (int k = 0; k < length; k++)
+                    {
+                        var keys = new[] { toKey(i, 3), toKey(j, 4), toKey(k, 5) };
+                        var values = new[] { 6, 7, 8 };
+                        TestSortOverloads(keys, values);
+                    }
+                }
+            }
+        }
+
 
         internal struct CustomComparer<T> : IComparer<T>
             where T : IComparable<T>
