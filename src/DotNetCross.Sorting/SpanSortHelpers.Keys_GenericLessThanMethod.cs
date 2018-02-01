@@ -61,51 +61,51 @@ namespace System
             //if (typeof(TKey) == typeof(sbyte))
             //{
             //    ref var specificKeys = ref Unsafe.As<TKey, sbyte>(ref keys);
-            //    Sort(ref specificKeys, length, new SByteLessThanComparer());
+            //    Sort(ref specificKeys, length, new SByteDirectComparer());
             //    return true;
             //}
             //else if (typeof(TKey) == typeof(byte) ||
             //         typeof(TKey) == typeof(bool)) // Use byte for bools to reduce code size
             //{
             //    ref var specificKeys = ref Unsafe.As<TKey, byte>(ref keys);
-            //    Sort(ref specificKeys, length, new ByteLessThanComparer());
+            //    Sort(ref specificKeys, length, new ByteDirectComparer());
             //    return true;
             //}
             //else if (typeof(TKey) == typeof(short) ||
             //         typeof(TKey) == typeof(char)) // Use short for chars to reduce code size
             //{
             //    ref var specificKeys = ref Unsafe.As<TKey, short>(ref keys);
-            //    Sort(ref specificKeys, length, new Int16LessThanComparer());
+            //    Sort(ref specificKeys, length, new Int16DirectComparer());
             //    return true;
             //}
             //else if (typeof(TKey) == typeof(ushort))
             //{
             //    ref var specificKeys = ref Unsafe.As<TKey, ushort>(ref keys);
-            //    Sort(ref specificKeys, length, new UInt16LessThanComparer());
+            //    Sort(ref specificKeys, length, new UInt16DirectComparer());
             //    return true;
             //}
             //else if (typeof(TKey) == typeof(int))
             //{
             //    ref var specificKeys = ref Unsafe.As<TKey, int>(ref keys);
-            //    Sort(ref specificKeys, length, new Int32LessThanComparer());
+            //    Sort(ref specificKeys, length, new Int32DirectComparer());
             //    return true;
             //}
             //else if (typeof(TKey) == typeof(uint))
             //{
             //    ref var specificKeys = ref Unsafe.As<TKey, uint>(ref keys);
-            //    Sort(ref specificKeys, length, new UInt32LessThanComparer());
+            //    Sort(ref specificKeys, length, new UInt32DirectComparer());
             //    return true;
             //}
             //else if (typeof(TKey) == typeof(long))
             //{
             //    ref var specificKeys = ref Unsafe.As<TKey, long>(ref keys);
-            //    Sort(ref specificKeys, length, new Int64LessThanComparer());
+            //    Sort(ref specificKeys, length, new Int64DirectComparer());
             //    return true;
             //}
             //else if (typeof(TKey) == typeof(ulong))
             //{
             //    ref var specificKeys = ref Unsafe.As<TKey, ulong>(ref keys);
-            //    Sort(ref specificKeys, length, new UInt64LessThanComparer());
+            //    Sort(ref specificKeys, length, new UInt64DirectComparer());
             //    return true;
             //}
             //else if (typeof(TKey) == typeof(float))
@@ -117,7 +117,7 @@ namespace System
             //    var left = NaNPrepass(ref specificKeys, length, new SingleIsNaN());
 
             //    ref var afterNaNsKeys = ref Unsafe.Add(ref specificKeys, left);
-            //    Sort(ref afterNaNsKeys, length - left, new SingleLessThanComparer());
+            //    Sort(ref afterNaNsKeys, length - left, new SingleDirectComparer());
 
             //    return true;
             //}
@@ -130,14 +130,14 @@ namespace System
             //    var left = NaNPrepass(ref specificKeys, length, new DoubleIsNaN());
 
             //    ref var afterNaNsKeys = ref Unsafe.Add(ref specificKeys, left);
-            //    Sort(ref afterNaNsKeys, length - left, new DoubleLessThanComparer());
+            //    Sort(ref afterNaNsKeys, length - left, new DoubleDirectComparer());
 
             //    return true;
             //}
             //else if (typeof(TKey) == typeof(string))
             //{
             //    ref var specificKeys = ref Unsafe.As<TKey, string>(ref keys);
-            //    Sort(ref specificKeys, length, new StringLessThanComparer());
+            //    Sort(ref specificKeys, length, new StringDirectComparer());
             //    return true;
             //}
             //else
@@ -172,7 +172,7 @@ namespace System
         internal static void Sort<TKey, TComparer>(
             ref TKey keys, int length,
             TComparer comparer)
-            where TComparer : ILessThanComparer
+            where TComparer : IDirectComparer
         {
             IntrospectiveSort(ref keys, length, comparer);
         }
@@ -180,7 +180,7 @@ namespace System
         private static void IntrospectiveSort<TKey, TComparer>(
             ref TKey keys, int length,
             TComparer comparer)
-            where TComparer : ILessThanComparer
+            where TComparer : IDirectComparer
         {
             var depthLimit = 2 * FloorLog2PlusOne(length);
             IntroSort(ref keys, 0, length - 1, depthLimit, comparer);
@@ -190,7 +190,7 @@ namespace System
             ref TKey keys,
             int lo, int hi, int depthLimit,
             TComparer comparer)
-            where TComparer : ILessThanComparer
+            where TComparer : IDirectComparer
         {
             Debug.Assert(comparer != null);
             Debug.Assert(lo >= 0);
@@ -241,7 +241,7 @@ namespace System
         private static int PickPivotAndPartition<TKey, TComparer>(
             ref TKey keys, int lo, int hi,
             TComparer comparer)
-            where TComparer : ILessThanComparer
+            where TComparer : IDirectComparer
         {
             Debug.Assert(comparer != null);
             Debug.Assert(lo >= 0);
@@ -295,7 +295,7 @@ namespace System
         private static void HeapSort<TKey, TComparer>(
             ref TKey keys, int lo, int hi,
             TComparer comparer)
-            where TComparer : ILessThanComparer
+            where TComparer : IDirectComparer
         {
             Debug.Assert(comparer != null);
             Debug.Assert(lo >= 0);
@@ -316,7 +316,7 @@ namespace System
         private static void DownHeap<TKey, TComparer>(
             ref TKey keys, int i, int n, int lo,
             TComparer comparer)
-            where TComparer : ILessThanComparer
+            where TComparer : IDirectComparer
         {
             Debug.Assert(comparer != null);
             Debug.Assert(lo >= 0);
@@ -354,7 +354,7 @@ namespace System
         private static void InsertionSort<TKey, TComparer>(
             ref TKey keys, int lo, int hi,
             TComparer comparer)
-            where TComparer : ILessThanComparer
+            where TComparer : IDirectComparer
         {
             Debug.Assert(lo >= 0);
             Debug.Assert(hi >= lo);
@@ -383,7 +383,7 @@ namespace System
         private static void Sort3<TKey, TComparer>(
             ref TKey r0, ref TKey r1, ref TKey r2,
             TComparer comparer)
-            where TComparer : ILessThanComparer
+            where TComparer : IDirectComparer
         {
             if (comparer.LessThan(r0, r1)) //r0 < r1)
             {
@@ -428,7 +428,7 @@ namespace System
         private static void Sort2<TKey, TComparer>(
             ref TKey keys, int i, int j,
             TComparer comparer)
-            where TComparer : ILessThanComparer
+            where TComparer : IDirectComparer
         {
             Debug.Assert(i != j);
 
@@ -508,7 +508,7 @@ namespace System
             public void Sort(ref TKey keys, int length)
             {
                 S.Sort(ref keys, length,
-                    new ComparerLessThanComparerNew<TKey, IComparer<TKey>>(Comparer<TKey>.Default));
+                    new ComparerDirectComparerNew<TKey, IComparer<TKey>>(Comparer<TKey>.Default));
             }
         }
 
@@ -518,7 +518,7 @@ namespace System
         {
             public void Sort(ref TKey keys, int length)
             {
-                S.Sort(ref keys, length, new ComparableLessThanComparerNew<TKey>());
+                S.Sort(ref keys, length, new ComparableDirectComparerNew<TKey>());
             }
         }
 
@@ -528,9 +528,9 @@ namespace System
         {
             public void Sort(ref TKey keys, int length)
             {
-                S.Sort<Reference, IComparableLessThanComparerNew<TKey>>(
+                S.Sort<Reference, IComparableDirectComparerNew<TKey>>(
                     ref Unsafe.As<TKey, Reference>(ref keys), length,
-                    new IComparableLessThanComparerNew<TKey>());
+                    new IComparableDirectComparerNew<TKey>());
             }
         }
 
@@ -608,12 +608,12 @@ namespace System
                 if (typeof(TComparer) == typeof(IComparer<TKey>) && comparer == null)
                 {
                     S.Sort(ref keys, length,
-                        new ComparerLessThanComparerNew<TKey, IComparer<TKey>>(Comparer<TKey>.Default));
+                        new ComparerDirectComparerNew<TKey, IComparer<TKey>>(Comparer<TKey>.Default));
                 }
                 else
                 {
                     S.Sort(ref keys, length,
-                        new ComparerLessThanComparerNew<TKey, IComparer<TKey>>(comparer));
+                        new ComparerDirectComparerNew<TKey, IComparer<TKey>>(comparer));
                 }
                 //}
                 //catch (IndexOutOfRangeException e)
@@ -651,13 +651,13 @@ namespace System
                     if (!S.TrySortSpecialized(ref keys, length))
                     {
                         S.Sort(ref keys, length,
-                            new ComparableLessThanComparerNew<TKey>());
+                            new ComparableDirectComparerNew<TKey>());
                     }
                 }
                 else
                 {
                     S.Sort(ref keys, length,
-                        new ComparerLessThanComparerNew<TKey, TComparer>(comparer));
+                        new ComparerDirectComparerNew<TKey, TComparer>(comparer));
                 }
                 //}
                 //catch (IndexOutOfRangeException e)
@@ -695,18 +695,18 @@ namespace System
                     {
                         //if (typeof(TKey).IsValueType)
                         //{
-                        //    S.Sort(ref keys, length, new ComparableLessThanComparer());
+                        //    S.Sort(ref keys, length, new ComparableDirectComparer());
                         //}
                         //else
                         {
-                            S.Sort(ref Unsafe.As<TKey, Reference>(ref keys), length, new IComparableLessThanComparer());
+                            S.Sort(ref Unsafe.As<TKey, Reference>(ref keys), length, new IComparableDirectComparer());
                         }
                     }
                 }
                 else
                 {
                     S.Sort(ref keys, length,
-                        new ComparerLessThanComparerNew<TKey, TComparer>(comparer));
+                        new ComparerDirectComparerNew<TKey, TComparer>(comparer));
                 }
                 //}
                 //catch (IndexOutOfRangeException e)
@@ -736,16 +736,16 @@ namespace System
 #pragma warning restore 0649
         }
 
-        internal interface ILessThanComparer
+        internal interface IDirectComparer
         {
             bool LessThan<T>(T x, T y);
         }
-        internal struct ComparerLessThanComparerNew<TKey, TComparer> : ILessThanComparer
+        internal struct ComparerDirectComparerNew<TKey, TComparer> : IDirectComparer
             where TComparer : IComparer<TKey>
         {
             readonly TComparer _comparer;
 
-            public ComparerLessThanComparerNew(in TComparer comparer)
+            public ComparerDirectComparerNew(in TComparer comparer)
             {
                 _comparer = comparer;
             }
@@ -753,18 +753,18 @@ namespace System
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool LessThan<T>(T x, T y) => _comparer.Compare(Unsafe.As<T, TKey>(ref x), Unsafe.As<T, TKey>(ref y)) < 0;
         }
-        internal struct ComparableLessThanComparerNew<TKey> : ILessThanComparer
+        internal struct ComparableDirectComparerNew<TKey> : IDirectComparer
             where TKey : struct, IComparable<TKey>
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool LessThan<T>(T x, T y) => Unsafe.As<T, TKey>(ref x).CompareTo(Unsafe.As<T, TKey>(ref y)) < 0;
         }
-        internal struct IComparableLessThanComparer : ILessThanComparer
+        internal struct IComparableDirectComparer : IDirectComparer
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool LessThan<T>(T x, T y) => Unsafe.As<T, IComparable<T>>(ref x).CompareTo(y) < 0;
         }
-        internal struct IComparableLessThanComparerNew<TKey> : ILessThanComparer
+        internal struct IComparableDirectComparerNew<TKey> : IDirectComparer
             where TKey : class, IComparable<TKey>
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]

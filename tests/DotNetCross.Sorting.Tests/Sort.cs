@@ -1,4 +1,4 @@
-//#define OUTER_LOOP
+#define OUTER_LOOP
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
@@ -94,29 +94,37 @@ namespace System.SpanTests
         }
         [Fact]
         [Trait(SortTrait, SortTraitValue)]
-        public static void Sort_KeysValues_Single_NaN()
+        public static void Sort_KeysValues_Single_Single_NaN()
         {
-            TestSort(new ArraySegment<float>(new [] { float.NaN, 0f, 0f, float.NaN }),
-                     new ArraySegment<int>(new[] { 1, 2, 3, 4 }));
-            // Array.Sort outputs: double.NaN, double.NaN, 0, 0, 
-            //                              1,          4, 2, 3
-            // Span.Sort outputs:  double.NaN, double.NaN, 0, 0, 
-            //                              1,          4, 3, 2
-            // Wouldn't span sort be correct? 2 <-> 4?
-            // This should be exactly the same, why is Array.Sort giving this result?
+            TestSort(new ArraySegment<float>(new[] { float.NaN, 0f, 0f, float.NaN }),
+                     new ArraySegment<float>(new[] { 1f, 2f, 3f, 4f }));
         }
         [Fact]
         [Trait(SortTrait, SortTraitValue)]
-        public static void Sort_KeysValues_Double_NaN()
+        public static void Sort_KeysValues_Double_Double_NaN()
+        {
+            TestSort(new ArraySegment<double>(new[] { double.NaN, 0.0, 0.0, double.NaN }),
+                     new ArraySegment<double>(new[] { 1d, 2d, 3d, 4d }));
+        }
+        [Fact]
+        [Trait(SortTrait, SortTraitValue)]
+        public static void Sort_KeysValues_Single_Int32_NaN()
+        {
+            TestSort(new ArraySegment<float>(new [] { float.NaN, 0f, 0f, float.NaN }),
+                     new ArraySegment<int>(new[] { 1, 2, 3, 4 }));
+            // Array.Sort only uses NaNPrePass when both key and value are float
+            // Array.Sort outputs: double.NaN, double.NaN, 0, 0, 
+            //                              1,          4, 2, 3
+        }
+        [Fact]
+        [Trait(SortTrait, SortTraitValue)]
+        public static void Sort_KeysValues_Double_Int32_NaN()
         {
             TestSort(new ArraySegment<double>(new[] { double.NaN, 0.0, 0.0, double.NaN }),
                      new ArraySegment<int>(new[] { 1, 2, 3, 4 }));
+            // Array.Sort only uses NaNPrePass when both key and value are double
             // Array.Sort outputs: double.NaN, double.NaN, 0, 0, 
             //                              1,          4, 2, 3
-            // Span.Sort outputs:  double.NaN, double.NaN, 0, 0, 
-            //                              1,          4, 3, 2
-            // Wouldn't span sort be correct? 2 <-> 4?
-            // This should be exactly the same, why is Array.Sort giving this result?
         }
 
 

@@ -24,84 +24,100 @@ namespace System
             if (typeof(TKey) == typeof(sbyte))
             {
                 ref var specificKeys = ref Unsafe.As<TKey, sbyte>(ref keys);
-                Sort(ref specificKeys, ref values, length, new SByteLessThanComparer());
+                Sort(ref specificKeys, ref values, length, new SByteDirectComparer());
                 return true;
             }
             else if (typeof(TKey) == typeof(byte) ||
                      typeof(TKey) == typeof(bool)) // Use byte for bools to reduce code size
             {
                 ref var specificKeys = ref Unsafe.As<TKey, byte>(ref keys);
-                Sort(ref specificKeys, ref values, length, new ByteLessThanComparer());
+                Sort(ref specificKeys, ref values, length, new ByteDirectComparer());
                 return true;
             }
             else if (typeof(TKey) == typeof(short))
             {
                 ref var specificKeys = ref Unsafe.As<TKey, short>(ref keys);
-                Sort(ref specificKeys, ref values, length, new Int16LessThanComparer());
+                Sort(ref specificKeys, ref values, length, new Int16DirectComparer());
                 return true;
             }
             else if (typeof(TKey) == typeof(ushort) ||
                      typeof(TKey) == typeof(char)) // Use ushort for chars to reduce code size)
             {
                 ref var specificKeys = ref Unsafe.As<TKey, ushort>(ref keys);
-                Sort(ref specificKeys, ref values, length, new UInt16LessThanComparer());
+                Sort(ref specificKeys, ref values, length, new UInt16DirectComparer());
                 return true;
             }
             else if (typeof(TKey) == typeof(int))
             {
                 ref var specificKeys = ref Unsafe.As<TKey, int>(ref keys);
-                Sort(ref specificKeys, ref values, length, new Int32LessThanComparer());
+                Sort(ref specificKeys, ref values, length, new Int32DirectComparer());
                 return true;
             }
             else if (typeof(TKey) == typeof(uint))
             {
                 ref var specificKeys = ref Unsafe.As<TKey, uint>(ref keys);
-                Sort(ref specificKeys, ref values, length, new UInt32LessThanComparer());
+                Sort(ref specificKeys, ref values, length, new UInt32DirectComparer());
                 return true;
             }
             else if (typeof(TKey) == typeof(long))
             {
                 ref var specificKeys = ref Unsafe.As<TKey, long>(ref keys);
-                Sort(ref specificKeys, ref values, length, new Int64LessThanComparer());
+                Sort(ref specificKeys, ref values, length, new Int64DirectComparer());
                 return true;
             }
             else if (typeof(TKey) == typeof(ulong))
             {
                 ref var specificKeys = ref Unsafe.As<TKey, ulong>(ref keys);
-                Sort(ref specificKeys, ref values, length, new UInt64LessThanComparer());
+                Sort(ref specificKeys, ref values, length, new UInt64DirectComparer());
                 return true;
             }
             else if (typeof(TKey) == typeof(float))
             {
                 ref var specificKeys = ref Unsafe.As<TKey, float>(ref keys);
-
-                // Comparison to NaN is always false, so do a linear pass 
-                // and swap all NaNs to the front of the array
-                var left = NaNPrepass(ref specificKeys, ref values, length, new SingleIsNaN());
-
-                var remaining = length - left;
-                if (remaining > 1)
+                // Array.Sort only uses NaNPrepass when both key and value are the same,
+                // to give exactly the same result we have to do the same.
+                if (typeof(TValue) == typeof(float))
                 {
-                    ref var afterNaNsKeys = ref Unsafe.Add(ref specificKeys, left);
-                    ref var afterNaNsValues = ref Unsafe.Add(ref values, left);
-                    Sort(ref afterNaNsKeys, ref afterNaNsValues, remaining, new SingleLessThanComparer());
+                    // Comparison to NaN is always false, so do a linear pass 
+                    // and swap all NaNs to the front of the array
+                    var left = NaNPrepass(ref specificKeys, ref values, length, new SingleIsNaN());
+
+                    var remaining = length - left;
+                    if (remaining > 1)
+                    {
+                        ref var afterNaNsKeys = ref Unsafe.Add(ref specificKeys, left);
+                        ref var afterNaNsValues = ref Unsafe.Add(ref values, left);
+                        Sort(ref afterNaNsKeys, ref afterNaNsValues, remaining, new SingleDirectComparer());
+                    }
+                }
+                else
+                {
+                    Sort(ref specificKeys, ref values, length, new SingleDirectComparer());
                 }
                 return true;
             }
             else if (typeof(TKey) == typeof(double))
             {
                 ref var specificKeys = ref Unsafe.As<TKey, double>(ref keys);
-
-                // Comparison to NaN is always false, so do a linear pass 
-                // and swap all NaNs to the front of the array
-                var left = NaNPrepass(ref specificKeys, ref values, length, new DoubleIsNaN());
-
-                var remaining = length - left;
-                if (remaining > 1)
+                // Array.Sort only uses NaNPrepass when both key and value are the same,
+                // to give exactly the same result we have to do the same.
+                if (typeof(TValue) == typeof(double))
                 {
-                    ref var afterNaNsKeys = ref Unsafe.Add(ref specificKeys, left);
-                    ref var afterNaNsValues = ref Unsafe.Add(ref values, left);
-                    Sort(ref afterNaNsKeys, ref afterNaNsValues, remaining, new DoubleLessThanComparer());
+                    // Comparison to NaN is always false, so do a linear pass 
+                    // and swap all NaNs to the front of the array
+                    var left = NaNPrepass(ref specificKeys, ref values, length, new DoubleIsNaN());
+
+                    var remaining = length - left;
+                    if (remaining > 1)
+                    {
+                        ref var afterNaNsKeys = ref Unsafe.Add(ref specificKeys, left);
+                        ref var afterNaNsValues = ref Unsafe.Add(ref values, left);
+                        Sort(ref afterNaNsKeys, ref afterNaNsValues, remaining, new DoubleDirectComparer());
+                    }
+                }
+                else
+                {
+                    Sort(ref specificKeys, ref values, length, new DoubleDirectComparer());
                 }
                 return true;
             }
@@ -109,7 +125,7 @@ namespace System
             //else if (typeof(TKey) == typeof(string))
             //{
             //    ref var specificKeys = ref Unsafe.As<TKey, string>(ref keys);
-            //    Sort(ref specificKeys, ref values, length, new StringLessThanComparer());
+            //    Sort(ref specificKeys, ref values, length, new StringDirectComparer());
             //    return true;
             //}
             else

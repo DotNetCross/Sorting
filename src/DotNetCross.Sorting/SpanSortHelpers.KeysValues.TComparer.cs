@@ -19,7 +19,7 @@ namespace System
         internal static void Sort<TKey, TValue, TComparer>(
             ref TKey keys, ref TValue values, int length,
             TComparer comparer)
-            where TComparer : ILessThanComparer<TKey>
+            where TComparer : IDirectComparer<TKey>
         {
             IntrospectiveSort(ref keys, ref values, length, comparer);
         }
@@ -27,7 +27,7 @@ namespace System
         private static void IntrospectiveSort<TKey, TValue, TComparer>(
             ref TKey keys, ref TValue values, int length,
             TComparer comparer)
-            where TComparer : ILessThanComparer<TKey>
+            where TComparer : IDirectComparer<TKey>
         {
             var depthLimit = 2 * FloorLog2PlusOne(length);
             IntroSort(ref keys, ref values, 0, length - 1, depthLimit, comparer);
@@ -37,7 +37,7 @@ namespace System
             ref TKey keys, ref TValue values,
             int lo, int hi, int depthLimit,
             TComparer comparer)
-            where TComparer : ILessThanComparer<TKey>
+            where TComparer : IDirectComparer<TKey>
         {
             Debug.Assert(comparer != null);
             Debug.Assert(lo >= 0);
@@ -83,7 +83,7 @@ namespace System
         private static int PickPivotAndPartition<TKey, TValue, TComparer>(
             ref TKey keys, ref TValue values, int lo, int hi,
             TComparer comparer)
-            where TComparer : ILessThanComparer<TKey>
+            where TComparer : IDirectComparer<TKey>
         {
             Debug.Assert(comparer != null);
             Debug.Assert(lo >= 0);
@@ -141,7 +141,7 @@ namespace System
         private static void HeapSort<TKey, TValue, TComparer>(
             ref TKey keys, ref TValue values, int lo, int hi,
             TComparer comparer)
-            where TComparer : ILessThanComparer<TKey>
+            where TComparer : IDirectComparer<TKey>
         {
             Debug.Assert(comparer != null);
             Debug.Assert(lo >= 0);
@@ -163,7 +163,7 @@ namespace System
         private static void DownHeap<TKey, TValue, TComparer>(
             ref TKey keys, ref TValue values, int i, int n, int lo,
             TComparer comparer)
-            where TComparer : ILessThanComparer<TKey>
+            where TComparer : IDirectComparer<TKey>
         {
             Debug.Assert(comparer != null);
             Debug.Assert(lo >= 0);
@@ -208,7 +208,7 @@ namespace System
         private static void InsertionSort<TKey, TValue, TComparer>(
             ref TKey keys, ref TValue values, int lo, int hi,
             TComparer comparer)
-            where TComparer : ILessThanComparer<TKey>
+            where TComparer : IDirectComparer<TKey>
         {
             Debug.Assert(lo >= 0);
             Debug.Assert(hi >= lo);
@@ -240,7 +240,7 @@ namespace System
         private static ref TKey Sort3<TKey, TValue, TComparer>(
             ref TKey keys, ref TValue values, int i0, int i1, int i2,
             TComparer comparer)
-            where TComparer : ILessThanComparer<TKey>
+            where TComparer : IDirectComparer<TKey>
         {
             ref var r0 = ref Unsafe.Add(ref keys, i0);
             ref var r1 = ref Unsafe.Add(ref keys, i1);
@@ -255,7 +255,7 @@ namespace System
         private static void Sort2<TKey, TValue, TComparer>(
             ref TKey keys, ref TValue values, int i, int j,
             TComparer comparer)
-            where TComparer : ILessThanComparer<TKey>
+            where TComparer : IDirectComparer<TKey>
         {
             Debug.Assert(i != j);
 
@@ -268,9 +268,11 @@ namespace System
         private static void Sort2<TKey, TValue, TComparer>(
             ref TKey a, ref TKey b, TComparer comparer, 
             ref TValue values, int i, int j) 
-            where TComparer : ILessThanComparer<TKey>
+            where TComparer : IDirectComparer<TKey>
         {
-            if (comparer.LessThan(b, a))
+            // This is one of the only places GreaterThan is needed
+            // but we need to preserve this due to bogus comparers or similar
+            if (comparer.GreaterThan(a, b))
             {
                 Swap(ref a, ref b);
                 Swap(ref values, i, j);

@@ -66,7 +66,7 @@ namespace DotNetCross.Sorting
 
 
         //private static void IntroSort<TKey, TComparer>(ref TKey keys, ref int values, int hi, int depthLimit, in TComparer comparer)
-        //    where TComparer : ILessThanComparer<TKey>
+        //    where TComparer : IDirectComparer<TKey>
         //{
         //    Debug.Assert(comparer != null);
         //    //Debug.Assert(lo >= 0);
@@ -119,7 +119,7 @@ namespace DotNetCross.Sorting
         //private static int PickPivotAndPartitionIntPtrIndeces<TKey, TComparer>(
         //    ref TKey keys, ref int values, int lo, int hi,
         //    in TComparer comparer)
-        //    where TComparer : ILessThanComparer<TKey>
+        //    where TComparer : IDirectComparer<TKey>
         //{
         //    Debug.Assert(comparer != null);
         //    Debug.Assert(lo >= 0);
@@ -187,7 +187,7 @@ namespace DotNetCross.Sorting
         //private static int PickPivotAndPartitionIntPtrByteOffsets<TKey, TComparer>(
         //    ref TKey keys, ref int values, int lo, int hi,
         //    in TComparer comparer)
-        //    where TComparer : ILessThanComparer<TKey>
+        //    where TComparer : IDirectComparer<TKey>
         //{
         //    Debug.Assert(comparer != null);
         //    Debug.Assert(lo >= 0);
@@ -258,7 +258,7 @@ namespace DotNetCross.Sorting
         //private static ref TKey Sort3<TKey, TComparer>(
         //    ref TKey keys, int i0, int i1, int i2,
         //    TComparer comparer)
-        //    where TComparer : ILessThanComparer<TKey>
+        //    where TComparer : IDirectComparer<TKey>
         //{
         //    ref var r0 = ref Unsafe.Add(ref keys, i0);
         //    ref var r1 = ref Unsafe.Add(ref keys, i1);

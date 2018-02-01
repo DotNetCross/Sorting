@@ -25,51 +25,51 @@ namespace System
             if (typeof(TKey) == typeof(sbyte))
             {
                 ref var specificKeys = ref Unsafe.As<TKey, sbyte>(ref keys);
-                Sort(ref specificKeys, length, new SByteLessThanComparer());
+                Sort(ref specificKeys, length, new SByteDirectComparer());
                 return true;
             }
             else if (typeof(TKey) == typeof(byte) ||
                      typeof(TKey) == typeof(bool)) // Use byte for bools to reduce code size
             {
                 ref var specificKeys = ref Unsafe.As<TKey, byte>(ref keys);
-                Sort(ref specificKeys, length, new ByteLessThanComparer());
+                Sort(ref specificKeys, length, new ByteDirectComparer());
                 return true;
             }
             else if (typeof(TKey) == typeof(short))
             {
                 ref var specificKeys = ref Unsafe.As<TKey, short>(ref keys);
-                Sort(ref specificKeys, length, new Int16LessThanComparer());
+                Sort(ref specificKeys, length, new Int16DirectComparer());
                 return true;
             }
             else if (typeof(TKey) == typeof(ushort) ||
                      typeof(TKey) == typeof(char)) // Use ushort for chars to reduce code size)
             {
                 ref var specificKeys = ref Unsafe.As<TKey, ushort>(ref keys);
-                Sort(ref specificKeys, length, new UInt16LessThanComparer());
+                Sort(ref specificKeys, length, new UInt16DirectComparer());
                 return true;
             }
             else if (typeof(TKey) == typeof(int))
             {
                 ref var specificKeys = ref Unsafe.As<TKey, int>(ref keys);
-                Sort(ref specificKeys, length, new Int32LessThanComparer());
+                Sort(ref specificKeys, length, new Int32DirectComparer());
                 return true;
             }
             else if (typeof(TKey) == typeof(uint))
             {
                 ref var specificKeys = ref Unsafe.As<TKey, uint>(ref keys);
-                Sort(ref specificKeys, length, new UInt32LessThanComparer());
+                Sort(ref specificKeys, length, new UInt32DirectComparer());
                 return true;
             }
             else if (typeof(TKey) == typeof(long))
             {
                 ref var specificKeys = ref Unsafe.As<TKey, long>(ref keys);
-                Sort(ref specificKeys, length, new Int64LessThanComparer());
+                Sort(ref specificKeys, length, new Int64DirectComparer());
                 return true;
             }
             else if (typeof(TKey) == typeof(ulong))
             {
                 ref var specificKeys = ref Unsafe.As<TKey, ulong>(ref keys);
-                Sort(ref specificKeys, length, new UInt64LessThanComparer());
+                Sort(ref specificKeys, length, new UInt64DirectComparer());
                 return true;
             }
             else if (typeof(TKey) == typeof(float))
@@ -84,7 +84,7 @@ namespace System
                 if (remaining > 1)
                 {
                     ref var afterNaNsKeys = ref Unsafe.Add(ref specificKeys, left);
-                    Sort(ref afterNaNsKeys, remaining, new SingleLessThanComparer());
+                    Sort(ref afterNaNsKeys, remaining, new SingleDirectComparer());
                 }
                 return true;
             }
@@ -99,7 +99,7 @@ namespace System
                 if (remaining > 1)
                 {
                     ref var afterNaNsKeys = ref Unsafe.Add(ref specificKeys, left);
-                    Sort(ref afterNaNsKeys, remaining, new DoubleLessThanComparer());
+                    Sort(ref afterNaNsKeys, remaining, new DoubleDirectComparer());
                 }
                 return true;
             }
@@ -107,7 +107,7 @@ namespace System
             //else if (typeof(TKey) == typeof(string))
             //{
             //    ref var specificKeys = ref Unsafe.As<TKey, string>(ref keys);
-            //    Sort(ref specificKeys, length, new StringLessThanComparer());
+            //    Sort(ref specificKeys, length, new StringDirectComparer());
             //    return true;
             //}
             else
