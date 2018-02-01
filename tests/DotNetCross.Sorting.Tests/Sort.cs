@@ -29,6 +29,8 @@ namespace System.SpanTests
         static TheoryData<ISortCases> CreateSortCases(int maxLength)
         {
             var cases = new ISortCases[] {
+                new LengthZeroSortCases(),
+                new LengthOneSortCases(),
                 new AllLengthTwoSortCases(),
                 new AllLengthThreeSortCases(),
                 new AllLengthFourSortCases(),
@@ -790,6 +792,26 @@ namespace System.SpanTests
                 return $"Lengths [{MinLength}, {MaxLength,4}] {nameof(Filler)}={Filler.GetType().Name.Replace("SpanFiller", "")} ";
             }
         }
+        public class LengthZeroSortCases : ISortCases
+        {
+            public IEnumerable<ArraySegment<TKey>> EnumerateTests<TKey>(Func<int, TKey> toKey, TKey specialKey)
+            {
+                yield return Array.Empty<TKey>();
+            }
+
+            public override string ToString()
+                => GetType().Name.Replace(nameof(ISortCases).Remove(0, 1), string.Empty);
+        }
+        public class LengthOneSortCases : ISortCases
+        {
+            public IEnumerable<ArraySegment<TKey>> EnumerateTests<TKey>(Func<int, TKey> toKey, TKey specialKey)
+            {
+                yield return new[] { toKey(-1) };
+            }
+
+            public override string ToString()
+                => GetType().Name.Replace(nameof(ISortCases).Remove(0, 1), string.Empty);
+        }
         public class AllLengthTwoSortCases : ISortCases
         {
             public IEnumerable<ArraySegment<TKey>> EnumerateTests<TKey>(Func<int, TKey> toKey, TKey specialKey)
@@ -913,7 +935,7 @@ namespace System.SpanTests
         internal struct CustomComparer<TKey> : IComparer<TKey>
             where TKey : IComparable<TKey>
         {
-            public int Compare(TKey x, TKey y) => x.CompareTo(y);
+            public int Compare(TKey x, TKey y) => x != null ? x.CompareTo(y) : -1;
         }
 
         public struct ComparableStructInt32 : IComparable<ComparableStructInt32>
@@ -942,14 +964,7 @@ namespace System.SpanTests
 
             public int CompareTo(ComparableClassInt32 other)
             {
-                if (other == null)
-                {
-                    return -1;
-                }
-                else
-                {
-                    return this.Value.CompareTo(other.Value);
-                }
+                return other != null ? Value.CompareTo(other.Value) : 1;
             }
         }
 

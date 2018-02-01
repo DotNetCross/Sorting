@@ -117,7 +117,7 @@ namespace System
                 }
                 else
                 {
-                    while (Unsafe.Add(ref keys, ++left).CompareTo(pivot) < 0) ;
+                    while (pivot.CompareTo(Unsafe.Add(ref keys, ++left)) > 0) ;
                     while (pivot.CompareTo(Unsafe.Add(ref keys, --right)) < 0) ;
                 }
 
