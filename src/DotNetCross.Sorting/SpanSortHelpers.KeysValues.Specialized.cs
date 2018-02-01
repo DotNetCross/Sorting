@@ -79,10 +79,13 @@ namespace System
                 // and swap all NaNs to the front of the array
                 var left = NaNPrepass(ref specificKeys, ref values, length, new SingleIsNaN());
 
-                ref var afterNaNsKeys = ref Unsafe.Add(ref specificKeys, left);
-                ref var afterNaNsValues = ref Unsafe.Add(ref values, left);
-                Sort(ref afterNaNsKeys, ref afterNaNsValues, length - left, new SingleLessThanComparer());
-
+                var remaining = length - left;
+                if (remaining > 1)
+                {
+                    ref var afterNaNsKeys = ref Unsafe.Add(ref specificKeys, left);
+                    ref var afterNaNsValues = ref Unsafe.Add(ref values, left);
+                    Sort(ref afterNaNsKeys, ref afterNaNsValues, remaining, new SingleLessThanComparer());
+                }
                 return true;
             }
             else if (typeof(TKey) == typeof(double))
@@ -93,10 +96,13 @@ namespace System
                 // and swap all NaNs to the front of the array
                 var left = NaNPrepass(ref specificKeys, ref values, length, new DoubleIsNaN());
 
-                ref var afterNaNsKeys = ref Unsafe.Add(ref specificKeys, left);
-                ref var afterNaNsValues = ref Unsafe.Add(ref values, left);
-                Sort(ref afterNaNsKeys, ref afterNaNsValues, length - left, new DoubleLessThanComparer());
-
+                var remaining = length - left;
+                if (remaining > 1)
+                {
+                    ref var afterNaNsKeys = ref Unsafe.Add(ref specificKeys, left);
+                    ref var afterNaNsValues = ref Unsafe.Add(ref values, left);
+                    Sort(ref afterNaNsKeys, ref afterNaNsValues, remaining, new DoubleLessThanComparer());
+                }
                 return true;
             }
             // TODO: Specialize for string if necessary. What about the == null checks?
@@ -119,16 +125,19 @@ namespace System
             where TIsNaN : struct, IIsNaN<TKey>
         {
             int left = 0;
-            for (int i = 0; i <= length; i++)
+            for (int i = 0; i < length; i++)
             {
                 ref TKey current = ref Unsafe.Add(ref keys, i);
                 if (isNaN.IsNaN(current))
                 {
-                    ref TKey previous = ref Unsafe.Add(ref keys, left);
-
-                    Swap(ref previous, ref current);
-                    Swap(ref values, left, i);
-
+                    // TODO: If first index is not NaN or we find just one not NaNs 
+                    //       we could skip to version that no longer checks this
+                    if (left != i)
+                    {
+                        ref TKey previous = ref Unsafe.Add(ref keys, left);
+                        Swap(ref previous, ref current);
+                        Swap(ref values, left, i);
+                    }
                     ++left;
                 }
             }

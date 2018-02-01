@@ -68,6 +68,7 @@ namespace System.SpanTests
         //        .Sort(comparer));
         //}
 
+
         [Fact]
         [Trait(SortTrait, SortTraitValue)]
         public static void Sort_NullComparerDoesNotThrow()
@@ -83,9 +84,45 @@ namespace System.SpanTests
             Assert.Throws<ArgumentNullException>(() => new Span<string>(new string[] { }).Sort((Comparison<string>)null));
         }
 
+
+
+        [Fact]
+        [Trait(SortTrait, SortTraitValue)]
+        public static void Sort_Int32_BogusComparer()
+        {
+            TestSort(new ArraySegment<int>(new int[] { 0, 1 }), new BogusComparer<int>());
+        }
+        [Fact]
+        [Trait(SortTrait, SortTraitValue)]
+        public static void Sort_KeysValues_Single_NaN()
+        {
+            TestSort(new ArraySegment<float>(new [] { float.NaN, 0f, 0f, float.NaN }),
+                     new ArraySegment<int>(new[] { 1, 2, 3, 4 }));
+            // Array.Sort outputs: double.NaN, double.NaN, 0, 0, 
+            //                              1,          4, 2, 3
+            // Span.Sort outputs:  double.NaN, double.NaN, 0, 0, 
+            //                              1,          4, 3, 2
+            // Wouldn't span sort be correct? 2 <-> 4?
+            // This should be exactly the same, why is Array.Sort giving this result?
+        }
+        [Fact]
+        [Trait(SortTrait, SortTraitValue)]
+        public static void Sort_KeysValues_Double_NaN()
+        {
+            TestSort(new ArraySegment<double>(new[] { double.NaN, 0.0, 0.0, double.NaN }),
+                     new ArraySegment<int>(new[] { 1, 2, 3, 4 }));
+            // Array.Sort outputs: double.NaN, double.NaN, 0, 0, 
+            //                              1,          4, 2, 3
+            // Span.Sort outputs:  double.NaN, double.NaN, 0, 0, 
+            //                              1,          4, 3, 2
+            // Wouldn't span sort be correct? 2 <-> 4?
+            // This should be exactly the same, why is Array.Sort giving this result?
+        }
+
+
         #region Keys Tests
 
-        
+
         [Theory]
         [Trait(SortTrait, SortTraitValue)]
         [MemberData(nameof(s_fastSortTests))]
@@ -204,6 +241,14 @@ namespace System.SpanTests
         public static void Sort_Keys_ComparableClassInt32(ISortCases sortCases)
         {
             Test_Keys_ComparableClassInt32(sortCases);
+        }
+
+        [Theory]
+        [Trait(SortTrait, SortTraitValue)]
+        [MemberData(nameof(s_fastSortTests))]
+        public static void Sort_Keys_BogusComparable(ISortCases sortCases)
+        {
+            Test_Keys_BogusComparable(sortCases);
         }
 #if OUTER_LOOP
         //[OuterLoop]
@@ -326,13 +371,21 @@ namespace System.SpanTests
         {
             Test_Keys_ComparableClassInt32(sortCases);
         }
+        //[OuterLoop]
+        [Theory]
+        [Trait(SortTrait, SortTraitValue)]
+        [MemberData(nameof(s_slowSortTests))]
+        public static void Sort_Keys_BogusComparable_OuterLoop(ISortCases sortCases)
+        {
+            Test_Keys_BogusComparable(sortCases);
+        }
 #endif
 
         #endregion
 
         #region Keys and Values Tests
 
-        
+
         [Theory]
         [Trait(SortTrait, SortTraitValue)]
         [MemberData(nameof(s_fastSortTests))]
@@ -451,6 +504,14 @@ namespace System.SpanTests
         public static void Sort_KeysValues_ComparableClassInt32_Int32(ISortCases sortCases)
         {
             Test_KeysValues_ComparableClassInt32_Int32(sortCases);
+        }
+
+        [Theory]
+        [Trait(SortTrait, SortTraitValue)]
+        [MemberData(nameof(s_fastSortTests))]
+        public static void Sort_KeysValues_BogusComparable_Int32(ISortCases sortCases)
+        {
+            Test_KeysValues_BogusComparable_Int32(sortCases);
         }
 #if OUTER_LOOP
         //[OuterLoop]
@@ -573,6 +634,14 @@ namespace System.SpanTests
         {
             Test_KeysValues_ComparableClassInt32_Int32(sortCases);
         }
+        //[OuterLoop]
+        [Theory]
+        [Trait(SortTrait, SortTraitValue)]
+        [MemberData(nameof(s_slowSortTests))]
+        public static void Sort_KeysValues_BogusComparable_Int32_OuterLoop(ISortCases sortCases)
+        {
+            Test_KeysValues_BogusComparable_Int32(sortCases);
+        }
 #endif
         #endregion
 
@@ -654,6 +723,8 @@ namespace System.SpanTests
             Test(sortCases, i => new ComparableStructInt32(i), new ComparableStructInt32(int.MinValue));
         static void Test_Keys_ComparableClassInt32(ISortCases sortCases) =>
             Test(sortCases, i => new ComparableClassInt32(i), null);
+        static void Test_Keys_BogusComparable(ISortCases sortCases) =>
+            Test(sortCases, i => new BogusComparable(i), null);
 
         static void Test<TKey>(ISortCases sortCase, Func<int, TKey> toKey, TKey specialKey)
             where TKey : IComparable<TKey>
@@ -666,22 +737,64 @@ namespace System.SpanTests
         static void TestSortOverloads<TKey>(ArraySegment<TKey> keys)
             where TKey : IComparable<TKey>
         {
-            TestSort(keys, s => ((Span<TKey>)s).Sort());
-            TestSort(keys, s => ((Span<TKey>)s).Sort(Comparer<TKey>.Default));
-            TestSort(keys, s => ((Span<TKey>)s).Sort(Comparer<TKey>.Default.Compare));
-            TestSort(keys, s => ((Span<TKey>)s).Sort(new CustomComparer<TKey>()));
-            TestSort(keys, s => ((Span<TKey>)s).Sort((IComparer<TKey>)null));
+            var copy = (TKey[])keys.Array.Clone();
+
+            TestSort(keys);
+            TestSort(keys, Comparer<TKey>.Default);
+            TestSort(keys, Comparer<TKey>.Default.Compare);
+            TestSort(keys, new CustomComparer<TKey>());
+            TestSort(keys, (IComparer<TKey>)null);
+            // TODO: Should results for a bogus comparer be identical? They are not currently
+            //TestSort(keys, new BogusComparer<TKey>());
         }
         static void TestSort<TKey>(
-            ArraySegment<TKey> keysToSort, 
-            Action<ArraySegment<TKey>> sort)
+            ArraySegment<TKey> keysToSort)
             where TKey : IComparable<TKey>
         {
             var expected = new ArraySegment<TKey>((TKey[])keysToSort.Array.Clone(),
                 keysToSort.Offset, keysToSort.Count);
             Array.Sort(expected.Array, expected.Offset, expected.Count);
 
-            sort(keysToSort);
+            Span<TKey> keysSpan = keysToSort;
+            keysSpan.Sort();
+
+            // We assert the full arrays are as expected, to check for possible under/overflow
+            Assert.Equal(expected.Array, keysToSort.Array);
+        }
+        static void TestSort<TKey, TComparer>(
+            ArraySegment<TKey> keysToSort,
+            TComparer comparer)
+            where TComparer : IComparer<TKey>
+        {
+            var expected = new ArraySegment<TKey>((TKey[])keysToSort.Array.Clone(),
+                keysToSort.Offset, keysToSort.Count);
+            Array.Sort(expected.Array, expected.Offset, expected.Count, comparer);
+
+            Span<TKey> keysSpan = keysToSort;
+            keysSpan.Sort(comparer);
+
+            // We assert the full arrays are as expected, to check for possible under/overflow
+            Assert.Equal(expected.Array, keysToSort.Array);
+        }
+        static void TestSort<TKey>(
+            ArraySegment<TKey> keysToSort,
+            Comparison<TKey> comparison)
+        {
+            var expected = new ArraySegment<TKey>((TKey[])keysToSort.Array.Clone(),
+                keysToSort.Offset, keysToSort.Count);
+            // Array.Sort doesn't have a comparison version for segments
+            if (expected.Offset == 0 && expected.Count == expected.Array.Length)
+            {
+                Array.Sort(expected.Array, comparison);
+            }
+            else
+            {
+                Array.Sort(expected.Array, expected.Offset, expected.Count, 
+                    new ComparisonComparer<TKey>(comparison));
+            }
+
+            Span<TKey> keysSpan = keysToSort;
+            keysSpan.Sort(comparison);
 
             // We assert the full arrays are as expected, to check for possible under/overflow
             Assert.Equal(expected.Array, keysToSort.Array);
@@ -717,6 +830,8 @@ namespace System.SpanTests
             Test(sortCases, i => new ComparableStructInt32(i), new ComparableStructInt32(int.MinValue), i => i);
         static void Test_KeysValues_ComparableClassInt32_Int32(ISortCases sortCases) =>
             Test(sortCases, i => new ComparableClassInt32(i), null, i => i);
+        static void Test_KeysValues_BogusComparable_Int32(ISortCases sortCases) =>
+            Test(sortCases, i => new BogusComparable(i), null, i => i);
 
         static void Test<TKey, TValue>(ISortCases sortCase, 
             Func<int, TKey> toKey, TKey specialKey, Func<int, TValue> toValue)
@@ -735,15 +850,18 @@ namespace System.SpanTests
         static void TestSortOverloads<TKey, TValue>(ArraySegment<TKey> keys, ArraySegment<TValue> values)
             where TKey : IComparable<TKey>
         {
-            TestSort(keys, values, (ks, vs) => ((Span<TKey>)ks).Sort((Span<TValue>)vs));
-            TestSort(keys, values, (ks, vs) => ((Span<TKey>)ks).Sort((Span<TValue>)vs, Comparer<TKey>.Default));
-            TestSort(keys, values, (ks, vs) => ((Span<TKey>)ks).Sort((Span<TValue>)vs, Comparer<TKey>.Default.Compare));
-            TestSort(keys, values, (ks, vs) => ((Span<TKey>)ks).Sort((Span<TValue>)vs, new CustomComparer<TKey>()));
-            TestSort(keys, values, (ks, vs) => ((Span<TKey>)ks).Sort((Span<TValue>)vs, (IComparer<TKey>)null));
+            var copy = (TKey[])keys.Array.Clone();
+
+            TestSort(keys, values);
+            TestSort(keys, values, Comparer<TKey>.Default);
+            TestSort(keys, values, Comparer<TKey>.Default.Compare);
+            TestSort(keys, values, new CustomComparer<TKey>());
+            TestSort(keys, values, (IComparer<TKey>)null);
+            // TODO: Should results for a bogus comparer be identical? They are not currently
+            //TestSort(keys, values, new BogusComparer<TKey>());
         }
         static void TestSort<TKey, TValue>(
-            ArraySegment<TKey> keysToSort, ArraySegment<TValue> valuesToSort, 
-            Action<ArraySegment<TKey>, ArraySegment<TValue>> sort)
+            ArraySegment<TKey> keysToSort, ArraySegment<TValue> valuesToSort)
             where TKey : IComparable<TKey>
         {
             var expectedKeys = new ArraySegment<TKey>((TKey[])keysToSort.Array.Clone(),
@@ -754,11 +872,50 @@ namespace System.SpanTests
             Assert.Equal(expectedKeys.Count, expectedValues.Count);
             Array.Sort(expectedKeys.Array, expectedValues.Array, expectedKeys.Offset, expectedKeys.Count);
 
-            sort(keysToSort, valuesToSort);
+            Span<TKey> keysSpan = keysToSort;
+            Span<TValue> valuesSpan = valuesToSort;
+            keysSpan.Sort(valuesSpan);
 
             // We assert the full arrays are as expected, to check for possible under/overflow
             Assert.Equal(expectedKeys.Array, keysToSort.Array);
             Assert.Equal(expectedValues.Array, valuesToSort.Array);
+        }
+        static void TestSort<TKey, TValue, TComparer>(
+            ArraySegment<TKey> keysToSort, ArraySegment<TValue> valuesToSort,
+            TComparer comparer)
+            where TComparer : IComparer<TKey>
+        {
+            var expectedKeys = new ArraySegment<TKey>((TKey[])keysToSort.Array.Clone(),
+                keysToSort.Offset, keysToSort.Count);
+            var expectedValues = new ArraySegment<TValue>((TValue[])valuesToSort.Array.Clone(),
+                valuesToSort.Offset, valuesToSort.Count);
+            Array.Sort(expectedKeys.Array, expectedValues.Array, expectedKeys.Offset, expectedKeys.Count, comparer);
+
+            Span<TKey> keysSpan = keysToSort;
+            Span<TValue> valuesSpan = valuesToSort;
+            keysSpan.Sort(valuesSpan, comparer);
+
+            // We assert the full arrays are as expected, to check for possible under/overflow
+            Assert.Equal(expectedKeys.Array, keysToSort.Array);
+        }
+        static void TestSort<TKey, TValue>(
+            ArraySegment<TKey> keysToSort, ArraySegment<TValue> valuesToSort,
+            Comparison<TKey> comparison)
+        {
+            var expectedKeys = new ArraySegment<TKey>((TKey[])keysToSort.Array.Clone(),
+                keysToSort.Offset, keysToSort.Count);
+            var expectedValues = new ArraySegment<TValue>((TValue[])valuesToSort.Array.Clone(),
+                valuesToSort.Offset, valuesToSort.Count);
+            // Array.Sort doesn't have a comparison version for segments
+            Array.Sort(expectedKeys.Array, expectedValues.Array, expectedKeys.Offset, expectedKeys.Count,
+                new ComparisonComparer<TKey>(comparison));
+
+            Span<TKey> keysSpan = keysToSort;
+            Span<TValue> valuesSpan = valuesToSort;
+            keysSpan.Sort(valuesSpan, comparison);
+
+            // We assert the full arrays are as expected, to check for possible under/overflow
+            Assert.Equal(expectedKeys.Array, keysToSort.Array);
         }
 
         public interface ISortCases
@@ -935,7 +1092,13 @@ namespace System.SpanTests
         internal struct CustomComparer<TKey> : IComparer<TKey>
             where TKey : IComparable<TKey>
         {
-            public int Compare(TKey x, TKey y) => x != null ? x.CompareTo(y) : -1;
+            public int Compare(TKey x, TKey y) => object.ReferenceEquals(x, y) ? 0 : (x != null ? x.CompareTo(y) : -1);
+        }
+
+        internal struct BogusComparer<TKey> : IComparer<TKey>
+            where TKey : IComparable<TKey>
+        {
+            public int Compare(TKey x, TKey y) => 1; // Always greater
         }
 
         public struct ComparableStructInt32 : IComparable<ComparableStructInt32>
@@ -966,6 +1129,18 @@ namespace System.SpanTests
             {
                 return other != null ? Value.CompareTo(other.Value) : 1;
             }
+        }
+
+        public class BogusComparable: IComparable<BogusComparable>
+        {
+            public readonly int Value;
+
+            public BogusComparable(int value)
+            {
+                Value = value;
+            }
+
+            public int CompareTo(BogusComparable other) => 1;
         }
 
         public struct ValueIdStruct : IComparable<ValueIdStruct>, IEquatable<ValueIdStruct>
@@ -1028,6 +1203,19 @@ namespace System.SpanTests
             public override int GetHashCode() => Value.GetHashCode();
 
             public override string ToString() => $"{Value} Id:{Id}";
+        }
+
+        // Used for array sort
+        class ComparisonComparer<TKey> : IComparer<TKey>
+        {
+            readonly Comparison<TKey> _comparison;
+
+            public ComparisonComparer(Comparison<TKey> comparison)
+            {
+                _comparison = comparison;
+            }
+
+            public int Compare(TKey x, TKey y) => _comparison(x, y);
         }
     }
 }

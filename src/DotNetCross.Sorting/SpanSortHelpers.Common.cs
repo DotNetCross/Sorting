@@ -21,6 +21,15 @@ namespace System
         internal static int FloorLog2PlusOne(int n)
         {
             Debug.Assert(n >= 2);
+            if (n < 2) { throw new ArgumentException("FloorFailure"); }
+            // Since we know n >= 2 we can:
+            // int result = 2;
+            // n >>= 2;
+            // while (n > 0)
+            // {
+            //     ++result;
+            //     n >>= 1;
+            // }
             int result = 0;
             do
             {

@@ -124,8 +124,12 @@ namespace System
                 }
                 else
                 {
-                    while (pivot.CompareTo(Unsafe.Add(ref keys, ++left)) > 0) ;
-                    while (pivot.CompareTo(Unsafe.Add(ref keys, --right)) < 0) ;
+                    // TODO: Possible buffer over/underflow here if custom CompareTo? What to do?
+                    //       Here we bound the expression like in the above loop, but is that the same in coreclr?
+                    //       This is the reason for "catch (IndexOutOfRangeException) => IntrospectiveSortUtilities.ThrowOrIgnoreBadComparer(comparer);"
+                    // NOTE: Inserted check to ensure no out of bounds
+                    while (left < (hi - 1) && pivot.CompareTo(Unsafe.Add(ref keys, ++left)) > 0) ;
+                    while (right > lo && pivot.CompareTo(Unsafe.Add(ref keys, --right)) < 0) ;
                 }
 
                 if (left >= right)

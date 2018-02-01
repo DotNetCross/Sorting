@@ -122,8 +122,12 @@ namespace System
             {
                 // TODO: Would be good to be able to update local ref here
 
-                while (comparer.LessThan(Unsafe.Add(ref keys, ++left), pivot)) ;
-                while (comparer.LessThan(pivot, Unsafe.Add(ref keys, --right))) ;
+                // TODO: Possible buffer over/underflow here if custom bogus comparer? What to do?
+                //       This is the reason for "catch (IndexOutOfRangeException) => IntrospectiveSortUtilities.ThrowOrIgnoreBadComparer(comparer);"
+                // NOTE: Inserted check to ensure no out of bounds
+                //       Does this mean LessThan cannot be used due to swapping order of arguments?
+                while (left < (hi - 1) && comparer.LessThan(Unsafe.Add(ref keys, ++left), pivot)) ;
+                while (right > lo && comparer.LessThan(pivot, Unsafe.Add(ref keys, --right))) ;
 
                 if (left >= right)
                     break;

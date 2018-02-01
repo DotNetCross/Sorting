@@ -115,8 +115,12 @@ namespace System
             {
                 // TODO: Would be good to be able to update local ref here
 
-                while (comparer.LessThan(Unsafe.Add(ref keys, ++left), pivot)) ;
-                while (comparer.LessThan(pivot, Unsafe.Add(ref keys, --right))) ;
+                // TODO: Possible buffer over/underflow here if custom bogus comparer? What to do?
+                //       This is the reason for "catch (IndexOutOfRangeException) => IntrospectiveSortUtilities.ThrowOrIgnoreBadComparer(comparer);"
+                // NOTE: Inserted check to ensure no out of bounds
+                //       Does this mean LessThan cannot be used due to swapping order of arguments?
+                while (left < (hi - 1) && comparer.LessThan(Unsafe.Add(ref keys, ++left), pivot)) ;
+                while (right > lo && comparer.LessThan(pivot, Unsafe.Add(ref keys, --right))) ;
 
                 if (left >= right)
                     break;
@@ -257,11 +261,11 @@ namespace System
 
             ref TKey a = ref Unsafe.Add(ref keys, i);
             ref TKey b = ref Unsafe.Add(ref keys, j);
-            values = Sort2(ref a, ref b, comparer, ref values, i, j);
+            Sort2(ref a, ref b, comparer, ref values, i, j);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static TValue Sort2<TKey, TValue, TComparer>(
+        private static void Sort2<TKey, TValue, TComparer>(
             ref TKey a, ref TKey b, TComparer comparer, 
             ref TValue values, int i, int j) 
             where TComparer : ILessThanComparer<TKey>
@@ -271,8 +275,6 @@ namespace System
                 Swap(ref a, ref b);
                 Swap(ref values, i, j);
             }
-
-            return values;
         }
     }
 }
