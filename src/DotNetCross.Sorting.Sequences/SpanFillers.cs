@@ -35,6 +35,29 @@ namespace DotNetCross.Sorting.Sequences
             }
         }
     }
+    public class ModuloDecrementingSpanFiller : ISpanFiller
+    {
+        readonly int _modulo;
+
+        public ModuloDecrementingSpanFiller(int modulo)
+        {
+            _modulo = modulo;
+        }
+
+        public void Fill<T>(Span<T> span, int sliceLength, Func<int, T> toValue)
+        {
+            ModuloFill(span, _modulo, toValue);
+        }
+
+        public static void ModuloFill<T>(Span<T> span, int modulo, Func<int, T> toValue)
+        {
+            for (int i = 0; i < span.Length; i++)
+            {
+                int v = (span.Length - i - 1) % modulo;
+                span[i] = toValue(v);
+            }
+        }
+    }
     public class IncrementingSpanFiller : ISpanFiller
     {
         public void Fill<T>(Span<T> span, int sliceLength, Func<int, T> toValue)
