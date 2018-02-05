@@ -24,7 +24,7 @@ public static void Sort<TKey, TValue>(this Span<TKey> keys,
 
 Implements https://github.com/dotnet/corefx/issues/15329
 
-**WIP**: This is still very much a work-in-progress. Warts and all!
+**WIP**: This is still very much a work-in-progress. Warts and all! :)
 
 #### Goals
 - Port `coreclr` `Array.Sort` code without major changes to the algorithm. 
@@ -38,7 +38,7 @@ Implements https://github.com/dotnet/corefx/issues/15329
   for this PR to hopefully be accepted without too much controversy :)
 
 #### Array.Sort
-Array.Sort is implemented as both managed code and native code (for some primitives) in:
+`Array.Sort` is implemented as both managed code and native code (for some primitives) in:
 
 - https://github.com/dotnet/coreclr/blob/master/src/mscorlib/src/System/Array.cs#L1593 (and following lines)
 - https://github.com/dotnet/coreclr/blob/master/src/mscorlib/src/System/Array.cs#L1860 (non-generic helper types start here)
@@ -52,9 +52,9 @@ In retrospective I believed the different variants of Array.Sort would sort iden
 they do not. The fact that I started out with the native implementation and focused on 
 primitives and the specialization of these, appears to have been a mistake.
 
-The fact is Array.Sort can yield different sorting results depending on the variant used
-when also sorting items (also called values, since the sorted are then keys). Note
-that the sort is still correct, it is just that equal keys can have different results
+The fact is `Array.Sort` can yield different sorting results depending on the variant used
+when also sorting items (also called values, since the items used for sorting are then keys). 
+Note that the sort is still correct, it is just that equal keys can have different results
 for where the items are. I.e. here is an example that comes from a special test:
 
 [INSERT IMAGE FROM WINMERGE]
@@ -68,7 +68,7 @@ to allow for easier comparison of the different variants.
 
 Consolidated (most likely will be removed):
 - `SpanSortHelpers.KeysAndOrValues.cs`
-  - This is my futile attempt to consoladate the different variants into a single code base.
+  - This is my futile attempt to consolidate the different variants into a single code base.
   - I originally had a plan involving `ref struct` and value type generic arguments to ensure
     this would could be done with neglible performance impact but a few things were in the way:
     - https://github.com/dotnet/roslyn/issues/20226
@@ -92,7 +92,7 @@ Current:
 - `SpanSortHelpers.Keys.Specialized.cs`
   - Specialized switch for fast primitive versions and a little code sharing.
 - `SpanSortHelpers.Keys.TComparer.cs`
-  - TComparer variant
+  - TComparer variant, used for specialized too.
 - `SpanSortHelpers.KeysValues.cs`
   - Entry points and dispatch types for two span sort (e.g. with items/values).
 - `SpanSortHelpers.KeysValues.IComparable.cs`
@@ -100,7 +100,7 @@ Current:
 - `SpanSortHelpers.KeysValues.Specialized.cs`
   - Specialized switch for fast primitive versions and a little code sharing.
 - `SpanSortHelpers.KeysValues.TComparer.cs`
-  - TComparer variant
+  - TComparer variant, used for specialized too.
 
 Primary development was done in my DotNetCross.Sorting repo:
 https://github.com/DotNetCross/Sorting/
@@ -108,23 +108,23 @@ This was to get a better feedback loop and to use BenchmarkDotNet for benchmark 
 and disassembly.
 
 NOTE: I understand that in `corefx` we might want to consolidate this into a single file,
-but for now it easier when comparing variants. Note also that the `coreclr` has
-more variants that currently in this PR, there is for example a variant for `Comparison<T>`
+but for now it is easier when comparing variants. Note also that the `coreclr` has
+more variants than currently in this PR, there is for example a variant for `Comparison<T>`
 in `coreclr`.
 
 #### Changes
 Many small changes have been made due to usings refs and Unsafe, but a couple notable changes are: 
 - `Sort3` add a specific implementation for sorting three, used both for finding pivot and when sorting exactly 3 elements. 
   - This has currently been changed to use `Sort2` three times like `coreclr` as otherwise,
-    there would be differences for some same key cases, that I have enough time to debug.
-  - Why use a special `Sort3`? For expensive comparisons this can be a big improvement,
-    if keys are almost already sorted since only 2 compares are needed instead of 3.
-- Remove unnecessary ifs on swaps, except for one place where it is now explicit. 
+    there would be differences for some same key cases. That I haven't had time to debug.
+  - Why use a special `Sort3`? For expensive comparisons this can be a big improvement
+    if keys are almost already sorted, since only 2 compares are needed instead of 3.
+- Remove unnecessary ifs on swaps, except for a few places where it is now explicit. 
 - A few renames such as `Sort2` instead of `SwapIfGreater`. 
 - Comparer based variant uses a specific `IDirectComparer` allowing for the kind of 
   specialization for basic types that `coreclr` does in native code.
   This started out as just a `LessThan` method but the problem is then
-  whether bogus comparers should yield the same result as Array.Sort so I
+  whether bogus comparers should yield the same result as `Array.Sort` so I
   changed this to have more methods.
 
 #### Benchmarks
@@ -138,7 +138,7 @@ with a pattern in slices of `Length`. Depending on the filler the full array wil
 with either repeating patterns of `Length` or fill the entire array with a given pattern.
 
 This allows using this for testing sorts of different lengths, but measures the total time to do a number of sorts, 
-so it include the overhead of slicing and the loop. And allows testing different patterns/sequnces.
+so it includes the overhead of slicing and the loop. And allows testing different patterns/sequnces.
 The main point here is that this is used to compare **relatively** to the `Array.Sort`.
 
 ```csharp
@@ -187,7 +187,8 @@ Others fill based on slice length. This is particularly important for **MedianOf
 Random pairs are then swapped, as a ratio of length. In this case 10%, 
 i.e. 10% pairs have been swapped randomly. Seeded so each run is the same.
 
-For each different type, the `int` is converted to the given type e.g. using `ToString("D9")` for `string`.
+For each different type, the `int` value is converted to the given type 
+e.g. using `ToString("D9")` for `string`.
 
 These fillers are also used for test case generation. But are combined with other 
 sort case generators.
@@ -195,7 +196,7 @@ sort case generators.
 
 #### Difference to BinarySearch
 `BinarySearch` only has an overload without comparer for when `T : IComparable<T>`.
-That is, there is no overload where the value searched for when it not
+That is, there is no overload where the value searched for is not not
 generically constrained.
 
  - Proposal https://github.com/dotnet/corefx/issues/15818
@@ -211,13 +212,13 @@ the expected output. The idea being span `Sort` should give exactly the same res
 
 #### Notes and TODOs
 Biggest problem currently is that there are differences for some specific test cases:
-- NaN for float and double will not give the same result **when** sorting keys and values.
+- NaN for float and double will not give the same result when sorting keys **and** values.
   - I have not had time to debug this. In span Sort I wanted to use
   the specialized sort path for these, but `coreclr` only does that when items/values
   are of the same type. This means `coreclr` does not do a `NaNPrepass` for
-  floating point types when items is not of same type.
+  floating point types when items are not of same type.
   - I removed this then, but results are still different.
-- BogusComparable tests fail since Array.Sort will throw on these for **some** lengths.
+- BogusComparable tests fail since `Array.Sort` will throw on these for **some** lengths.
   - Tests need to be modified to handle this, and span Sort must detect this issue and throw.
 
 There are a lot of other remaining TODOs e.g.:
