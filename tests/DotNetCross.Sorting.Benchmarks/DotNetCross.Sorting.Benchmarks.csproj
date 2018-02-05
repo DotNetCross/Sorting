@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFrameworks>netcoreapp2.0</TargetFrameworks>
+    <!--<TargetFrameworks>netcoreapp2.0;net471</TargetFrameworks>-->
+    <DebugType>pdbonly</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+    <LangVersion>latest</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" Version="0.10.12" />
+    <PackageReference Include="BenchmarkDotNet.Core" Version="0.10.12" />
+    <PackageReference Include="BenchmarkDotNet.Diagnostics.Windows" Version="0.10.12" />
+    <PackageReference Include="BenchmarkDotNet.Toolchains.Roslyn" Version="0.10.12" />
+    <PackageReference Include="System.Memory" Version="4.4.0-preview2-25405-01" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\DotNetCross.Sorting\DotNetCross.Sorting.csproj" />
+    <ProjectReference Include="..\..\src\DotNetCross.Sorting.Sequences\DotNetCross.Sorting.Sequences.csproj" />
+  </ItemGroup>
+
+</Project>

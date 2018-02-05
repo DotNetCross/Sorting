@@ -4,15 +4,17 @@
     <TargetFramework>netcoreapp2.0</TargetFramework>
     <OutputPath>..\..\build\Tests_$(AssemblyName)_$(Configuration)</OutputPath>
     <IsPackable>false</IsPackable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.3.0-preview-20170628-02" />
-    <PackageReference Include="xunit" Version="2.2.0" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.2.0" />
+    <PackageReference Include="xunit" Version="2.3.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.3.1" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\DotNetCross.Sorting.Sequences\DotNetCross.Sorting.Sequences.csproj" />
     <ProjectReference Include="..\..\src\DotNetCross.Sorting\DotNetCross.Sorting.csproj" />
   </ItemGroup>
 

@@ -24,6 +24,13 @@ namespace DotNetCross.Sorting.Tests
             Test((a, c) => QuickSort.Sort(new Span<int>(a), new HoarePartitioner(), c));
         }
 
+        [Fact]
+        public void SpanSortExtension()
+        {
+            Test((a, c) => new Span<int>(a).Sort(c));
+        }
+
+
         static readonly (int[] Unsorted, int[] Sorted)[] Cases = {
             Create(new int[] { 6, 4, 5, 2, 1 }),
             Create(new int[] { 6, 4, 5, 1, 2, 1, 3, 4, 1 }),
@@ -43,7 +50,7 @@ namespace DotNetCross.Sorting.Tests
             return (unsorted, sorted);
         }
 
-        public static void Test(Action<int[], Comparer<int>> sort)
+        static void Test(Action<int[], Comparer<int>> sort)
         {
             foreach (var c in Cases)
             {
