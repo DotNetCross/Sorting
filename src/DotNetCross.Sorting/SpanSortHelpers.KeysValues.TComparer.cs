@@ -118,7 +118,7 @@ namespace System
                 // TODO: Possible buffer over/underflow here if custom bogus comparer? What to do?
                 //       This is the reason for "catch (IndexOutOfRangeException) => IntrospectiveSortUtilities.ThrowOrIgnoreBadComparer(comparer);"
                 // NOTE: Inserted check to ensure no out of bounds
-                //       Does this mean LessThan cannot be used due to swapping order of arguments?
+                // TODO: For primitives and internal comparers the range checks can be eliminated
                 while (left < (hi - 1) && comparer.LessThan(Unsafe.Add(ref keys, ++left), pivot)) ;
                 while (right > lo && comparer.LessThan(pivot, Unsafe.Add(ref keys, --right))) ;
 
