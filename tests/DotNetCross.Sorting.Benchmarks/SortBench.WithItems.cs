@@ -10,7 +10,9 @@ namespace DotNetCross.Sorting.Benchmarks
 {
     [Config(typeof(SortBenchConfig))]
     public class SortBench<TKey, TValue>
+        where TKey : IComparable<TKey>
     {
+        static readonly ClassComparableComparer<TKey> _classComparer = new ClassComparableComparer<TKey>();
         readonly int _maxLength;
         readonly IParam[] _paramFillers;
         readonly Func<int, TKey> _toKey;
@@ -44,6 +46,7 @@ namespace DotNetCross.Sorting.Benchmarks
 
         public IEnumerable<int> Lengths { get; }
 
+
         [GlobalSetup]
         public void GlobalSetup()
         {
@@ -67,6 +70,14 @@ namespace DotNetCross.Sorting.Benchmarks
                 Array.Sort(_work, _workValues, i, Length);
             }
         }
+        [Benchmark]
+        public void ArraySort_ClassComparer()
+        {
+            for (int i = 0; i <= _maxLength - Length; i += Length)
+            {
+                Array.Sort(_work, _workValues, i, Length, _classComparer);
+            }
+        }
 
         [Benchmark]
         public void SpanSort()
@@ -74,6 +85,22 @@ namespace DotNetCross.Sorting.Benchmarks
             for (int i = 0; i <= _maxLength - Length; i += Length)
             {
                 new Span<TKey>(_work, i, Length).Sort(new Span<TValue>(_workValues, i, Length));
+            }
+        }
+        [Benchmark]
+        public void SpanSort_ClassComparer()
+        {
+            for (int i = 0; i <= _maxLength - Length; i += Length)
+            {
+                new Span<TKey>(_work, i, Length).Sort(new Span<TValue>(_workValues, i, Length), _classComparer);
+            }
+        }
+        [Benchmark]
+        public void SpanSort_StructComparer()
+        {
+            for (int i = 0; i <= _maxLength - Length; i += Length)
+            {
+                new Span<TKey>(_work, i, Length).Sort(new Span<TValue>(_workValues, i, Length), new ComparableComparer<TKey>());
             }
         }
     }

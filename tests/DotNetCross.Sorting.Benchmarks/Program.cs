@@ -119,9 +119,9 @@ namespace DotNetCross.Sorting.Benchmarks
     }
 
     // BDN fails
-    public class Int32SortDisassemblerBenchNotWorking : SortDisassemblerBench<int>
+    public class Int32SortDisassemblerBenchGeneric : SortDisassemblerBench<int>
     {
-        public Int32SortDisassemblerBenchNotWorking()
+        public Int32SortDisassemblerBenchGeneric()
             : base(length: 1024 * 1024, i => i)
         { }
     }
@@ -137,12 +137,12 @@ namespace DotNetCross.Sorting.Benchmarks
                 BenchmarkRunner.Run<ComparableStructInt32SortBench>();
                 BenchmarkRunner.Run<ComparableClassInt32SortBench>();
                 BenchmarkRunner.Run<StringSortBench>();
-
+                
                 BenchmarkRunner.Run<Int32StringSortBench>();
                 BenchmarkRunner.Run<Int32SingleSortBench>();
                 BenchmarkRunner.Run<Int32Int32SortBench>();
                 BenchmarkRunner.Run<StringInt32SortBench>();
-
+                
                 BenchmarkRunner.Run<Int32SortDisassemblerBench>();
                 BenchmarkRunner.Run<StringSortDisassemblerBench>();
 
@@ -150,7 +150,7 @@ namespace DotNetCross.Sorting.Benchmarks
 
                 // TODO: Add disassembler for key and values
 
-                //BenchmarkRunner.Run<Int32SortDisassemblerBenchNotWorking>(); // Fails, probably due to generics...
+                //BenchmarkRunner.Run<Int32SortDisassemblerBenchGeneric>(); // Fails, probably due to generics...
 
                 // Micro benchmarks
                 //BenchmarkRunner.Run<IntPtrHelperBenchmark>();
