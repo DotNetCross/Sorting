@@ -7,13 +7,13 @@ namespace DotNetCross.Sorting.Benchmarks
 {
     // Why does this work but not generic SortDissassemblerBench
     [Config(typeof(SortDisassemblerBenchConfig))]
-    public class Int32SortDisassemblerBench
+    public class Int32SortDisassemblerBenchSpecial
     {
         const int MaxLength = 3 * 1000 * 1000;
         static readonly int[] _filled = new int[MaxLength];
         int[] _work = new int[MaxLength];
 
-        public Int32SortDisassemblerBench()
+        public Int32SortDisassemblerBenchSpecial()
         {
             Length = 100000;
         }

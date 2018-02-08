@@ -12,7 +12,7 @@ namespace DotNetCross.Sorting.Benchmarks
     //[RyuJitX64Job()]
     public class CompareAsm
     {
-        ComparableComparer<int> comparer = new ComparableComparer<int>();
+        StructComparableComparer<int> comparer = new StructComparableComparer<int>();
 
         [Params(42)]
         public int Value { get; set; }

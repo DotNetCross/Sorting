@@ -9,11 +9,18 @@ namespace DotNetCross.Sorting.Benchmarks
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int Compare(TKey x, TKey y) => x.CompareTo(y);
+
+        public static readonly ClassComparableComparer<TKey> Instance = new ClassComparableComparer<TKey>();
     }
-    public struct ComparableComparer<T> : IComparer<T>
+    public struct StructComparableComparer<T> : IComparer<T>
         where T : IComparable<T>
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int Compare(T x, T y) => x.CompareTo(y);
+    }
+    public static class ComparableComparison<TKey>
+        where TKey : IComparable<TKey>
+    {
+        public static readonly Comparison<TKey> Instance = (x, y) => x.CompareTo(y);
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Attributes.Jobs;
 using BenchmarkDotNet.Engines;
@@ -11,6 +12,7 @@ namespace DotNetCross.Sorting.Benchmarks
     [SimpleJob(RunStrategy.Monitoring, launchCount: 1, warmupCount: 1, targetCount: 3)]
     //[Config(typeof(SortDisassemblerBenchConfig))]
     public class SortDisassemblerBench<TKey, TValue>
+        where TKey : IComparable<TKey>
     {
         readonly int _length;
         readonly TKey[] _filled;
@@ -41,15 +43,51 @@ namespace DotNetCross.Sorting.Benchmarks
         }
 
         [Benchmark(Baseline = true)]
-        public void ArraySort()
+        public void Array_()
         {
             Array.Sort(_work, _workValues);
         }
+        [Benchmark]
+        public void Array_NullComparer()
+        {
+            Array.Sort(_work, _workValues, (IComparer<TKey>)null);
+        }
+        [Benchmark]
+        public void Array_ClassComparableComparer()
+        {
+            Array.Sort(_work, _workValues, ClassComparableComparer<TKey>.Instance);
+        }
+        // Overload doesn't exist
+        //[Benchmark]
+        //public void Array_Comparison()
+        //{
+        //    Array.Sort(_work, _workValues, ComparableComparison<TKey>.Instance);
+        //}
 
         [Benchmark]
-        public void SpanSort()
+        public void Span_()
         {
             new Span<TKey>(_work).Sort(new Span<TValue>(_workValues));
+        }
+        [Benchmark]
+        public void Span_NullComparer()
+        {
+            new Span<TKey>(_work).Sort(new Span<TValue>(_workValues), (IComparer<TKey>)null);
+        }
+        [Benchmark]
+        public void Span_ClassComparableComparer()
+        {
+            new Span<TKey>(_work).Sort(new Span<TValue>(_workValues), ClassComparableComparer<TKey>.Instance);
+        }
+        [Benchmark]
+        public void Span_StructComparableComparer()
+        {
+            new Span<TKey>(_work).Sort(new Span<TValue>(_workValues), new StructComparableComparer<TKey>());
+        }
+        [Benchmark]
+        public void Span_Comparison()
+        {
+            new Span<TKey>(_work).Sort(new Span<TValue>(_workValues), ComparableComparison<TKey>.Instance);
         }
     }
 }

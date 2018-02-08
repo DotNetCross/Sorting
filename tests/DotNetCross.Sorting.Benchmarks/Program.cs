@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using BenchmarkDotNet.Running;
 using DotNetCross.Sorting.Sequences;
 
@@ -20,38 +19,6 @@ namespace DotNetCross.Sorting.Benchmarks
                 new DecrementingSpanFiller(),
                 new ConstantSpanFiller(42),
             };
-    }
-
-    public struct ComparableStructInt32 : IComparable<ComparableStructInt32>
-    {
-        public readonly int Value;
-
-        public ComparableStructInt32(int value)
-        {
-            Value = value;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int CompareTo(ComparableStructInt32 other)
-        {
-            return this.Value.CompareTo(other.Value);
-        }
-    }
-
-    public class ComparableClassInt32 : IComparable<ComparableClassInt32>
-    {
-        public readonly int Value;
-
-        public ComparableClassInt32(int value)
-        {
-            Value = value;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int CompareTo(ComparableClassInt32 other)
-        {
-            return this.Value.CompareTo(other.Value);
-        }
     }
 
     public class Int32SortBench : SortBench<int>
@@ -89,6 +56,7 @@ namespace DotNetCross.Sorting.Benchmarks
                    SpanFillers.Default, i => new ComparableClassInt32(i))
         { }
     }
+
     public class Int32Int32SortBench : SortBench<int, int>
     {
         public Int32Int32SortBench()
@@ -99,6 +67,13 @@ namespace DotNetCross.Sorting.Benchmarks
     public class Int32SingleSortBench : SortBench<int, float>
     {
         public Int32SingleSortBench()
+            : base(maxLength: 2000000, new[] { 2, 3, 10, 100, 10000, 1000000 },
+                   SpanFillers.Default, i => i, i => i)
+        { }
+    }
+    public class SingleInt32SortBench : SortBench<float, int>
+    {
+        public SingleInt32SortBench()
             : base(maxLength: 2000000, new[] { 2, 3, 10, 100, 10000, 1000000 },
                    SpanFillers.Default, i => i, i => i)
         { }
@@ -117,12 +92,93 @@ namespace DotNetCross.Sorting.Benchmarks
                    SpanFillers.Default, i => i.ToString("D9"), i => i)
         { }
     }
-
-    // BDN fails
-    public class Int32SortDisassemblerBenchGeneric : SortDisassemblerBench<int>
+    public class ComparableClassInt32Int32SortBench : SortBench<ComparableClassInt32, int>
     {
-        public Int32SortDisassemblerBenchGeneric()
+        public ComparableClassInt32Int32SortBench()
+            : base(maxLength: 100000, new[] { 2, 3, 10, 100, 1000, 10000 },
+                   SpanFillers.Default, i => new ComparableClassInt32(i), i => i)
+        { }
+    }
+    public class ComparableStructInt32Int32SortBench : SortBench<ComparableClassInt32, int>
+    {
+        public ComparableStructInt32Int32SortBench()
+            : base(maxLength: 100000, new[] { 2, 3, 10, 100, 1000, 10000 },
+                   SpanFillers.Default, i => new ComparableClassInt32(i), i => i)
+        { }
+    }
+
+
+    public class Int32SortDisassemblerBench : SortDisassemblerBench<int>
+    {
+        public Int32SortDisassemblerBench()
             : base(length: 1024 * 1024, i => i)
+        { }
+    }
+    public class SingleSortDisassemblerBench : SortDisassemblerBench<float>
+    {
+        public SingleSortDisassemblerBench()
+            : base(length: 1024 * 1024, i => i)
+        { }
+    }
+    public class ComparableStructInt32SortDisassemblerBench : SortDisassemblerBench<ComparableStructInt32>
+    {
+        public ComparableStructInt32SortDisassemblerBench()
+            : base(length: 1024 * 1024, i => new ComparableStructInt32(i))
+        { }
+    }
+    public class ComparableClassInt32SortDisassemblerBench : SortDisassemblerBench<ComparableClassInt32>
+    {
+        public ComparableClassInt32SortDisassemblerBench()
+            : base(length: 1024 * 1024, i => new ComparableClassInt32(i))
+        { }
+    }
+    public class StringSortDisassemblerBench : SortDisassemblerBench<string>
+    {
+        public StringSortDisassemblerBench()
+            : base(length: 1024 * 1024, i => i.ToString("D9"))
+        { }
+    }
+
+    public class Int32Int32SortDisassemblerBench : SortDisassemblerBench<int, int>
+    {
+        public Int32Int32SortDisassemblerBench()
+            : base(length: 1024 * 1024, i => i, i => i)
+        { }
+    }
+    public class Int32SingleSortDisassemblerBench : SortDisassemblerBench<int, float>
+    {
+        public Int32SingleSortDisassemblerBench()
+            : base(length: 1024 * 1024, i => i, i => i)
+        { }
+    }
+    public class SingleInt32SortDisassemblerBench : SortDisassemblerBench<float, int>
+    {
+        public SingleInt32SortDisassemblerBench()
+            : base(length: 1024 * 1024, i => i, i => i)
+        { }
+    }
+    public class StringInt32SortDisassemblerBench : SortDisassemblerBench<string, int>
+    {
+        public StringInt32SortDisassemblerBench()
+            : base(length: 1024 * 1024, i => i.ToString("D9"), i => i)
+        { }
+    }
+    public class Int32StringSortDisassemblerBench : SortDisassemblerBench<int, string>
+    {
+        public Int32StringSortDisassemblerBench()
+            : base(length: 1024 * 1024, i => i, i => i.ToString("D9"))
+        { }
+    }
+    public class ComparableClassInt32Int32SortDisassemblerBench : SortDisassemblerBench<ComparableClassInt32, int>
+    {
+        public ComparableClassInt32Int32SortDisassemblerBench()
+            : base(length: 1024 * 1024, i => new ComparableClassInt32(i), i => i)
+        { }
+    }
+    public class ComparableStructInt32Int32SortDisassemblerBench : SortDisassemblerBench<ComparableClassInt32, int>
+    {
+        public ComparableStructInt32Int32SortDisassemblerBench()
+            : base(length: 1024 * 1024, i => new ComparableClassInt32(i), i => i)
         { }
     }
 
@@ -132,25 +188,35 @@ namespace DotNetCross.Sorting.Benchmarks
         {
             if (true && !Debugger.IsAttached)
             {
+                // TKey benchs
                 BenchmarkRunner.Run<Int32SortBench>();
                 BenchmarkRunner.Run<SingleSortBench>();
                 BenchmarkRunner.Run<ComparableStructInt32SortBench>();
                 BenchmarkRunner.Run<ComparableClassInt32SortBench>();
                 BenchmarkRunner.Run<StringSortBench>();
-                
-                BenchmarkRunner.Run<Int32StringSortBench>();
-                BenchmarkRunner.Run<Int32SingleSortBench>();
+                // TKey,TValue benchs
                 BenchmarkRunner.Run<Int32Int32SortBench>();
+                BenchmarkRunner.Run<Int32SingleSortBench>();
+                BenchmarkRunner.Run<SingleInt32SortBench>();
+                BenchmarkRunner.Run<Int32StringSortBench>();
                 BenchmarkRunner.Run<StringInt32SortBench>();
-                
+                BenchmarkRunner.Run<ComparableClassInt32Int32SortBench>();
+                BenchmarkRunner.Run<ComparableStructInt32Int32SortBench>();
+
+                // TKey disassemblers
                 BenchmarkRunner.Run<Int32SortDisassemblerBench>();
+                BenchmarkRunner.Run<SingleSortDisassemblerBench>();
+                BenchmarkRunner.Run<ComparableStructInt32SortDisassemblerBench>();
+                BenchmarkRunner.Run<ComparableClassInt32SortDisassemblerBench>();
                 BenchmarkRunner.Run<StringSortDisassemblerBench>();
-
-                // TODO: Add disassembler for ComparableClassInt32
-
-                // TODO: Add disassembler for key and values
-
-                //BenchmarkRunner.Run<Int32SortDisassemblerBenchGeneric>(); // Fails, probably due to generics...
+                // TKey,TValue disassemblers
+                BenchmarkRunner.Run<Int32Int32SortDisassemblerBench>();
+                BenchmarkRunner.Run<Int32SingleSortDisassemblerBench>();
+                BenchmarkRunner.Run<SingleInt32SortDisassemblerBench>();
+                BenchmarkRunner.Run<Int32StringSortDisassemblerBench>();
+                BenchmarkRunner.Run<StringInt32SortDisassemblerBench>();
+                BenchmarkRunner.Run<ComparableClassInt32Int32SortDisassemblerBench>();
+                BenchmarkRunner.Run<ComparableStructInt32Int32SortDisassemblerBench>();
 
                 // Micro benchmarks
                 //BenchmarkRunner.Run<IntPtrHelperBenchmark>();
@@ -165,9 +231,9 @@ namespace DotNetCross.Sorting.Benchmarks
                 sut.Length = 1000; // 1000000;
                 sut.GlobalSetup();
                 sut.IterationSetup();
-                sut.SpanSort();
+                sut.Span_();
                 sut.IterationSetup();
-                sut.SpanSort();
+                sut.Span_();
 
                 Console.WriteLine("Enter key...");
                 Console.ReadKey();
@@ -175,7 +241,7 @@ namespace DotNetCross.Sorting.Benchmarks
                 for (int i = 0; i < 1000; i++)
                 {
                     sut.IterationSetup();
-                    sut.SpanSort();
+                    sut.Span_();
                 }
             }
             else

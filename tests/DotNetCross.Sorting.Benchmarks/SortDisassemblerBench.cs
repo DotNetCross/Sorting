@@ -1,10 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Attributes.Jobs;
 using BenchmarkDotNet.Engines;
 using BenchmarkDotNet.Running;
 using DotNetCross.Sorting.Sequences;
-//using T = System.Int32;
 
 namespace DotNetCross.Sorting.Benchmarks
 {
@@ -12,6 +12,7 @@ namespace DotNetCross.Sorting.Benchmarks
     [SimpleJob(RunStrategy.Monitoring, launchCount: 1, warmupCount: 1, targetCount: 3)]
     //[Config(typeof(SortDisassemblerBenchConfig))]
     public class SortDisassemblerBench<TKey>
+        where TKey : IComparable<TKey>
     {
         readonly int _length;
         readonly TKey[] _filled;
@@ -34,15 +35,50 @@ namespace DotNetCross.Sorting.Benchmarks
         }
 
         [Benchmark(Baseline = true)]
-        public void ArraySort()
+        public void Array_()
         {
             Array.Sort(_work);
         }
+        [Benchmark]
+        public void Array_NullComparer()
+        {
+            Array.Sort(_work, (IComparer<TKey>)null);
+        }
+        [Benchmark]
+        public void Array_ClassComparableComparer()
+        {
+            Array.Sort(_work, ClassComparableComparer<TKey>.Instance);
+        }
+        [Benchmark]
+        public void Array_Comparison()
+        {
+            Array.Sort(_work, ComparableComparison<TKey>.Instance);
+        }
 
         [Benchmark]
-        public void SpanSort()
+        public void Span_()
         {
             new Span<TKey>(_work).Sort();
+        }
+        [Benchmark]
+        public void Span_NullComparer()
+        {
+            new Span<TKey>(_work).Sort((IComparer<TKey>)null);
+        }
+        [Benchmark]
+        public void Span_ClassComparableComparer()
+        {
+            new Span<TKey>(_work).Sort(ClassComparableComparer<TKey>.Instance);
+        }
+        [Benchmark]
+        public void Span_StructComparableComparer()
+        {
+            new Span<TKey>(_work).Sort(new StructComparableComparer<TKey>());
+        }
+        [Benchmark]
+        public void Span_Comparison()
+        {
+            new Span<TKey>(_work).Sort(ComparableComparison<TKey>.Instance);
         }
     }
 }
