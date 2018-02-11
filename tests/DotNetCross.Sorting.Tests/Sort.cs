@@ -1,4 +1,4 @@
-//#define OUTER_LOOP
+#define OUTER_LOOP
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
@@ -128,6 +128,15 @@ namespace System.SpanTests
             {
                 TestSort(new ArraySegment<int>(new int[] { 0, 1 }), new BogusComparer<int>());
             }
+            [Fact]
+            [Trait(SortTrait, SortTraitValue)]
+            public static void Sort_Keys_BogusComparable_ConstantPattern()
+            {
+                var s = new ArraySegment<BogusComparable>(Enumerable.Range(0, 17).Select(i => new BogusComparable(42)).ToArray());
+                TestSort(s);
+            }
+
+
             [Fact]
             [Trait(SortTrait, SortTraitValue)]
             public static void Sort_KeysValues_Single_Single_NaN()
@@ -1334,7 +1343,11 @@ namespace System.SpanTests
                 if (expectedException != null)
                 {
                     Assert.IsType(expectedException.GetType(), actualException);
-                    Assert.Equal(expectedException.Message, actualException.Message);
+                    if (expectedException.Message != actualException.Message)
+                    {
+                        Assert.True(actualException.Message.StartsWith("Unable to sort because the IComparable.CompareTo() method returns inconsistent results. Either a value does not compare equal to itself, or one value repeatedly compared to another value yields different results. IComparable: '"));
+                        Assert.True(actualException.Message.EndsWith("'."));
+                    }
                 }
                 else
                 {
