@@ -1345,8 +1345,8 @@ namespace System.SpanTests
                     Assert.IsType(expectedException.GetType(), actualException);
                     if (expectedException.Message != actualException.Message)
                     {
-                        Assert.True(actualException.Message.StartsWith("Unable to sort because the IComparable.CompareTo() method returns inconsistent results. Either a value does not compare equal to itself, or one value repeatedly compared to another value yields different results. IComparable: '"));
-                        Assert.True(actualException.Message.EndsWith("'."));
+                        Assert.StartsWith("Unable to sort because the IComparable.CompareTo() method returns inconsistent results. Either a value does not compare equal to itself, or one value repeatedly compared to another value yields different results. IComparable: '", actualException.Message);
+                        Assert.EndsWith("'.", actualException.Message);
                     }
                 }
                 else
