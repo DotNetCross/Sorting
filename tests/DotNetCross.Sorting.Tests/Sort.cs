@@ -1,4 +1,4 @@
-#define OUTER_LOOP
+//#define OUTER_LOOP
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
@@ -119,6 +119,9 @@ namespace System.SpanTests
                 TestSort(keysSegment, valuesSegment, new StructCustomComparer<byte>());
             }
 
+            // Array message for bogus comparer:
+            // System.ArgumentException : Unable to sort because the IComparer.Compare() method returns inconsistent results. Either a value does not compare equal to itself, or one value repeatedly compared to another value yields different results.IComparer: ''.
+            
             [Fact]
             [Trait(SortTrait, SortTraitValue)]
             public static void Sort_Int32_BogusComparer()
@@ -794,14 +797,21 @@ namespace System.SpanTests
             {
                 var expected = new ArraySegment<TKey>((TKey[])keysToSort.Array.Clone(),
                     keysToSort.Offset, keysToSort.Count);
-                Array.Sort(expected.Array, expected.Offset, expected.Count);
 
-                Span<TKey> keysSpan = keysToSort;
-                keysSpan.Sort();
+                var expectedException = RunAndCatchException(() =>
+                    Array.Sort(expected.Array, expected.Offset, expected.Count));
 
+                var actualException = RunAndCatchException(() =>
+                {
+                    Span<TKey> keysSpan = keysToSort;
+                    keysSpan.Sort();
+                });
+
+                AssertExceptionEquals(expectedException, actualException);
                 // We assert the full arrays are as expected, to check for possible under/overflow
                 Assert.Equal(expected.Array, keysToSort.Array);
             }
+
             static void TestSort<TKey, TComparer>(
                 ArraySegment<TKey> keysToSort,
                 TComparer comparer)
@@ -809,10 +819,17 @@ namespace System.SpanTests
             {
                 var expected = new ArraySegment<TKey>((TKey[])keysToSort.Array.Clone(),
                     keysToSort.Offset, keysToSort.Count);
-                Array.Sort(expected.Array, expected.Offset, expected.Count, comparer);
 
-                Span<TKey> keysSpan = keysToSort;
-                keysSpan.Sort(comparer);
+                var expectedException = RunAndCatchException(() =>
+                    Array.Sort(expected.Array, expected.Offset, expected.Count, comparer));
+
+                var actualException = RunAndCatchException(() =>
+                {
+                    Span<TKey> keysSpan = keysToSort;
+                    keysSpan.Sort(comparer);
+                });
+
+                AssertExceptionEquals(expectedException, actualException);
 
                 // We assert the full arrays are as expected, to check for possible under/overflow
                 Assert.Equal(expected.Array, keysToSort.Array);
@@ -824,19 +841,26 @@ namespace System.SpanTests
                 var expected = new ArraySegment<TKey>((TKey[])keysToSort.Array.Clone(),
                     keysToSort.Offset, keysToSort.Count);
                 // Array.Sort doesn't have a comparison version for segments
+                Exception expectedException = null;
                 if (expected.Offset == 0 && expected.Count == expected.Array.Length)
                 {
-                    Array.Sort(expected.Array, comparison);
+                    expectedException = RunAndCatchException(() =>
+                        Array.Sort(expected.Array, comparison));
                 }
                 else
                 {
-                    Array.Sort(expected.Array, expected.Offset, expected.Count,
-                        new ComparisonComparer<TKey>(comparison));
+                    expectedException = RunAndCatchException(() =>
+                        Array.Sort(expected.Array, expected.Offset, expected.Count,
+                        new ComparisonComparer<TKey>(comparison)));
                 }
 
-                Span<TKey> keysSpan = keysToSort;
-                keysSpan.Sort(comparison);
+                var actualException = RunAndCatchException(() =>
+                {
+                    Span<TKey> keysSpan = keysToSort;
+                    keysSpan.Sort(comparison);
+                });
 
+                AssertExceptionEquals(expectedException, actualException);
                 // We assert the full arrays are as expected, to check for possible under/overflow
                 Assert.Equal(expected.Array, keysToSort.Array);
             }
@@ -911,12 +935,18 @@ namespace System.SpanTests
                     valuesToSort.Offset, valuesToSort.Count);
                 Assert.Equal(expectedKeys.Offset, expectedValues.Offset);
                 Assert.Equal(expectedKeys.Count, expectedValues.Count);
-                Array.Sort(expectedKeys.Array, expectedValues.Array, expectedKeys.Offset, expectedKeys.Count);
 
-                Span<TKey> keysSpan = keysToSort;
-                Span<TValue> valuesSpan = valuesToSort;
-                keysSpan.Sort(valuesSpan);
+                var expectedException = RunAndCatchException(() =>
+                    Array.Sort(expectedKeys.Array, expectedValues.Array, expectedKeys.Offset, expectedKeys.Count));
 
+                var actualException = RunAndCatchException(() =>
+                {
+                    Span<TKey> keysSpan = keysToSort;
+                    Span<TValue> valuesSpan = valuesToSort;
+                    keysSpan.Sort(valuesSpan);
+                });
+
+                AssertExceptionEquals(expectedException, actualException);
                 // We assert the full arrays are as expected, to check for possible under/overflow
                 Assert.Equal(expectedKeys.Array, keysToSort.Array);
                 Assert.Equal(expectedValues.Array, valuesToSort.Array);
@@ -930,12 +960,18 @@ namespace System.SpanTests
                     keysToSort.Offset, keysToSort.Count);
                 var expectedValues = new ArraySegment<TValue>((TValue[])valuesToSort.Array.Clone(),
                     valuesToSort.Offset, valuesToSort.Count);
-                Array.Sort(expectedKeys.Array, expectedValues.Array, expectedKeys.Offset, expectedKeys.Count, comparer);
 
-                Span<TKey> keysSpan = keysToSort;
-                Span<TValue> valuesSpan = valuesToSort;
-                keysSpan.Sort(valuesSpan, comparer);
+                var expectedException = RunAndCatchException(() =>
+                    Array.Sort(expectedKeys.Array, expectedValues.Array, expectedKeys.Offset, expectedKeys.Count, comparer));
 
+                var actualException = RunAndCatchException(() =>
+                {
+                    Span<TKey> keysSpan = keysToSort;
+                    Span<TValue> valuesSpan = valuesToSort;
+                    keysSpan.Sort(valuesSpan, comparer);
+                });
+
+                AssertExceptionEquals(expectedException, actualException);
                 // We assert the full arrays are as expected, to check for possible under/overflow
                 Assert.Equal(expectedKeys.Array, keysToSort.Array);
                 Assert.Equal(expectedValues.Array, valuesToSort.Array);
@@ -949,13 +985,17 @@ namespace System.SpanTests
                 var expectedValues = new ArraySegment<TValue>((TValue[])valuesToSort.Array.Clone(),
                     valuesToSort.Offset, valuesToSort.Count);
                 // Array.Sort doesn't have a comparison version for segments
-                Array.Sort(expectedKeys.Array, expectedValues.Array, expectedKeys.Offset, expectedKeys.Count,
-                    new ComparisonComparer<TKey>(comparison));
+                var expectedException = RunAndCatchException(() =>
+                    Array.Sort(expectedKeys.Array, expectedValues.Array, expectedKeys.Offset, expectedKeys.Count, new ComparisonComparer<TKey>(comparison)));
 
-                Span<TKey> keysSpan = keysToSort;
-                Span<TValue> valuesSpan = valuesToSort;
-                keysSpan.Sort(valuesSpan, comparison);
+                var actualException = RunAndCatchException(() =>
+                {
+                    Span<TKey> keysSpan = keysToSort;
+                    Span<TValue> valuesSpan = valuesToSort;
+                    keysSpan.Sort(valuesSpan, comparison);
+                });
 
+                AssertExceptionEquals(expectedException, actualException);
                 // We assert the full arrays are as expected, to check for possible under/overflow
                 Assert.Equal(expectedKeys.Array, keysToSort.Array);
                 Assert.Equal(expectedValues.Array, valuesToSort.Array);
@@ -1274,6 +1314,32 @@ namespace System.SpanTests
                 }
 
                 public int Compare(TKey x, TKey y) => _comparison(x, y);
+            }
+
+            static Exception RunAndCatchException(Action sort)
+            {
+                try
+                {
+                    sort();
+                }
+                catch (Exception e)
+                {
+                    return e;
+                }
+                return null;
+            }
+
+            static void AssertExceptionEquals(Exception expectedException, Exception actualException)
+            {
+                if (expectedException != null)
+                {
+                    Assert.IsType(expectedException.GetType(), actualException);
+                    Assert.Equal(expectedException.Message, actualException.Message);
+                }
+                else
+                {
+                    Assert.Null(actualException);
+                }
             }
         }
     }
