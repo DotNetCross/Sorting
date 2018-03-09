@@ -13,26 +13,26 @@ using static System.SpanSortHelpersCommon;
 
 namespace System
 {
-    internal static partial class SpanSortHelpersKeys
+    internal static partial class SpanSortHelpersKeysValues
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void Sort<TKey>(
-            ref TKey keys, int length,
+        internal static void Sort<TKey, TValue>(
+            ref TKey keys, ref TValue values, int length,
             Comparison<TKey> comparison)
         {
-            IntrospectiveSort(ref keys, length, comparison);
+            IntrospectiveSort(ref keys, ref values, length, comparison);
         }
 
-        private static void IntrospectiveSort<TKey>(
-            ref TKey keys, int length,
+        private static void IntrospectiveSort<TKey, TValue>(
+            ref TKey keys, ref TValue values, int length,
             Comparison<TKey> comparison)
         {
             var depthLimit = 2 * FloorLog2PlusOne(length);
-            IntroSort(ref keys, 0, length - 1, depthLimit, comparison);
+            IntroSort(ref keys, ref values, 0, length - 1, depthLimit, comparison);
         }
 
-        private static void IntroSort<TKey>(
-            ref TKey keys, 
+        private static void IntroSort<TKey, TValue>(
+            ref TKey keys, ref TValue values,
             int lo, int hi, int depthLimit,
             Comparison<TKey> comparison)
         {
@@ -50,41 +50,37 @@ namespace System
                     }
                     if (partitionSize == 2)
                     {
-                        Sort2(ref keys, lo, hi, comparison);
+                        Sort2(ref keys, ref values, lo, hi, comparison);
                         return;
                     }
                     if (partitionSize == 3)
                     {
-                        ref TKey loRef = ref Unsafe.Add(ref keys, lo);
-                        ref TKey miRef = ref Unsafe.Add(ref keys, hi - 1);
-                        ref TKey hiRef = ref Unsafe.Add(ref keys, hi);
-                        //ref TKey miRef = ref Unsafe.SubtractByteOffset(ref hiRef, new IntPtr(Unsafe.SizeOf<TKey>()));
-                        Sort3(ref loRef, ref miRef, ref hiRef, comparison);
+                        Sort3(ref keys, ref values, lo, hi - 1, hi, comparison);
                         return;
                     }
-
-                    InsertionSort(ref keys, lo, hi, comparison);
+                    InsertionSort(ref keys, ref values, lo, hi, comparison);
                     return;
                 }
 
                 if (depthLimit == 0)
                 {
-                    HeapSort(ref keys, lo, hi, comparison);
+                    HeapSort(ref keys, ref values, lo, hi, comparison);
                     return;
                 }
                 depthLimit--;
 
                 // We should never reach here, unless > 3 elements due to partition size
-                int p = PickPivotAndPartition(ref keys, lo, hi, comparison);
+                int p = PickPivotAndPartition(ref keys, ref values, lo, hi, comparison);
                 // Note we've already partitioned around the pivot and do not have to move the pivot again.
-                IntroSort(ref keys, p + 1, hi, depthLimit, comparison);
+                IntroSort(ref keys, ref values, p + 1, hi, depthLimit, comparison);
                 hi = p - 1;
             }
         }
 
-        private static int PickPivotAndPartition<TKey>(
-            ref TKey keys, int lo, int hi,
+        private static int PickPivotAndPartition<TKey, TValue>(
+            ref TKey keys, ref TValue values, int lo, int hi,
             Comparison<TKey> comparison)
+            
         {
             Debug.Assert(comparison != null);
             Debug.Assert(lo >= 0);
@@ -101,10 +97,7 @@ namespace System
             int middle = (int)(((uint)hi + (uint)lo) >> 1);
 
             // Sort lo, mid and hi appropriately, then pick mid as the pivot.
-            ref TKey keysAtLo = ref Unsafe.Add(ref keys, lo);
-            ref TKey keysAtMiddle = ref Unsafe.Add(ref keys, middle);
-            ref TKey keysAtHi = ref Unsafe.Add(ref keys, hi);
-            Sort3(ref keysAtLo, ref keysAtMiddle, ref keysAtHi, comparison);
+            ref TKey keysAtMiddle = ref Sort3(ref keys, ref values, lo, middle, hi, comparison);
 
             TKey pivot = keysAtMiddle;
 
@@ -113,10 +106,13 @@ namespace System
             // We already partitioned lo and hi and put the pivot in hi - 1.  
             // And we pre-increment & decrement below.
             Swap(ref keysAtMiddle, ref Unsafe.Add(ref keys, right));
+            Swap(ref values, middle, right);
 
             while (left < right)
             {
                 // TODO: Would be good to be able to update local ref here
+
+                // TODO: For primitives and internal comparers the range checks can be eliminated
 
                 while (left < (hi - 1) && comparison(Unsafe.Add(ref keys, ++left), pivot) < 0) ;
                 // Check if bad comparable/comparison
@@ -132,18 +128,20 @@ namespace System
                     break;
 
                 Swap(ref keys, left, right);
+                Swap(ref values, left, right);
             }
             // Put pivot in the right location.
             right = hi - 1;
             if (left != right)
             {
                 Swap(ref keys, left, right);
+                Swap(ref values, left, right);
             }
             return left;
         }
 
-        private static void HeapSort<TKey>(
-            ref TKey keys, int lo, int hi,
+        private static void HeapSort<TKey, TValue>(
+            ref TKey keys, ref TValue values, int lo, int hi,
             Comparison<TKey> comparison)
             
         {
@@ -154,17 +152,18 @@ namespace System
             int n = hi - lo + 1;
             for (int i = n / 2; i >= 1; --i)
             {
-                DownHeap(ref keys, i, n, lo, comparison);
+                DownHeap(ref keys, ref values, i, n, lo, comparison);
             }
             for (int i = n; i > 1; --i)
             {
                 Swap(ref keys, lo, lo + i - 1);
-                DownHeap(ref keys, 1, i - 1, lo, comparison);
+                Swap(ref values, lo, lo + i - 1);
+                DownHeap(ref keys, ref values, 1, i - 1, lo, comparison);
             }
         }
 
-        private static void DownHeap<TKey>(
-            ref TKey keys, int i, int n, int lo,
+        private static void DownHeap<TKey, TValue>(
+            ref TKey keys, ref TValue values, int i, int n, int lo,
             Comparison<TKey> comparison)
             
         {
@@ -174,7 +173,12 @@ namespace System
             //TKey d = keys[lo + i - 1];
             ref TKey keysAtLo = ref Unsafe.Add(ref keys, lo);
             ref TKey keysAtLoMinus1 = ref Unsafe.Add(ref keysAtLo, -1); // No Subtract??
+
+            ref TValue valuesAtLoMinus1 = ref Unsafe.Add(ref values, lo - 1);
+
             TKey d = Unsafe.Add(ref keysAtLoMinus1, i);
+            TValue dValue = Unsafe.Add(ref valuesAtLoMinus1, i);
+
             var nHalf = n / 2;
             while (i <= nHalf)
             {
@@ -193,16 +197,18 @@ namespace System
 
                 // keys[lo + i - 1] = keys[lo + child - 1]
                 Unsafe.Add(ref keysAtLoMinus1, i) = Unsafe.Add(ref keysAtLoMinus1, child);
+                Unsafe.Add(ref valuesAtLoMinus1, i) = Unsafe.Add(ref valuesAtLoMinus1, child);
 
                 i = child;
             }
             //keys[lo + i - 1] = d;
             Unsafe.Add(ref keysAtLoMinus1, i) = d;
+            Unsafe.Add(ref valuesAtLoMinus1, i) = dValue;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void InsertionSort<TKey>(
-            ref TKey keys, int lo, int hi,
+        private static void InsertionSort<TKey, TValue>(
+            ref TKey keys, ref TValue values, int lo, int hi,
             Comparison<TKey> comparison)
             
         {
@@ -217,90 +223,39 @@ namespace System
                 // TODO: Would be good to be able to update local ref here
                 if (j >= lo && comparison(t, Unsafe.Add(ref keys, j)) < 0)
                 {
+                    var v = Unsafe.Add(ref values, j + 1);
                     do
                     {
                         Unsafe.Add(ref keys, j + 1) = Unsafe.Add(ref keys, j);
+                        Unsafe.Add(ref values, j + 1) = Unsafe.Add(ref values, j);
                         --j;
                     }
                     while (j >= lo && comparison(t, Unsafe.Add(ref keys, j)) < 0);
 
                     Unsafe.Add(ref keys, j + 1) = t;
+                    Unsafe.Add(ref values, j + 1) = v;
                 }
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void Sort3<TKey>(
-            ref TKey r0, ref TKey r1, ref TKey r2,
+        private static ref TKey Sort3<TKey, TValue>(
+            ref TKey keys, ref TValue values, int i0, int i1, int i2,
             Comparison<TKey> comparison)
             
         {
-            Sort2(ref r0, ref r1, comparison);
-            Sort2(ref r0, ref r2, comparison);
-            Sort2(ref r1, ref r2, comparison);
-
-            // Below works but does not give exactly the same result as Array.Sort
-            // i.e. order could be a bit different for keys that are equal
-            //if (comparison.LessThanEqual(r0, r1)) 
-            //{
-            //    // r0 <= r1
-            //    if (comparison.LessThanEqual(r1, r2)) 
-            //    {
-            //        // r0 <= r1 <= r2
-            //        return; // Is this return good or bad for perf?
-            //    }
-            //    // r0 <= r1
-            //    // r2 < r1
-            //    else if (comparison.LessThanEqual(r0, r2)) 
-            //    {
-            //        // r0 <= r2 < r1
-            //        Swap(ref r1, ref r2);
-            //    }
-            //    // r0 <= r1
-            //    // r2 < r1
-            //    // r2 < r0
-            //    else
-            //    {
-            //        // r2 < r0 <= r1
-            //        TKey tmp = r0;
-            //        r0 = r2;
-            //        r2 = r1;
-            //        r1 = tmp;
-            //    }
-            //}
-            //else 
-            //{
-            //    // r1 < r0
-            //    if (comparison.LessThan(r2, r1)) 
-            //    {
-            //        // r2 < r1 < r0
-            //        Swap(ref r0, ref r2);
-            //    }
-            //    // r1 < r0
-            //    // r1 <= r2
-            //    else if (comparison.LessThan(r2, r0)) 
-            //    {
-            //        // r1 <= r2 < r0
-            //        TKey tmp = r0;
-            //        r0 = r1;
-            //        r1 = r2;
-            //        r2 = tmp;
-            //    }
-            //    // r1 < r0
-            //    // r1 <= r2
-            //    // r0 <= r2
-            //    else 
-            //    {
-            //        // r1 < r0 <= r2
-            //        Swap(ref r0, ref r1);
-            //    }
-            //}
+            ref var r0 = ref Unsafe.Add(ref keys, i0);
+            ref var r1 = ref Unsafe.Add(ref keys, i1);
+            ref var r2 = ref Unsafe.Add(ref keys, i2);
+            Sort2(ref r0, ref r1, comparison, ref values, i0, i1);
+            Sort2(ref r0, ref r2, comparison, ref values, i0, i2);
+            Sort2(ref r1, ref r2, comparison, ref values, i1, i2);
+            return ref r1;
         }
 
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void Sort2<TKey>(
-            ref TKey keys, int i, int j,
+        private static void Sort2<TKey, TValue>(
+            ref TKey keys, ref TValue values, int i, int j,
             Comparison<TKey> comparison)
             
         {
@@ -308,21 +263,21 @@ namespace System
 
             ref TKey a = ref Unsafe.Add(ref keys, i);
             ref TKey b = ref Unsafe.Add(ref keys, j);
-            Sort2(ref a, ref b, comparison);
+            Sort2(ref a, ref b, comparison, ref values, i, j);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void Sort2<TKey>(
-            ref TKey a, ref TKey b, Comparison<TKey> comparison)
+        private static void Sort2<TKey, TValue>(
+            ref TKey a, ref TKey b, Comparison<TKey> comparison, 
+            ref TValue values, int i, int j) 
             
         {
             // This is one of the only places GreaterThan is needed
             // but we need to preserve this due to bogus comparers or similar
             if (comparison(a, b) > 0)
             {
-                TKey temp = a;
-                a = b;
-                b = temp;
+                Swap(ref a, ref b);
+                Swap(ref values, i, j);
             }
         }
     }

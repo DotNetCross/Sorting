@@ -11,6 +11,7 @@ using System.Runtime.CompilerServices;
 
 using static System.SpanSortHelpersCommon;
 using S = System.SpanSortHelpersKeysValues;
+using SDC = System.SpanSortHelpersKeysValues_DirectComparer;
 
 namespace System
 {
@@ -27,7 +28,7 @@ namespace System
 
             // PERF: Try specialized here for optimal performance
             // Code-gen is weird unless used in loop outside
-            if (!TrySortSpecialized(
+            if (!SDC.TrySortSpecialized(
                 ref keys.DangerousGetPinnableReference(),
                 ref values.DangerousGetPinnableReference(),
                 length))
@@ -56,6 +57,21 @@ namespace System
                 length, comparer);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static void Sort<TKey, TValue>(
+            this Span<TKey> keys, Span<TValue> values, Comparison<TKey> comparison)
+        {
+            int length = keys.Length;
+            if (length != values.Length)
+                ThrowHelper.ThrowArgumentException_ItemsMustHaveSameLength();
+            if (length < 2)
+                return;
+
+            DefaultSpanSortHelper<TKey, TValue>.s_default.Sort(
+                ref keys.DangerousGetPinnableReference(),
+                ref values.DangerousGetPinnableReference(),
+                length, comparison);
+        }
 
         internal static class DefaultSpanSortHelper<TKey, TValue>
         {
@@ -82,14 +98,19 @@ namespace System
         internal interface ISpanSortHelper<TKey, TValue>
         {
             void Sort(ref TKey keys, ref TValue values, int length);
+            void Sort(ref TKey keys, ref TValue values, int length, Comparison<TKey> comparison);
         }
 
         internal class SpanSortHelper<TKey, TValue> : ISpanSortHelper<TKey, TValue>
         {
             public void Sort(ref TKey keys, ref TValue values, int length)
             {
-                S.Sort(ref keys, ref values, length,
-                    new ComparerDirectComparer<TKey, IComparer<TKey>>(Comparer<TKey>.Default));
+                S.Sort(ref keys, ref values, length, Comparer<TKey>.Default);
+            }
+
+            public void Sort(ref TKey keys, ref TValue values, int length, Comparison<TKey> comparison)
+            {
+                S.Sort(ref keys, ref values, length, comparison);
             }
         }
 
@@ -100,6 +121,13 @@ namespace System
             public void Sort(ref TKey keys, ref TValue values, int length)
             {
                 S.Sort(ref keys, ref values, length);
+            }
+
+            public void Sort(ref TKey keys, ref TValue values, int length, Comparison<TKey> comparison)
+            {
+                // TODO: Check if comparison is Comparer<TKey>.Default.Compare
+
+                S.Sort(ref keys, ref values, length, comparison);
             }
         }
 
@@ -147,13 +175,11 @@ namespace System
                 //{
                 if (typeof(TComparer) == typeof(IComparer<TKey>) && comparer == null)
                 {
-                    S.Sort(ref keys, ref values, length,
-                        new ComparerDirectComparer<TKey, IComparer<TKey>>(Comparer<TKey>.Default));
+                    S.Sort(ref keys, ref values, length, Comparer<TKey>.Default);
                 }
                 else
                 {
-                    S.Sort(ref keys, ref values, length,
-                        new ComparerDirectComparer<TKey, IComparer<TKey>>(comparer));
+                    S.Sort(ref keys, ref values, length, comparer);
                 }
                 //}
                 //catch (IndexOutOfRangeException e)
@@ -188,7 +214,7 @@ namespace System
                     (!typeof(TComparer).IsValueType &&
                      object.ReferenceEquals(comparer, Comparer<TKey>.Default))) // Or "=="?
                 {
-                    if (!S.TrySortSpecialized(ref keys, ref values, length))
+                    if (!SDC.TrySortSpecialized(ref keys, ref values, length))
                     {
                         // NOTE: For Bogus Comparable the exception message will be different, when using Comparer<TKey>.Default
                         //       Since the exception message is thrown internally without knowledge of the comparer
@@ -197,8 +223,7 @@ namespace System
                 }
                 else
                 {
-                    S.Sort(ref keys, ref values, length,
-                        new ComparerDirectComparer<TKey, TComparer>(comparer));
+                    S.Sort(ref keys, ref values, length, comparer);
                 }
                 //}
                 //catch (IndexOutOfRangeException e)
