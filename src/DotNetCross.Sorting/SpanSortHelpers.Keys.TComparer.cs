@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
@@ -13,13 +14,13 @@ using static System.SpanSortHelpersCommon;
 
 namespace System
 {
-    internal static partial class SpanSortHelpersKeys_DirectComparer
+    internal static partial class SpanSortHelpersKeys_Comparer
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static void Sort<TKey, TComparer>(
             ref TKey keys, int length,
             TComparer comparer)
-            where TComparer : IDirectComparer<TKey>
+            where TComparer : IComparer<TKey>
         {
             IntrospectiveSort(ref keys, length, comparer);
         }
@@ -27,7 +28,7 @@ namespace System
         private static void IntrospectiveSort<TKey, TComparer>(
             ref TKey keys, int length,
             TComparer comparer)
-            where TComparer : IDirectComparer<TKey>
+            where TComparer : IComparer<TKey>
         {
             var depthLimit = 2 * FloorLog2PlusOne(length);
             IntroSort(ref keys, 0, length - 1, depthLimit, comparer);
@@ -37,7 +38,7 @@ namespace System
             ref TKey keys, 
             int lo, int hi, int depthLimit,
             TComparer comparer)
-            where TComparer : IDirectComparer<TKey>
+            where TComparer : IComparer<TKey>
         {
             Debug.Assert(comparer != null);
             Debug.Assert(lo >= 0);
@@ -88,7 +89,7 @@ namespace System
         private static int PickPivotAndPartition<TKey, TComparer>(
             ref TKey keys, int lo, int hi,
             TComparer comparer)
-            where TComparer : IDirectComparer<TKey>
+            where TComparer : IComparer<TKey>
         {
             Debug.Assert(comparer != null);
             Debug.Assert(lo >= 0);
@@ -122,16 +123,14 @@ namespace System
             {
                 // TODO: Would be good to be able to update local ref here
 
-                // TODO: For primitives and internal comparers the range checks can be eliminated
-
-                while (left < (hi - 1) && comparer.LessThan(Unsafe.Add(ref keys, ++left), pivot)) ;
+                while (left < (hi - 1) && comparer.Compare(Unsafe.Add(ref keys, ++left), pivot) < 0) ;
                 // Check if bad comparable/comparer
-                if (left == (hi - 1) && comparer.LessThan(Unsafe.Add(ref keys, left), pivot))
+                if (left == (hi - 1) && comparer.Compare(Unsafe.Add(ref keys, left), pivot) < 0)
                     ThrowHelper.ThrowArgumentException_BadComparer(comparer);
 
-                while (right > lo && comparer.LessThan(pivot, Unsafe.Add(ref keys, --right))) ;
+                while (right > lo && comparer.Compare(pivot, Unsafe.Add(ref keys, --right)) < 0) ;
                 // Check if bad comparable/comparer
-                if (right == lo && comparer.LessThan(pivot, Unsafe.Add(ref keys, right)))
+                if (right == lo && comparer.Compare(pivot, Unsafe.Add(ref keys, right)) < 0)
                     ThrowHelper.ThrowArgumentException_BadComparer(comparer);
 
                 if (left >= right)
@@ -151,7 +150,7 @@ namespace System
         private static void HeapSort<TKey, TComparer>(
             ref TKey keys, int lo, int hi,
             TComparer comparer)
-            where TComparer : IDirectComparer<TKey>
+            where TComparer : IComparer<TKey>
         {
             Debug.Assert(comparer != null);
             Debug.Assert(lo >= 0);
@@ -172,7 +171,7 @@ namespace System
         private static void DownHeap<TKey, TComparer>(
             ref TKey keys, int i, int n, int lo,
             TComparer comparer)
-            where TComparer : IDirectComparer<TKey>
+            where TComparer : IComparer<TKey>
         {
             Debug.Assert(comparer != null);
             Debug.Assert(lo >= 0);
@@ -188,13 +187,13 @@ namespace System
 
                 //if (child < n && comparer(keys[lo + child - 1], keys[lo + child]) < 0)
                 if (child < n &&
-                    comparer.LessThan(Unsafe.Add(ref keysAtLoMinus1, child), Unsafe.Add(ref keysAtLo, child)))
+                    comparer.Compare(Unsafe.Add(ref keysAtLoMinus1, child), Unsafe.Add(ref keysAtLo, child)) < 0)
                 {
                     ++child;
                 }
 
                 //if (!(comparer(d, keys[lo + child - 1]) < 0))
-                if (!(comparer.LessThan(d, Unsafe.Add(ref keysAtLoMinus1, child))))
+                if (!(comparer.Compare(d, Unsafe.Add(ref keysAtLoMinus1, child)) < 0))
                     break;
 
                 // keys[lo + i - 1] = keys[lo + child - 1]
@@ -210,7 +209,7 @@ namespace System
         private static void InsertionSort<TKey, TComparer>(
             ref TKey keys, int lo, int hi,
             TComparer comparer)
-            where TComparer : IDirectComparer<TKey>
+            where TComparer : IComparer<TKey>
         {
             Debug.Assert(lo >= 0);
             Debug.Assert(hi >= lo);
@@ -221,14 +220,14 @@ namespace System
                 //t = keys[i + 1];
                 var t = Unsafe.Add(ref keys, j + 1);
                 // TODO: Would be good to be able to update local ref here
-                if (j >= lo && comparer.LessThan(t, Unsafe.Add(ref keys, j)))
+                if (j >= lo && comparer.Compare(t, Unsafe.Add(ref keys, j)) < 0)
                 {
                     do
                     {
                         Unsafe.Add(ref keys, j + 1) = Unsafe.Add(ref keys, j);
                         --j;
                     }
-                    while (j >= lo && comparer.LessThan(t, Unsafe.Add(ref keys, j)));
+                    while (j >= lo && comparer.Compare(t, Unsafe.Add(ref keys, j)) < 0);
 
                     Unsafe.Add(ref keys, j + 1) = t;
                 }
@@ -239,7 +238,7 @@ namespace System
         private static void Sort3<TKey, TComparer>(
             ref TKey r0, ref TKey r1, ref TKey r2,
             TComparer comparer)
-            where TComparer : IDirectComparer<TKey>
+            where TComparer : IComparer<TKey>
         {
             Sort2(ref r0, ref r1, comparer);
             Sort2(ref r0, ref r2, comparer);
@@ -308,7 +307,7 @@ namespace System
         private static void Sort2<TKey, TComparer>(
             ref TKey keys, int i, int j,
             TComparer comparer)
-            where TComparer : IDirectComparer<TKey>
+            where TComparer : IComparer<TKey>
         {
             Debug.Assert(i != j);
 
@@ -320,11 +319,11 @@ namespace System
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void Sort2<TKey, TComparer>(
             ref TKey a, ref TKey b, TComparer comparer)
-            where TComparer : IDirectComparer<TKey>
+            where TComparer : IComparer<TKey>
         {
             // This is one of the only places GreaterThan is needed
             // but we need to preserve this due to bogus comparers or similar
-            if (comparer.GreaterThan(a, b))
+            if (comparer.Compare(a, b) > 0)
             {
                 TKey temp = a;
                 a = b;
