@@ -85,7 +85,20 @@ namespace System.SpanTests
             Assert.Throws<ArgumentNullException>(() => new Span<int>(new int[] { }).Sort((Comparison<int>)null));
             Assert.Throws<ArgumentNullException>(() => new Span<string>(new string[] { }).Sort((Comparison<string>)null));
         }
-
+        // 153  169 - HeapSort
+        // Array - Before
+        // "81, 83, 82, 81, 80, 79, 78, 77, 76, 82, 83, 84, 76, 77, 78, 79, 80"
+        // "412, 154, 155, 156, 157, 158, 159, 160, 161, 411, 410, 409, 417, 416, 415, 414, 413"
+        // Array - After
+        // "76, 76, 77, 77, 78, 78, 79, 79, 80, 80, 81, 81, 82, 82, 83, 83, 84"
+        // "161, 417, 416, 160, 415, 159, 158, 414, 157, 413, 412, 156, 155, 411, 154, 410, 409"
+        //
+        // Span - Before
+        // "81, 83, 82, 81, 80, 79, 78, 77, 76, 82, 83, 84, 76, 77, 78, 79, 80"
+        // "412, 154, 155, 156, 157, 158, 159, 160, 161, 411, 410, 409, 417, 416, 415, 414, 413"
+        // Span - After 
+        // "76, 76, 77, 77, 78, 78, 79, 79, 80, 80, 81, 81, 82, 82, 83, 83, 84"
+        // "417, 161, 416, 160, 159, 415, 158, 414, 157, 413, 412, 156, 155, 411, 410, 154, 409"
         [Fact]
         [Trait(SortTrait, SortTraitValue)]
         public static void Sort_KeysValues_UInt8_Int32_PatternWithRepeatedKeys_ArraySort_DifferentOutputs()
@@ -100,16 +113,27 @@ namespace System.SpanTests
             Array.Sort(arraySortKeysNoComparer, arraySortValuesNoComparer);
             var arraySortKeysComparer = (byte[])keys.Clone();
             var arraySortValuesComparer = (int[])values.Clone();
-            Array.Sort(arraySortKeysComparer, arraySortValuesComparer, new StructCustomComparer<byte>());
+            //Array.Sort(arraySortKeysComparer, arraySortValuesComparer, new StructCustomComparer<byte>());
             // Keys are the same
-            Assert.Equal(arraySortKeysNoComparer, arraySortKeysComparer);
+            //Assert.Equal(arraySortKeysNoComparer, arraySortKeysComparer);
             // Values are **not** the same, for same keys they are sometimes swapped
-            Assert.Equal(arraySortValuesNoComparer, arraySortValuesComparer);
+            //Assert.Equal(arraySortValuesNoComparer, arraySortValuesComparer);
 
             // The problem only seems to occur when HeapSort is used, so length has to be a certain minimum size
             // Although the depth limit of course is dynamic, but we need to be bigger than some multiple of 16 due to insertion sort
 
-            // Span sort on the underhand gives the same result, but then is in disagreement with Array.Sort
+            var keysClone = (byte[])keys.Clone();
+            var valuesClone = (int[])values.Clone();
+            var keysSpan = new Span<byte>(keysClone);
+            var valuesSpan = new Span<int>(valuesClone);
+            keysSpan.Sort(valuesSpan);
+            //Assert.Equal(arraySortKeysComparer, keysClone);
+            //Assert.Equal(arraySortValuesComparer, valuesClone);
+            Assert.Equal(arraySortKeysNoComparer, keysClone);
+            Assert.Equal(arraySortValuesNoComparer, valuesClone);
+            
+
+            // Span sort on the other hand gives the same result, but then is in disagreement with Array.Sort
             var keysSegment = new ArraySegment<byte>(keys);
             var valuesSegment = new ArraySegment<int>(values);
             TestSort(keysSegment, valuesSegment); // Array.Sort gives a different result here, than the other two, specifically for two equal keys, the values are swapped
