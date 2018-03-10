@@ -22,6 +22,22 @@ namespace DotNetCross.Sorting.Tests
         // "161, 417, 416, 160, 415, 159, 414, 158, 413, 157, 156, 412, 411, 155, 410, 154, 409"
 
         // "161, 417, 416, 160, 415, 159, 414, 158, 413, 157, 156, 412, 411, 155, 410, 154, 409"
+
+        // 191 207 (offset 2, so 193 209)
+        // k 0 v 512
+        //byte[] Keys02() => new byte[] { 102, 103, 95, 101, 100, 99, 98, 97, 96, 97, 96, 98, 103, 102, 101, 100, 99 };
+        //int[] Values02() => new int[] { 410, 409, 161, 411, 412, 413, 414, 415, 160, 159, 416, 158, 153, 154, 155, 156, 157 };
+
+        //byte[] ExpectedKeys02() => new byte[] { 95, 96, 96, 97, 97, 98, 98, 99, 99, 100, 100, 101, 101, 102, 102, 103, 103 };
+        //int[] ExpectedValues02() => new int[] { 161, 160, 416, 159, 415, 158, 414, 157, 413, 412, 156, 155, 411, 154, 410, 153, 409 };
+
+        // 116 133 (offset 2, so 118 135)
+        byte[] Keys02() => new byte[] { 62, 61, 60, 59, 58, 66, 64, 64, 63, 62, 61, 60, 59, 65, 58, 66, 63, 65 };
+        int[] Values02() => new int[] { 194, 195, 196, 197, 198, 446, 192, 448, 449, 450, 451, 452, 453, 191, 454, 190, 193, 447 };
+
+        byte[] ExpectedKeys02() => new byte[] { 58, 58, 59, 59, 60, 60, 61, 61, 62, 62, 63, 63, 64, 64, 65, 65, 66, 66 };
+        int[] ExpectedValues02() => new int[] { 454, 198, 197, 453, 452, 196, 195, 451, 450, 194, 449, 193, 192, 448, 191, 447, 446, 190 };
+
         [Fact]
         public void ArrayTest()
         {
@@ -40,6 +56,26 @@ namespace DotNetCross.Sorting.Tests
             HeapSort(ref keys[0], ref values[0], 0, keys.Length - 1);
             Assert.Equal(ExpectedKeys(), keys);
             Assert.Equal(ExpectedValues(), values);
+        }
+
+        [Fact]
+        public void ArrayTest02()
+        {
+            var keys = Keys02();
+            var values = Values02();
+            Heapsort(keys, values, 0, keys.Length - 1);
+            Assert.Equal(ExpectedKeys02(), keys);
+            Assert.Equal(ExpectedValues02(), values);
+        }
+
+        [Fact]
+        public void SpanTest02()
+        {
+            var keys = Keys02();
+            var values = Values02();
+            HeapSort(ref keys[0], ref values[0], 0, keys.Length - 1);
+            Assert.Equal(ExpectedKeys02(), keys);
+            Assert.Equal(ExpectedValues02(), values);
         }
 
         private static void Heapsort<TKey, TValue>(TKey[] keys, TValue[] values, int lo, int hi)
@@ -131,8 +167,8 @@ namespace DotNetCross.Sorting.Tests
         }
 
         private static void DownHeap<TKey, TValue>(
-            ref TKey keys, ref TValue values, int i, int n, int lo)
-            where TKey : IComparable<TKey>
+    ref TKey keys, ref TValue values, int i, int n, int lo)
+    where TKey : IComparable<TKey>
         {
 
             Debug.Assert(lo >= 0);
@@ -161,7 +197,7 @@ namespace DotNetCross.Sorting.Tests
 
                 //if (keys[lo + child - 1] == null || keys[lo + child - 1].CompareTo(d) < 0)
                 if (Unsafe.Add(ref keysAtLoMinus1, child) == null ||
-                    !(d.CompareTo(Unsafe.Add(ref keysAtLoMinus1, child)) < 0))
+                    Unsafe.Add(ref keysAtLoMinus1, child).CompareTo(d) < 0)
                     break;
 
                 // keys[lo + i - 1] = keys[lo + child - 1]
@@ -174,6 +210,50 @@ namespace DotNetCross.Sorting.Tests
             Unsafe.Add(ref keysAtLoMinus1, i) = d;
             Unsafe.Add(ref valuesAtLoMinus1, i) = dValue;
         }
+
+        //private static void DownHeap<TKey, TValue>(
+        //    ref TKey keys, ref TValue values, int i, int n, int lo)
+        //    where TKey : IComparable<TKey>
+        //{
+
+        //    Debug.Assert(lo >= 0);
+
+        //    //TKey d = keys[lo + i - 1];
+        //    //ref TKey keysAtLo = ref Unsafe.Add(ref keys, lo);
+        //    //ref TKey keysAtLoMinus1 = ref Unsafe.Add(ref keysAtLo, -1); // No Subtract??
+
+        //    //ref TValue valuesAtLoMinus1 = ref Unsafe.Add(ref values, lo - 1);
+
+        //    TKey d = Unsafe.Add(ref keys, lo + i - 1);
+        //    TValue dValue = Unsafe.Add(ref values, lo + i - 1);
+
+        //    while (i <= n / 2)
+        //    {
+        //        int child = 2 * i;
+
+        //        //if (child < n && (keys[lo + child - 1] == null || keys[lo + child - 1].CompareTo(keys[lo + child]) < 0))
+        //        if (child < n &&
+        //            (Unsafe.Add(ref keys, lo + child - 1) == null ||
+        //             Unsafe.Add(ref keys, lo + child - 1).CompareTo(Unsafe.Add(ref keys, lo + child)) < 0))
+        //        {
+        //            ++child;
+        //        }
+
+        //        //if (keys[lo + child - 1] == null || keys[lo + child - 1].CompareTo(d) < 0)
+        //        if (Unsafe.Add(ref keys, lo + child - 1) == null ||
+        //            Unsafe.Add(ref keys, lo + child - 1).CompareTo(d) < 0)
+        //            break;
+
+        //        // keys[lo + i - 1] = keys[lo + child - 1]
+        //        Unsafe.Add(ref keys, lo + i - 1) = Unsafe.Add(ref keys, lo + child - 1);
+        //        Unsafe.Add(ref values, lo + i - 1) = Unsafe.Add(ref values, lo + child - 1);
+
+        //        i = child;
+        //    }
+        //    //keys[lo + i - 1] = d;
+        //    Unsafe.Add(ref keys, lo + i - 1) = d;
+        //    Unsafe.Add(ref values, lo + i - 1) = dValue;
+        //}
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static void Swap<T>(ref T items, int i, int j)

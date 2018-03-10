@@ -196,6 +196,7 @@ namespace System
 
                 //if (!(comparer(d, keys[lo + child - 1]) < 0))
                 if (!(comparer.LessThan(d, Unsafe.Add(ref keysAtLoMinus1, child))))
+                //if (comparer.LessThan(Unsafe.Add(ref keysAtLoMinus1, child), d))
                     break;
 
                 // keys[lo + i - 1] = keys[lo + child - 1]
