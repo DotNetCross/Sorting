@@ -33,12 +33,12 @@
 //            // PERF: Try specialized here for optimal performance
 //            // Code-gen is weird unless used in loop outside
 //            if (!TrySortSpecialized(
-//                ref keys.DangerousGetPinnableReference(), length))
+//                ref MemoryMarshal.GetReference(keys), length))
 //            {
 //                Span<Void> values = default;
 //                DefaultSpanSortHelper<TKey, Void>.s_default.Sort(
-//                    ref keys.DangerousGetPinnableReference(),
-//                    ref values.DangerousGetPinnableReference(),
+//                    ref MemoryMarshal.GetReference(keys),
+//                    ref MemoryMarshal.GetReference(values),
 //                    length);
 //            }
 //        }
@@ -54,8 +54,8 @@
 
 //            Span<Void> values = default;
 //            DefaultSpanSortHelper<TKey, Void, TComparer>.s_default.Sort(
-//                ref keys.DangerousGetPinnableReference(),
-//                ref values.DangerousGetPinnableReference(),
+//                ref MemoryMarshal.GetReference(keys),
+//                ref MemoryMarshal.GetReference(values),
 //                length, comparer);
 //        }
 
@@ -71,13 +71,13 @@
 //            // PERF: Try specialized here for optimal performance
 //            // Code-gen is weird unless used in loop outside
 //            if (!TrySortSpecializedWithValues(
-//                ref keys.DangerousGetPinnableReference(),
-//                ref values.DangerousGetPinnableReference(),
+//                ref MemoryMarshal.GetReference(keys),
+//                ref MemoryMarshal.GetReference(values),
 //                length))
 //            {
 //                DefaultSpanSortHelper<TKey, TValue>.s_default.Sort(
-//                    ref keys.DangerousGetPinnableReference(),
-//                    ref values.DangerousGetPinnableReference(),
+//                    ref MemoryMarshal.GetReference(keys),
+//                    ref MemoryMarshal.GetReference(values),
 //                    keys.Length);
 //            }
 //        }
@@ -94,8 +94,8 @@
 //                return;
 
 //            DefaultSpanSortHelper<TKey, TValue, TComparer>.s_default.Sort(
-//                ref keys.DangerousGetPinnableReference(),
-//                ref values.DangerousGetPinnableReference(),
+//                ref MemoryMarshal.GetReference(keys),
+//                ref MemoryMarshal.GetReference(values),
 //                keys.Length, comparer);
 //        }
 

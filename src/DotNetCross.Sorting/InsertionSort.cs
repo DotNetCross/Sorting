@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace DotNetCross.Sorting
 {
@@ -10,7 +11,7 @@ namespace DotNetCross.Sorting
            where TComparer : IComparer<T>
         {
             int s = 0;
-            Sort(ref span.DangerousGetPinnableReference(), span.Length, comparer, ref s);
+            Sort(ref MemoryMarshal.GetReference(span), span.Length, comparer, ref s);
         }
 
         // TODO: Extend to IntPtr length(s)

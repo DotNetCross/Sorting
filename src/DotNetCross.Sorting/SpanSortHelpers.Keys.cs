@@ -4,6 +4,7 @@
 
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 //#if !netstandard
 //using Internal.Runtime.CompilerServices;
@@ -28,11 +29,11 @@ namespace System
             // PERF: Try specialized here for optimal performance
             // Code-gen is weird unless used in loop outside
             if (!SDC.TrySortSpecialized(
-                ref keys.DangerousGetPinnableReference(),
+                ref MemoryMarshal.GetReference(keys),
                 length))
             {
                 DefaultSpanSortHelper<TKey>.s_default.Sort(
-                    ref keys.DangerousGetPinnableReference(),
+                    ref MemoryMarshal.GetReference(keys),
                     length);
             }
         }
@@ -47,7 +48,7 @@ namespace System
                 return;
 
             DefaultSpanSortHelper<TKey, TComparer>.s_default.Sort(
-                ref keys.DangerousGetPinnableReference(),
+                ref MemoryMarshal.GetReference(keys),
                 length, comparer);
         }
 
@@ -60,7 +61,7 @@ namespace System
                 return;
 
             DefaultSpanSortHelper<TKey>.s_default.Sort(
-                ref keys.DangerousGetPinnableReference(),
+                ref MemoryMarshal.GetReference(keys),
                 length, comparison);
         }
 
