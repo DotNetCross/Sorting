@@ -155,6 +155,7 @@ namespace System.SpanTests
             var keysSegment = new ArraySegment<byte>(keys, offset, count);
             var valuesSegment = new ArraySegment<int>(values, offset, count);
             // Array.Sort gives a different result here, this is due to difference in depth limit, and hence Span calls HeapSort, Array does not
+            // HACK: In this method ensure Array.Sort is never called with an actual segment and thus this test passes
             TestSort(keysSegment, valuesSegment); 
         }
 
@@ -1002,7 +1003,26 @@ namespace System.SpanTests
             Assert.Equal(expectedKeys.Count, expectedValues.Count);
 
             var expectedException = RunAndCatchException(() =>
-                Array.Sort(expectedKeys.Array, expectedValues.Array, expectedKeys.Offset, expectedKeys.Count));
+            {
+                if (expectedKeys.Offset == 0 && expectedKeys.Count == expectedKeys.Array.Length)
+                {
+                    Array.Sort(expectedKeys.Array, expectedValues.Array, expectedKeys.Offset, expectedKeys.Count);
+                }
+                else
+                {
+                    // HACK: To avoid the fact that .net core Array.Sort still computes
+                    //       the depth limit incorrectly, see https://github.com/dotnet/coreclr/pull/16002
+                    //       This can result in Array.Sort NOT calling HeapSort when Span does.
+                    //       And then values for identical keys may be sorted differently.
+                    Span<TKey> ks = expectedKeys;
+                    Span<TValue> vs = expectedValues;
+                    var noSegmentKeys = ks.ToArray();
+                    var noSegmentValues = vs.ToArray();
+                    Array.Sort(noSegmentKeys, noSegmentValues);
+                    new Span<TKey>(noSegmentKeys).CopyTo(ks);
+                    new Span<TValue>(noSegmentValues).CopyTo(vs);
+                }
+            });
 
             var actualException = RunAndCatchException(() =>
             {
