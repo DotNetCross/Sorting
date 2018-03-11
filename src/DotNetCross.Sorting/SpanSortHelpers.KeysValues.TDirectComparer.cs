@@ -115,17 +115,10 @@ namespace System
             {
                 // TODO: Would be good to be able to update local ref here
 
-                // TODO: For primitives and internal comparers the range checks can be eliminated
-
-                while (left < (hi - 1) && comparer.LessThan(Unsafe.Add(ref keys, ++left), pivot)) ;
-                // Check if bad comparable/comparer
-                if (left == (hi - 1) && comparer.LessThan(Unsafe.Add(ref keys, left), pivot))
-                    ThrowHelper.ThrowArgumentException_BadComparer(comparer);
-
-                while (right > lo && comparer.LessThan(pivot, Unsafe.Add(ref keys, --right))) ;
-                // Check if bad comparable/comparer
-                if (right == lo && comparer.LessThan(pivot, Unsafe.Add(ref keys, right)))
-                    ThrowHelper.ThrowArgumentException_BadComparer(comparer);
+                // PERF: For internal direct comparers the range checks are not needed
+                //       since we know they cannot be bogus i.e. pass the pivot without being false.
+                while (comparer.LessThan(Unsafe.Add(ref keys, ++left), pivot)) ;
+                while (comparer.LessThan(pivot, Unsafe.Add(ref keys, --right))) ;
 
                 if (left >= right)
                     break;
