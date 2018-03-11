@@ -78,6 +78,13 @@ namespace DotNetCross.Sorting.Benchmarks
                    SpanFillers.Default, i => i, i => i)
         { }
     }
+    public class SingleSingleSortBench : SortBench<float, float>
+    {
+        public SingleSingleSortBench()
+            : base(maxLength: 2000000, new[] { 2, 3, 10, 100, 10000, 1000000 },
+                   SpanFillers.Default, i => i, i => i)
+        { }
+    }
     public class Int32StringSortBench : SortBench<int, string>
     {
         public Int32StringSortBench()
@@ -198,6 +205,7 @@ namespace DotNetCross.Sorting.Benchmarks
                 BenchmarkRunner.Run<Int32Int32SortBench>();
                 BenchmarkRunner.Run<Int32SingleSortBench>();
                 BenchmarkRunner.Run<SingleInt32SortBench>();
+                BenchmarkRunner.Run<SingleSingleSortBench>();
                 BenchmarkRunner.Run<Int32StringSortBench>();
                 BenchmarkRunner.Run<StringInt32SortBench>();
                 BenchmarkRunner.Run<ComparableClassInt32Int32SortBench>();
