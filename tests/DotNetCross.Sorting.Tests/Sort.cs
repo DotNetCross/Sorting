@@ -176,6 +176,24 @@ namespace System.SpanTests
             TestSort(keysSegment, valuesSegment);
         }
 
+        [Fact]
+        [Trait(SortTrait, SortTraitValue)]
+        public static void Sort_KeysValues_BogusComparable_Int32_PatternWithRepeatedKeys_ArraySort_DifferentOutputs()
+        {
+            var keysInt32 = new int[] { -825307442, -825307442, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, -825307442, -825307442 };
+            var keys = keysInt32.Select(k => new BogusComparable(k)).ToArray();
+            var values = Enumerable.Range(0, keys.Length).ToArray();
+            var offset = 2;
+            var count = 17;
+
+            var keysSegment = new ArraySegment<BogusComparable>(keys, offset, count);
+            var valuesSegment = new ArraySegment<int>(values, offset, count);
+            // Array.Sort gives a different result here, this is due to difference in depth limit, and hence Span calls HeapSort, Array does not
+            
+            TestSort(keysSegment, valuesSegment);
+        }
+
+
         // Array message for bogus comparer:
         // System.ArgumentException : Unable to sort because the IComparer.Compare() method returns inconsistent results. Either a value does not compare equal to itself, or one value repeatedly compared to another value yields different results.IComparer: ''.
 
@@ -1018,9 +1036,15 @@ namespace System.SpanTests
                     Span<TValue> vs = expectedValues;
                     var noSegmentKeys = ks.ToArray();
                     var noSegmentValues = vs.ToArray();
-                    Array.Sort(noSegmentKeys, noSegmentValues);
-                    new Span<TKey>(noSegmentKeys).CopyTo(ks);
-                    new Span<TValue>(noSegmentValues).CopyTo(vs);
+                    try
+                    {
+                        Array.Sort(noSegmentKeys, noSegmentValues);
+                    }
+                    finally
+                    {
+                        new Span<TKey>(noSegmentKeys).CopyTo(ks);
+                        new Span<TValue>(noSegmentValues).CopyTo(vs);
+                    }
                 }
             });
 
@@ -1288,6 +1312,10 @@ namespace System.SpanTests
             {
                 return this.Value.CompareTo(other.Value);
             }
+
+            public override int GetHashCode() => Value.GetHashCode();
+
+            public override string ToString() => $"ComparableStruct {Value}";
         }
 
         public class ComparableClassInt32 : IComparable<ComparableClassInt32>
@@ -1303,6 +1331,10 @@ namespace System.SpanTests
             {
                 return other != null ? Value.CompareTo(other.Value) : 1;
             }
+
+            public override int GetHashCode() => Value.GetHashCode();
+
+            public override string ToString() => $"ComparableClass {Value}";
         }
 
         public class BogusComparable
@@ -1324,6 +1356,10 @@ namespace System.SpanTests
                     return false;
                 return Value.Equals(other.Value);
             }
+
+            public override int GetHashCode() => Value.GetHashCode();
+
+            public override string ToString() => $"Bogus {Value}";
         }
 
         public struct ValueIdStruct : IComparable<ValueIdStruct>, IEquatable<ValueIdStruct>
