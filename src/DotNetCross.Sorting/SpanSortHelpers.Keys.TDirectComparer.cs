@@ -127,16 +127,6 @@ namespace System
                 while (comparer.LessThan(Unsafe.Add(ref keys, ++left), pivot)) ;
                 while (comparer.LessThan(pivot, Unsafe.Add(ref keys, --right))) ;
 
-                //while (left < (hi - 1) && comparer.LessThan(Unsafe.Add(ref keys, ++left), pivot)) ;
-                //// Check if bad comparable/comparer
-                //if (left == (hi - 1) && comparer.LessThan(Unsafe.Add(ref keys, left), pivot))
-                //    ThrowHelper.ThrowArgumentException_BadComparer(comparer);
-                //
-                //while (right > lo && comparer.LessThan(pivot, Unsafe.Add(ref keys, --right))) ;
-                //// Check if bad comparable/comparer
-                //if (right == lo && comparer.LessThan(pivot, Unsafe.Add(ref keys, right)))
-                //    ThrowHelper.ThrowArgumentException_BadComparer(comparer);
-
                 if (left >= right)
                     break;
 
