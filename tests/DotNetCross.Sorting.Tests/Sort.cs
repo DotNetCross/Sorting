@@ -80,10 +80,24 @@ namespace System.SpanTests
 
         [Fact]
         [Trait(SortTrait, SortTraitValue)]
-        public static void Sort_NullComparisonThrows()
+        public static void Sort_Keys_NullComparisonThrows()
         {
-            Assert.Throws<ArgumentNullException>(() => new Span<int>(new int[] { }).Sort((Comparison<int>)null));
-            Assert.Throws<ArgumentNullException>(() => new Span<string>(new string[] { }).Sort((Comparison<string>)null));
+            Assert.Throws<ArgumentNullException>(() => 
+                new Span<int>(new int[] { }).Sort((Comparison<int>)null));
+
+            Assert.Throws<ArgumentNullException>(() => 
+                new Span<string>(new string[] { }).Sort((Comparison<string>)null));
+        }
+
+        [Fact]
+        [Trait(SortTrait, SortTraitValue)]
+        public static void Sort_KeysValues_NullComparisonThrows()
+        {
+            Assert.Throws<ArgumentNullException>(() => 
+                new Span<int>(new int[] { }).Sort(new Span<int>(), (Comparison<int>)null));
+
+            Assert.Throws<ArgumentNullException>(() => 
+                new Span<string>(new string[] { }).Sort(new Span<int>(), (Comparison<string>)null));
         }
 
         [Fact]
@@ -844,8 +858,7 @@ namespace System.SpanTests
             TestSort(keys, Comparer<TKey>.Default.Compare);
             TestSort(keys, new CustomComparer<TKey>());
             TestSort(keys, (IComparer<TKey>)null);
-            // TODO: Should results for a bogus comparer be identical? They are not currently
-            //TestSort(keys, new BogusComparer<TKey>());
+            TestSort(keys, new BogusComparer<TKey>());
         }
         static void TestSort<TKey>(
             ArraySegment<TKey> keysToSort)
@@ -978,8 +991,7 @@ namespace System.SpanTests
             TestSort(keys, values, Comparer<TKey>.Default.Compare);
             TestSort(keys, values, new CustomComparer<TKey>());
             TestSort(keys, values, (IComparer<TKey>)null);
-            // TODO: Should results for a bogus comparer be identical? They are not currently
-            //TestSort(keys, values, new BogusComparer<TKey>());
+            TestSort(keys, values, new BogusComparer<TKey>());
         }
         static void TestSort<TKey, TValue>(
             ArraySegment<TKey> keysToSort, ArraySegment<TValue> valuesToSort)

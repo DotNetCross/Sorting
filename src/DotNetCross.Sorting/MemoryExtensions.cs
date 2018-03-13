@@ -198,7 +198,6 @@ namespace System
         /// <exception cref = "InvalidOperationException"> 
         /// One or more elements do not implement the <see cref="IComparable" /> interface.
         /// </exception>
-        // TODO: Revise exception list, if we do not try/catch
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Sort<T>(this Span<T> span)
         {
