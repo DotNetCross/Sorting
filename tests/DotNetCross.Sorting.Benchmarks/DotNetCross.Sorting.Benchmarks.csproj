@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -11,11 +11,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="BenchmarkDotNet" Version="0.10.13" />
-    <PackageReference Include="BenchmarkDotNet.Core" Version="0.10.13" />
-    <PackageReference Include="BenchmarkDotNet.Diagnostics.Windows" Version="0.10.13" />
-    <PackageReference Include="BenchmarkDotNet.Toolchains.Roslyn" Version="0.10.13" />
-    <PackageReference Include="System.Memory" Version="4.5.0-preview1-26216-02" />
+    <PackageReference Include="BenchmarkDotNet" Version="0.11.3" />
+    <PackageReference Include="BenchmarkDotNet.Diagnostics.Windows" Version="0.11.3" />
+    <PackageReference Include="System.Memory" Version="4.5.1" />
   </ItemGroup>
 
   <ItemGroup>

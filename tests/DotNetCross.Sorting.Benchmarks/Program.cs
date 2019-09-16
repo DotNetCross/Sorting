@@ -197,6 +197,7 @@ namespace DotNetCross.Sorting.Benchmarks
             {
                 // TKey benchs
                 BenchmarkRunner.Run<Int32SortBench>();
+                return;
                 BenchmarkRunner.Run<SingleSortBench>();
                 BenchmarkRunner.Run<ComparableStructInt32SortBench>();
                 BenchmarkRunner.Run<ComparableClassInt32SortBench>();
