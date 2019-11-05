@@ -14,7 +14,7 @@ namespace DotNetCross.Sorting.Benchmarks
     {
         static readonly ClassComparableComparer<TKey> _classComparer = new ClassComparableComparer<TKey>();
         readonly int _maxLength;
-        readonly SpanFillerParam[] _paramFillers;
+        readonly ISpanFiller[] _fillers;
         readonly Func<int, TKey> _toValue;
         readonly TKey[] _filled;
         readonly TKey[] _work;
@@ -23,16 +23,16 @@ namespace DotNetCross.Sorting.Benchmarks
         {
             _maxLength = maxLength;
             Lengths = sliceLengths;
-            _paramFillers = fillers.Select(f => new SpanFillerParam(f)).ToArray();
+            _fillers = fillers;
             _toValue = toValue;
             _filled = new TKey[_maxLength];
             _work = new TKey[_maxLength];
         }
 
         [ParamsSource(nameof(Fillers))]
-        public SpanFillerParam Filler { get; set; }
+        public ISpanFiller Filler { get; set; }
 
-        public IEnumerable<SpanFillerParam> Fillers() => _paramFillers;
+        public IEnumerable<ISpanFiller> Fillers() => _fillers;
 
         [ParamsSource(nameof(Lengths))]
         public int Length { get; set; }
@@ -43,7 +43,7 @@ namespace DotNetCross.Sorting.Benchmarks
         public void GlobalSetup()
         {
             Console.WriteLine($"// {nameof(GlobalSetup)} Filling {_maxLength} with {Filler.GetType().Name} for {Length} slice run");
-            Filler.Value.Fill(_filled, Length, _toValue);
+            Filler.Fill(_filled, Length, _toValue);
         }
 
         [IterationSetup]
