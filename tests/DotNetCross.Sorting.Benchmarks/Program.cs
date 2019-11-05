@@ -236,7 +236,7 @@ namespace DotNetCross.Sorting.Benchmarks
             {
                 var sut = new ComparableClassInt32SortBench();
                 //var sut = new StringSortBench();
-                sut.Filler = new RandomSpanFiller(SpanFillers.RandomSeed);
+                sut.Filler = new SpanFillerParam(new RandomSpanFiller(SpanFillers.RandomSeed));
                 sut.Length = 1000; // 1000000;
                 sut.GlobalSetup();
                 sut.IterationSetup();

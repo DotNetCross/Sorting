@@ -13,7 +13,7 @@ namespace DotNetCross.Sorting.Benchmarks
         where TKey : IComparable<TKey>
     {
         readonly int _maxLength;
-        readonly IParam[] _paramFillers;
+        readonly SpanFillerParam[] _paramFillers;
         readonly Func<int, TKey> _toKey;
         readonly TKey[] _filled;
         readonly TKey[] _work;
@@ -36,9 +36,9 @@ namespace DotNetCross.Sorting.Benchmarks
         }
 
         [ParamsSource(nameof(Fillers))]
-        public ISpanFiller Filler { get; set; }
+        public SpanFillerParam Filler { get; set; }
 
-        public IEnumerable<IParam> Fillers() => _paramFillers;
+        public IEnumerable<SpanFillerParam> Fillers() => _paramFillers;
 
         [ParamsSource(nameof(Lengths))]
         public int Length { get; set; }
@@ -50,7 +50,7 @@ namespace DotNetCross.Sorting.Benchmarks
         public void GlobalSetup()
         {
             Console.WriteLine($"// {nameof(GlobalSetup)} Filling {_maxLength} with {Filler.GetType().Name} for {Length} slice run");
-            Filler.Fill(_filled, Length, _toKey);
+            Filler.Value.Fill(_filled, Length, _toKey);
             new IncrementingSpanFiller().Fill(_filledValues, Length, _toValue);
         }
 
