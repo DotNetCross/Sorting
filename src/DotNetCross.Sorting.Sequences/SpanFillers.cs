@@ -6,7 +6,16 @@ namespace DotNetCross.Sorting.Sequences
     {
         void Fill<T>(Span<T> span, int sliceLength, Func<int, T> toValue);
     }
-    public class ConstantSpanFiller : ISpanFiller
+
+    public abstract class SpanFillerBase : ISpanFiller
+    {
+        public abstract void Fill<T>(Span<T> span, int sliceLength, Func<int, T> toValue);
+
+        public override string ToString() => 
+            $"{this.GetType().Name.Replace("SpanFiller", "")}";
+    }
+
+    public class ConstantSpanFiller : SpanFillerBase
     {
         readonly int _fill;
 
@@ -15,14 +24,14 @@ namespace DotNetCross.Sorting.Sequences
             _fill = fill;
         }
 
-        public void Fill<T>(Span<T> span, int sliceLength, Func<int, T> toValue)
+        public override void Fill<T>(Span<T> span, int sliceLength, Func<int, T> toValue)
         {
             span.Fill(toValue(_fill));
         }
     }
-    public class DecrementingSpanFiller : ISpanFiller
+    public class DecrementingSpanFiller : SpanFillerBase
     {
-        public void Fill<T>(Span<T> span, int sliceLength, Func<int, T> toValue)
+        public override void Fill<T>(Span<T> span, int sliceLength, Func<int, T> toValue)
         {
             DecrementingFill(span, toValue);
         }
@@ -35,7 +44,7 @@ namespace DotNetCross.Sorting.Sequences
             }
         }
     }
-    public class ModuloDecrementingSpanFiller : ISpanFiller
+    public class ModuloDecrementingSpanFiller : SpanFillerBase
     {
         readonly int _modulo;
 
@@ -44,7 +53,7 @@ namespace DotNetCross.Sorting.Sequences
             _modulo = modulo;
         }
 
-        public void Fill<T>(Span<T> span, int sliceLength, Func<int, T> toValue)
+        public override void Fill<T>(Span<T> span, int sliceLength, Func<int, T> toValue)
         {
             ModuloFill(span, _modulo, toValue);
         }
@@ -58,9 +67,9 @@ namespace DotNetCross.Sorting.Sequences
             }
         }
     }
-    public class IncrementingSpanFiller : ISpanFiller
+    public class IncrementingSpanFiller : SpanFillerBase
     {
-        public void Fill<T>(Span<T> span, int sliceLength, Func<int, T> toValue)
+        public override void Fill<T>(Span<T> span, int sliceLength, Func<int, T> toValue)
         {
             IncrementingFill(span, toValue);
         }
@@ -73,9 +82,9 @@ namespace DotNetCross.Sorting.Sequences
             }
         }
     }
-    public class MedianOfThreeKillerSpanFiller : ISpanFiller
+    public class MedianOfThreeKillerSpanFiller : SpanFillerBase
     {
-        public void Fill<T>(Span<T> span, int sliceLength, Func<int, T> toValue)
+        public override void Fill<T>(Span<T> span, int sliceLength, Func<int, T> toValue)
         {
             // Each slice must be median of three!
             int i = 0;
@@ -109,7 +118,7 @@ namespace DotNetCross.Sorting.Sequences
             }
         }
     }
-    public class PartialRandomShuffleSpanFiller : ISpanFiller
+    public class PartialRandomShuffleSpanFiller : SpanFillerBase
     {
         readonly ISpanFiller _spanFiller;
         readonly double _fractionRandomShuffles;
@@ -122,7 +131,7 @@ namespace DotNetCross.Sorting.Sequences
             _seed = seed;
         }
 
-        public void Fill<T>(Span<T> span, int sliceLength, Func<int, T> toValue)
+        public override void Fill<T>(Span<T> span, int sliceLength, Func<int, T> toValue)
         {
             _spanFiller.Fill(span, sliceLength, toValue);
 
@@ -143,7 +152,7 @@ namespace DotNetCross.Sorting.Sequences
             }
         }
     }
-    public class RandomSpanFiller : ISpanFiller
+    public class RandomSpanFiller : SpanFillerBase
     {
         readonly int _seed;
 
@@ -152,7 +161,7 @@ namespace DotNetCross.Sorting.Sequences
             _seed = seed;
         }
 
-        public void Fill<T>(Span<T> span, int sliceLength, Func<int, T> toValue)
+        public override void Fill<T>(Span<T> span, int sliceLength, Func<int, T> toValue)
         {
             var random = new Random(_seed);
             RandomFill(random, span, toValue);

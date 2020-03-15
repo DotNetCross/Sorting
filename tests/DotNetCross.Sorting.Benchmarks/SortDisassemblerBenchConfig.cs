@@ -10,10 +10,10 @@ namespace DotNetCross.Sorting.Benchmarks
     {
         public SortDisassemblerBenchConfig()
         {
-            var runMode = new BenchmarkDotNet.Jobs.RunMode() { LaunchCount = 1, WarmupCount = 1, TargetCount = 3, RunStrategy = RunStrategy.Monitoring };
+            var runMode = new BenchmarkDotNet.Jobs.RunMode() { LaunchCount = 1, WarmupCount = 1, /*TargetCount = 3,*/ RunStrategy = RunStrategy.Monitoring };
             var envModes = new[] {
                 //new EnvMode { Runtime = Runtime.Core, Platform = Platform.X86 },
-                new EnvMode { Runtime = Runtime.Core, Platform = Platform.X64 },
+                new EnvironmentMode { Runtime = Runtime.Core, Platform = Platform.X64 },
                 //new EnvMode { Runtime = Runtime.Clr, Platform = Platform.X86 },
                 //new EnvMode { Runtime = Runtime.Clr, Platform = Platform.X64 },
             };

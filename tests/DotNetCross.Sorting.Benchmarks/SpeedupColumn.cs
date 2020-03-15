@@ -13,9 +13,9 @@ namespace DotNetCross.Sorting.Benchmarks
 
         public string Legend => "Speedup";
 
-        public bool IsDefault(Summary summary, Benchmark benchmark) => false;
-        public string GetValue(Summary summary, Benchmark benchmark, ISummaryStyle style) => GetValue(summary, benchmark);
-        public string GetValue(Summary summary, Benchmark benchmark) => string.Empty;
+        public bool IsDefault(Summary summary, BenchmarkCase benchmark) => false;
+        public string GetValue(Summary summary, BenchmarkCase benchmark, ISummaryStyle style) => GetValue(summary, benchmark);
+        public string GetValue(Summary summary, BenchmarkCase benchmark) => string.Empty;
 
         public string Id => nameof(SpeedupColumn);
         public int PriorityInCategory => 0;

@@ -1,4 +1,4 @@
-#define OUTER_LOOP
+//#define OUTER_LOOP
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
@@ -24,26 +24,28 @@ namespace System.SpanTests
         const int FastMaxLength = 50;
         const int SlowMaxLength = 512;
         public static readonly TheoryData<ISortCases> s_fastSortTests = CreateSortCases(FastMaxLength);
+#if OUTER_LOOP
         public static readonly TheoryData<ISortCases> s_slowSortTests = CreateSortCases(SlowMaxLength);
+#endif
 
         static TheoryData<ISortCases> CreateSortCases(int maxLength)
         {
             var cases = new ISortCases[] {
-            new LengthZeroSortCases(),
-            new LengthOneSortCases(),
-            new AllLengthTwoSortCases(),
-            new AllLengthThreeSortCases(),
-            new AllLengthFourSortCases(),
-            new FillerSortCases(maxLength, new ConstantSpanFiller(42) ),
-            new FillerSortCases(maxLength, new DecrementingSpanFiller() ),
-            new FillerSortCases(maxLength, new ModuloDecrementingSpanFiller(25) ),
-            new FillerSortCases(maxLength, new ModuloDecrementingSpanFiller(256) ),
-            new FillerSortCases(maxLength, new IncrementingSpanFiller() ),
-            new FillerSortCases(maxLength, new MedianOfThreeKillerSpanFiller() ),
-            new FillerSortCases(maxLength, new PartialRandomShuffleSpanFiller(new IncrementingSpanFiller(), 0.2, 16281) ),
-            new FillerSortCases(maxLength, new RandomSpanFiller(1873318) ),
-            // TODO: Add with some -1 that can be replaced with null or NaN or something
-        };
+                new LengthZeroSortCases(),
+                new LengthOneSortCases(),
+                new AllLengthTwoSortCases(),
+                new AllLengthThreeSortCases(),
+                new AllLengthFourSortCases(),
+                new FillerSortCases(maxLength, new ConstantSpanFiller(42) ),
+                new FillerSortCases(maxLength, new DecrementingSpanFiller() ),
+                new FillerSortCases(maxLength, new ModuloDecrementingSpanFiller(25) ),
+                new FillerSortCases(maxLength, new ModuloDecrementingSpanFiller(256) ),
+                new FillerSortCases(maxLength, new IncrementingSpanFiller() ),
+                new FillerSortCases(maxLength, new MedianOfThreeKillerSpanFiller() ),
+                new FillerSortCases(maxLength, new PartialRandomShuffleSpanFiller(new IncrementingSpanFiller(), 0.2, 16281) ),
+                new FillerSortCases(maxLength, new RandomSpanFiller(1873318) ),
+                // TODO: Add with some -1 that can be replaced with null or NaN or something
+            };
             var allCases = cases.Concat(cases.Select(c => new PadAndSliceSortCases(c, 2)))
                 .Concat(cases.Select(c => new StepwiseSpecialSortCases(c, 3)));
             var theoryData = new TheoryData<ISortCases>();
@@ -234,7 +236,7 @@ namespace System.SpanTests
         }
 
 
-        #region Keys Tests
+#region Keys Tests
 
 
         [Theory]
@@ -495,9 +497,9 @@ namespace System.SpanTests
         }
 #endif
 
-        #endregion
+#endregion
 
-        #region Keys and Values Tests
+#region Keys and Values Tests
 
 
         [Theory]
@@ -757,7 +759,7 @@ namespace System.SpanTests
             Test_KeysValues_BogusComparable_Int32(sortCases);
         }
 #endif
-        #endregion
+#endregion
 
         // NOTE: Sort_MaxLength_NoOverflow test is constrained to run on Windows and MacOSX because it causes
         //       problems on Linux due to the way deferred memory allocation works. On Linux, the allocation can
