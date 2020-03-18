@@ -240,9 +240,9 @@ namespace DotNetCross.Sorting.Benchmarks
                 sut.Length = 1000; // 1000000;
                 sut.GlobalSetup();
                 sut.IterationSetup();
-                sut.Span_();
+                sut.DNX_Span_();
                 sut.IterationSetup();
-                sut.Span_();
+                sut.DNX_Span_();
 
                 Console.WriteLine("Enter key...");
                 Console.ReadKey();
@@ -250,7 +250,7 @@ namespace DotNetCross.Sorting.Benchmarks
                 for (int i = 0; i < 1000; i++)
                 {
                     sut.IterationSetup();
-                    sut.Span_();
+                    sut.DNX_Span_();
                 }
             }
             else
