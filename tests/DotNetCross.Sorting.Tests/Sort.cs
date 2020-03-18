@@ -1,4 +1,4 @@
-//#define OUTER_LOOP
+#define OUTER_LOOP
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
@@ -810,48 +810,49 @@ namespace System.SpanTests
         //}
 
         static void Test_Keys_Int8(ISortCases sortCases) =>
-            Test(sortCases, i => (sbyte)i, sbyte.MinValue);
+            Test(sortCases, i => (sbyte)i, sbyte.MinValue, (x, y) => x == y);
         static void Test_Keys_UInt8(ISortCases sortCases) =>
-            Test(sortCases, i => (byte)i, byte.MaxValue);
+            Test(sortCases, i => (byte)i, byte.MaxValue, (x, y) => x == y);
         static void Test_Keys_Int16(ISortCases sortCases) =>
-            Test(sortCases, i => (short)i, short.MinValue);
+            Test(sortCases, i => (short)i, short.MinValue, (x, y) => x == y);
         static void Test_Keys_UInt16(ISortCases sortCases) =>
-            Test(sortCases, i => (ushort)i, ushort.MaxValue);
+            Test(sortCases, i => (ushort)i, ushort.MaxValue, (x, y) => x == y);
         static void Test_Keys_Int32(ISortCases sortCases) =>
-            Test(sortCases, i => (int)i, int.MinValue);
+            Test(sortCases, i => (int)i, int.MinValue, (x, y) => x == y);
         static void Test_Keys_UInt32(ISortCases sortCases) =>
-            Test(sortCases, i => (uint)i, uint.MaxValue);
+            Test(sortCases, i => (uint)i, uint.MaxValue, (x, y) => x == y);
         static void Test_Keys_Int64(ISortCases sortCases) =>
-            Test(sortCases, i => (long)i, long.MinValue);
+            Test(sortCases, i => (long)i, long.MinValue, (x, y) => x == y);
         static void Test_Keys_UInt64(ISortCases sortCases) =>
-            Test(sortCases, i => (ulong)i, ulong.MaxValue);
+            Test(sortCases, i => (ulong)i, ulong.MaxValue, (x, y) => x == y);
         static void Test_Keys_Single(ISortCases sortCases) =>
-            Test(sortCases, i => (float)i, float.NaN);
+            Test(sortCases, i => (float)i, float.NaN, (x, y) => x == y);
         static void Test_Keys_Double(ISortCases sortCases) =>
-            Test(sortCases, i => (double)i, double.NaN);
+            Test(sortCases, i => (double)i, double.NaN, (x, y) => x == y);
         static void Test_Keys_Boolean(ISortCases sortCases) =>
-            Test(sortCases, i => i % 2 == 0, false);
+            Test(sortCases, i => i % 2 == 0, false, (x, y) => x == y);
         static void Test_Keys_Char(ISortCases sortCases) =>
-            Test(sortCases, i => (char)i, char.MaxValue);
+            Test(sortCases, i => (char)i, char.MaxValue, (x, y) => x == y);
         static void Test_Keys_String(ISortCases sortCases) =>
-            Test(sortCases, i => i.ToString("D9"), null);
+            Test(sortCases, i => i.ToString("D9"), null, (x, y) => x == y);
         static void Test_Keys_ComparableStructInt32(ISortCases sortCases) =>
-            Test(sortCases, i => new ComparableStructInt32(i), new ComparableStructInt32(int.MinValue));
+            Test(sortCases, i => new ComparableStructInt32(i), new ComparableStructInt32(int.MinValue), (x, y) => x.Equals(y));
         static void Test_Keys_ComparableClassInt32(ISortCases sortCases) =>
-            Test(sortCases, i => new ComparableClassInt32(i), null);
+            Test(sortCases, i => new ComparableClassInt32(i), null, (x, y) => x == y);
         static void Test_Keys_BogusComparable(ISortCases sortCases) =>
-            Test(sortCases, i => new BogusComparable(i), null);
+            Test(sortCases, i => new BogusComparable(i), null, (x, y) => true); // Bogus we accept any match
 
-        static void Test<TKey>(ISortCases sortCase, Func<int, TKey> toKey, TKey specialKey)
-            where TKey : IComparable<TKey>
+        static void Test<TKey>(ISortCases sortCase, Func<int, TKey> toKey, TKey specialKey,
+            Func<TKey, TKey, bool> isSortEqual)
+            where TKey : IComparable<TKey>, IEquatable<TKey>
         {
             foreach (var unsorted in sortCase.EnumerateTests(toKey, specialKey))
             {
-                TestSortOverloads(unsorted);
+                TestSortOverloads(unsorted, isSortEqual);
             }
         }
-        static void TestSortOverloads<TKey>(ArraySegment<TKey> keys)
-            where TKey : IComparable<TKey>
+        static void TestSortOverloads<TKey>(ArraySegment<TKey> keys, Func<TKey, TKey, bool> isSortEqual)
+            where TKey : IComparable<TKey>, IEquatable<TKey>
         {
             var copy = (TKey[])keys.Array.Clone();
 
@@ -862,9 +863,8 @@ namespace System.SpanTests
             TestSort(keys, (IComparer<TKey>)null);
             TestSort(keys, new BogusComparer<TKey>());
         }
-        static void TestSort<TKey>(
-            ArraySegment<TKey> keysToSort)
-            where TKey : IComparable<TKey>
+        static void TestSort<TKey>(ArraySegment<TKey> keysToSort)
+            where TKey : IComparable<TKey>, IEquatable<TKey>
         {
             var expected = new ArraySegment<TKey>((TKey[])keysToSort.Array.Clone(),
                 keysToSort.Offset, keysToSort.Count);
@@ -881,6 +881,47 @@ namespace System.SpanTests
             AssertExceptionEquals(expectedException, actualException);
             // We assert the full arrays are as expected, to check for possible under/overflow
             Assert.Equal(expected.Array, keysToSort.Array);
+        }
+
+        // TODO: Below has not been tested
+        static void AssertKeys<TKey>(ArraySegment<TKey> expected, ArraySegment<TKey> actual,
+            Func<TKey, TKey, bool> isSortEqual) 
+            where TKey : IComparable<TKey>, IEquatable<TKey>
+        {
+            // We assert the full arrays are as expected, to check for possible under/overflow
+            var expectedArray = expected.Array;
+            var actualArray = actual.Array;
+            //Assert.Equal(expectedArray, actualArray);
+            Assert.Equal(expected.Count, actual.Count);
+            Assert.Equal(expectedArray.Length, actualArray.Length);
+            for (int i = 0; i < expectedArray.Length; i++)
+            {
+                var e = expectedArray[i];
+                // TODO: Use refs
+                var a = actualArray[i];
+                var equal = e.Equals(a);
+                if (!equal && i <  - 1)
+                {
+                    var j = i;
+                    // Move forward as long as *really* comparable (hence need proper comparable)
+                    while (++j < actualArray.Length &&
+                           isSortEqual(a, actualArray[j]))
+                    {
+                        var nextA = actualArray[j];
+                        if (e.Equals(nextA))
+                        {
+                            actualArray[i] = nextA;
+                            actualArray[j] = a;
+                            break;
+                        }
+                    }
+                    if (j >= actualArray.Length)
+                    {
+                        a = actualArray[i];
+                        Assert.Equal(e, a);
+                    }
+                }
+            }
         }
 
         static void TestSort<TKey, TComparer>(
@@ -1285,7 +1326,9 @@ namespace System.SpanTests
             public int Compare(TKey x, TKey y) => 1; // Always greater
         }
 
-        public struct ComparableStructInt32 : IComparable<ComparableStructInt32>
+        public struct ComparableStructInt32 
+            : IComparable<ComparableStructInt32>
+            , IEquatable<ComparableStructInt32>
         {
             public readonly int Value;
 
@@ -1299,12 +1342,20 @@ namespace System.SpanTests
                 return this.Value.CompareTo(other.Value);
             }
 
+            public bool Equals(ComparableStructInt32 other)
+            {
+                return Value.Equals(other.Value);
+            }
+
+
             public override int GetHashCode() => Value.GetHashCode();
 
             public override string ToString() => $"ComparableStruct {Value}";
         }
 
-        public class ComparableClassInt32 : IComparable<ComparableClassInt32>
+        public class ComparableClassInt32 
+            : IComparable<ComparableClassInt32>
+            , IEquatable<ComparableClassInt32>
         {
             public readonly int Value;
 
@@ -1316,6 +1367,13 @@ namespace System.SpanTests
             public int CompareTo(ComparableClassInt32 other)
             {
                 return other != null ? Value.CompareTo(other.Value) : 1;
+            }
+
+            public bool Equals(ComparableClassInt32 other)
+            {
+                if (other == null)
+                    return false;
+                return Value.Equals(other.Value);
             }
 
             public override int GetHashCode() => Value.GetHashCode();
@@ -1348,7 +1406,9 @@ namespace System.SpanTests
             public override string ToString() => $"Bogus {Value}";
         }
 
-        public struct ValueIdStruct : IComparable<ValueIdStruct>, IEquatable<ValueIdStruct>
+        public struct ValueIdStruct 
+            : IComparable<ValueIdStruct>
+            , IEquatable<ValueIdStruct>
         {
             public ValueIdStruct(int value, int identity)
             {
@@ -1381,7 +1441,9 @@ namespace System.SpanTests
             public override string ToString() => $"{Value} Id:{Id}";
         }
 
-        public class ValueIdClass : IComparable<ValueIdClass>, IEquatable<ValueIdClass>
+        public class ValueIdClass 
+            : IComparable<ValueIdClass>
+            , IEquatable<ValueIdClass>
         {
             public ValueIdClass(int value, int identity)
             {
