@@ -10,6 +10,7 @@ using System.Runtime.CompilerServices;
 //#endif
 
 using static System.SpanSortHelpersCommon;
+using static DotNetCross.Sorting.Sorts.IComparable;
 
 namespace System
 {
@@ -283,30 +284,6 @@ namespace System
             //        r2 = tmp;
             //    }
             //}
-        }
-
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void Sort2<TKey>(
-            ref TKey keys, int i, int j)
-            where TKey : IComparable<TKey>
-        {
-            Debug.Assert(i != j);
-
-            ref TKey a = ref Unsafe.Add(ref keys, i);
-            ref TKey b = ref Unsafe.Add(ref keys, j);
-            Sort2(ref a, ref b);
-        }
-
-        private static void Sort2<TKey>(ref TKey a, ref TKey b) 
-            where TKey : IComparable<TKey>
-        {
-            if (a != null && a.CompareTo(b) > 0)
-            {
-                TKey temp = a;
-                a = b;
-                b = temp;
-            }
         }
     }
 }
