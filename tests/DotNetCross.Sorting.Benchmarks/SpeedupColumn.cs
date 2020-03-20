@@ -7,25 +7,25 @@ using BenchmarkDotNet.Running;
 
 namespace DotNetCross.Sorting.Benchmarks
 {
-    public class SpeedupColumn : IColumn
-    {
-        public string ColumnName => "Speedup";
+    //public class SpeedupColumn : IColumn
+    //{
+    //    public string ColumnName => "Speedup";
 
-        public string Legend => "Speedup";
+    //    public string Legend => "Speedup";
 
-        public bool IsDefault(Summary summary, BenchmarkCase benchmark) => false;
-        public string GetValue(Summary summary, BenchmarkCase benchmark, ISummaryStyle style) => GetValue(summary, benchmark);
-        public string GetValue(Summary summary, BenchmarkCase benchmark) => string.Empty;
+    //    public bool IsDefault(Summary summary, BenchmarkCase benchmark) => false;
+    //    public string GetValue(Summary summary, BenchmarkCase benchmark, ISummaryStyle style) => GetValue(summary, benchmark);
+    //    public string GetValue(Summary summary, BenchmarkCase benchmark) => string.Empty;
 
-        public string Id => nameof(SpeedupColumn);
-        public int PriorityInCategory => 0;
-        public bool IsAvailable(Summary summary) => true;
-        public bool AlwaysShow => true;
-        public ColumnCategory Category => ColumnCategory.Custom;
-        public bool IsNumeric => true;
-        public UnitType UnitType => UnitType.Dimensionless;
-        public override string ToString() => ColumnName;
-    }
+    //    public string Id => nameof(SpeedupColumn);
+    //    public int PriorityInCategory => 0;
+    //    public bool IsAvailable(Summary summary) => true;
+    //    public bool AlwaysShow => true;
+    //    public ColumnCategory Category => ColumnCategory.Custom;
+    //    public bool IsNumeric => true;
+    //    public UnitType UnitType => UnitType.Dimensionless;
+    //    public override string ToString() => ColumnName;
+    //}
     //public class BaselineScaledColumn : IColumn
     //{
     //    public enum DiffKind

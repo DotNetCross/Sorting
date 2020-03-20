@@ -11,6 +11,8 @@ namespace DotNetCross.Sorting.Benchmarks
         public const double ShuffleFraction = 0.1;
         public const int ShuffleSeed = 931712983;
 
+        public static readonly ISpanFiller[] RandomOnly = new[] { new RandomSpanFiller(RandomSeed) };
+
         public static ISpanFiller[] Default = new ISpanFiller[]{
                 new RandomSpanFiller(RandomSeed),
                 new PartialRandomShuffleSpanFiller(new IncrementingSpanFiller(), ShuffleFraction, ShuffleSeed),
@@ -24,8 +26,8 @@ namespace DotNetCross.Sorting.Benchmarks
     public class Int32SortBench : SortBench<int>
     {
         public Int32SortBench()
-            : base(maxLength: 3000000, new[] { 2, 3, 10, 100, 10000, 1000000 },
-                   SpanFillers.Default, i => i)
+            : base(maxLength: 3000000, new[] { 2, 3, 10, 16 }, //new[] { 2, 3, 10, 16, 100, 1000, 10000, 1000000 },
+                   SpanFillers.RandomOnly, i => i)
         { }
     }
     public class SingleSortBench : SortBench<float>
@@ -197,6 +199,7 @@ namespace DotNetCross.Sorting.Benchmarks
             {
                 // TKey benchs
                 BenchmarkRunner.Run<Int32SortBench>();
+                //BenchmarkRunner.Run<Int32SortDisassemblerBench>();
                 return;
                 BenchmarkRunner.Run<SingleSortBench>();
                 BenchmarkRunner.Run<ComparableStructInt32SortBench>();

@@ -9,7 +9,7 @@ using DotNetCross.Sorting.Sequences;
 namespace DotNetCross.Sorting.Benchmarks
 {
     [DisassemblyDiagnoser(printAsm: true, printSource: true, recursiveDepth: 4)]
-    [SimpleJob(RunStrategy.Monitoring, launchCount: 1, warmupCount: 1, targetCount: 3)]
+    [ShortRunJob]// SimpleJob(RunStrategy.Monitoring, launchCount: 1, warmupCount: 1, targetCount: 3, invocationCount: 3)]
     //[Config(typeof(SortDisassemblerBenchConfig))]
     public class SortDisassemblerBench<TKey>
         where TKey : IComparable<TKey>
