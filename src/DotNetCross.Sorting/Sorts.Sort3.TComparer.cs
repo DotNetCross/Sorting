@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using static DotNetCross.Sorting.Swapper;
 
 namespace DotNetCross.Sorting
 {
@@ -19,7 +20,8 @@ namespace DotNetCross.Sorting
                 Sort2(ref r1, ref r2, comparer);
 
                 // Below works but does not give exactly the same result as Array.Sort
-                // i.e. order could be a bit different for keys that are equal
+                // i.e. order could be a bit different for keys that are equal or
+                // order different for for BogusComparer
                 //if (comparer.LessThanEqual(r0, r1))
                 //{
                 //    // r0 <= r1
