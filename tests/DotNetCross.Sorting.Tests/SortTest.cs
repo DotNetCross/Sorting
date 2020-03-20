@@ -27,7 +27,7 @@ namespace DotNetCross.Sorting.Tests
         [Fact]
         public void SpanSortExtension()
         {
-            Test((a, c) => new Span<int>(a).Sort(c));
+            Test((a, c) => new Span<int>(a).IntroSort(c));
         }
 
 

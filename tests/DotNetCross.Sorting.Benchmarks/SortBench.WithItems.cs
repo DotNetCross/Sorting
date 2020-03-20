@@ -100,7 +100,7 @@ namespace DotNetCross.Sorting.Benchmarks
         {
             for (int i = 0; i <= _maxLength - Length; i += Length)
             {
-                new Span<TKey>(_work, i, Length).Sort(new Span<TValue>(_workValues, i, Length));
+                new Span<TKey>(_work, i, Length).IntroSort(new Span<TValue>(_workValues, i, Length));
             }
         }
         [Benchmark]
@@ -108,7 +108,7 @@ namespace DotNetCross.Sorting.Benchmarks
         {
             for (int i = 0; i <= _maxLength - Length; i += Length)
             {
-                new Span<TKey>(_work, i, Length).Sort(new Span<TValue>(_workValues, i, Length), (IComparer<TKey>)null);
+                new Span<TKey>(_work, i, Length).IntroSort(new Span<TValue>(_workValues, i, Length), (IComparer<TKey>)null);
             }
         }
         [Benchmark]
@@ -116,7 +116,7 @@ namespace DotNetCross.Sorting.Benchmarks
         {
             for (int i = 0; i <= _maxLength - Length; i += Length)
             {
-                new Span<TKey>(_work, i, Length).Sort(new Span<TValue>(_workValues, i, Length), ClassComparableComparer<TKey>.Instance);
+                new Span<TKey>(_work, i, Length).IntroSort(new Span<TValue>(_workValues, i, Length), ClassComparableComparer<TKey>.Instance);
             }
         }
         [Benchmark]
@@ -124,7 +124,7 @@ namespace DotNetCross.Sorting.Benchmarks
         {
             for (int i = 0; i <= _maxLength - Length; i += Length)
             {
-                new Span<TKey>(_work, i, Length).Sort(new Span<TValue>(_workValues, i, Length), new StructComparableComparer<TKey>());
+                new Span<TKey>(_work, i, Length).IntroSort(new Span<TValue>(_workValues, i, Length), new StructComparableComparer<TKey>());
             }
         }
         [Benchmark]
@@ -132,7 +132,7 @@ namespace DotNetCross.Sorting.Benchmarks
         {
             for (int i = 0; i <= _maxLength - Length; i += Length)
             {
-                new Span<TKey>(_work, i, Length).Sort(new Span<TValue>(_workValues, i, Length), ComparableComparison<TKey>.Instance);
+                new Span<TKey>(_work, i, Length).IntroSort(new Span<TValue>(_workValues, i, Length), ComparableComparison<TKey>.Instance);
             }
         }
     }

@@ -58,27 +58,27 @@ namespace DotNetCross.Sorting.Benchmarks
         [Benchmark]
         public void Span_()
         {
-            new Span<TKey>(_work).Sort();
+            new Span<TKey>(_work).IntroSort();
         }
         [Benchmark]
         public void Span_NullComparer()
         {
-            new Span<TKey>(_work).Sort((IComparer<TKey>)null);
+            new Span<TKey>(_work).IntroSort((IComparer<TKey>)null);
         }
         [Benchmark]
         public void Span_ClassComparableComparer()
         {
-            new Span<TKey>(_work).Sort(ClassComparableComparer<TKey>.Instance);
+            new Span<TKey>(_work).IntroSort(ClassComparableComparer<TKey>.Instance);
         }
         [Benchmark]
         public void Span_StructComparableComparer()
         {
-            new Span<TKey>(_work).Sort(new StructComparableComparer<TKey>());
+            new Span<TKey>(_work).IntroSort(new StructComparableComparer<TKey>());
         }
         [Benchmark]
         public void Span_Comparison()
         {
-            new Span<TKey>(_work).Sort(ComparableComparison<TKey>.Instance);
+            new Span<TKey>(_work).IntroSort(ComparableComparison<TKey>.Instance);
         }
     }
 }

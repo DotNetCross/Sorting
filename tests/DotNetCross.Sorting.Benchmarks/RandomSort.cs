@@ -58,7 +58,7 @@ namespace DotNetCross.Sorting.Benchmarks
         {
             for (int i = 0; i <= MaxLength - Length; i += Length)
             {
-                new Span<int>(_work, i, Length).Sort();
+                new Span<int>(_work, i, Length).IntroSort();
             }
         }
 

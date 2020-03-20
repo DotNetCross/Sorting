@@ -77,7 +77,7 @@ namespace System.SpanTests
         [Trait(SortTrait, SortTraitValue)]
         public static void Sort_NullComparerDoesNotThrow()
         {
-            new Span<int>(new int[] { 3 }).Sort((IComparer<int>)null);
+            new Span<int>(new int[] { 3 }).IntroSort((IComparer<int>)null);
         }
 
         [Fact]
@@ -85,10 +85,10 @@ namespace System.SpanTests
         public static void Sort_Keys_NullComparisonThrows()
         {
             Assert.Throws<ArgumentNullException>(() => 
-                new Span<int>(new int[] { }).Sort((Comparison<int>)null));
+                new Span<int>(new int[] { }).IntroSort((Comparison<int>)null));
 
             Assert.Throws<ArgumentNullException>(() => 
-                new Span<string>(new string[] { }).Sort((Comparison<string>)null));
+                new Span<string>(new string[] { }).IntroSort((Comparison<string>)null));
         }
 
         [Fact]
@@ -96,10 +96,10 @@ namespace System.SpanTests
         public static void Sort_KeysValues_NullComparisonThrows()
         {
             Assert.Throws<ArgumentNullException>(() => 
-                new Span<int>(new int[] { }).Sort(new Span<int>(), (Comparison<int>)null));
+                new Span<int>(new int[] { }).IntroSort(new Span<int>(), (Comparison<int>)null));
 
             Assert.Throws<ArgumentNullException>(() => 
-                new Span<string>(new string[] { }).Sort(new Span<int>(), (Comparison<string>)null));
+                new Span<string>(new string[] { }).IntroSort(new Span<int>(), (Comparison<string>)null));
         }
 
         [Fact]
@@ -875,7 +875,7 @@ namespace System.SpanTests
             var actualException = RunAndCatchException(() =>
             {
                 Span<TKey> keysSpan = keysToSort;
-                keysSpan.Sort();
+                keysSpan.IntroSort();
             });
 
             AssertExceptionEquals(expectedException, actualException);
@@ -938,7 +938,7 @@ namespace System.SpanTests
             var actualException = RunAndCatchException(() =>
             {
                 Span<TKey> keysSpan = keysToSort;
-                keysSpan.Sort(comparer);
+                keysSpan.IntroSort(comparer);
             });
 
             AssertExceptionEquals(expectedException, actualException);
@@ -969,7 +969,7 @@ namespace System.SpanTests
             var actualException = RunAndCatchException(() =>
             {
                 Span<TKey> keysSpan = keysToSort;
-                keysSpan.Sort(comparison);
+                keysSpan.IntroSort(comparison);
             });
 
             AssertExceptionEquals(expectedException, actualException);
@@ -1079,7 +1079,7 @@ namespace System.SpanTests
             {
                 Span<TKey> keysSpan = keysToSort;
                 Span<TValue> valuesSpan = valuesToSort;
-                keysSpan.Sort(valuesSpan);
+                keysSpan.IntroSort(valuesSpan);
             });
 
             AssertExceptionEquals(expectedException, actualException);
@@ -1104,7 +1104,7 @@ namespace System.SpanTests
             {
                 Span<TKey> keysSpan = keysToSort;
                 Span<TValue> valuesSpan = valuesToSort;
-                keysSpan.Sort(valuesSpan, comparer);
+                keysSpan.IntroSort(valuesSpan, comparer);
             });
 
             AssertExceptionEquals(expectedException, actualException);
@@ -1128,7 +1128,7 @@ namespace System.SpanTests
             {
                 Span<TKey> keysSpan = keysToSort;
                 Span<TValue> valuesSpan = valuesToSort;
-                keysSpan.Sort(valuesSpan, comparison);
+                keysSpan.IntroSort(valuesSpan, comparison);
             });
 
             AssertExceptionEquals(expectedException, actualException);
