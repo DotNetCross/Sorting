@@ -22,7 +22,7 @@ jobs:
     - uses: actions/cache@v1
       with:
         path: ~/.nuget/packages
-        key: ${{ runner.os }}-nuget-${{ hashFiles('**/Directory.Build.targets') }}
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/csproj') }}
         restore-keys: |
           ${{ runner.os }}-nuget-
       
