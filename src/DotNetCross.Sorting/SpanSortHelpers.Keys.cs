@@ -97,12 +97,12 @@ namespace System
         {
             public void Sort(ref TKey keys, int length)
             {
-                SC.Sort(ref keys, length, Comparer<TKey>.Default);
+                SC.IntroSort(ref keys, length, Comparer<TKey>.Default);
             }
 
             public void Sort(ref TKey keys, int length, Comparison<TKey> comparison)
             {
-                S.Sort(ref keys, length, comparison);
+                S.IntroSort(ref keys, length, comparison);
             }
         }
 
@@ -112,14 +112,14 @@ namespace System
         {
             public void Sort(ref TKey keys, int length)
             {
-                S.Sort(ref keys, length);
+                S.IntroSort(ref keys, length);
             }
 
             public void Sort(ref TKey keys, int length, Comparison<TKey> comparison)
             {
                 // TODO: Check if comparison is Comparer<TKey>.Default.Compare
 
-                S.Sort(ref keys, length, comparison);
+                S.IntroSort(ref keys, length, comparison);
             }
         }
 
@@ -167,11 +167,11 @@ namespace System
                 //{
                 if (typeof(TComparer) == typeof(IComparer<TKey>) && comparer == null)
                 {
-                    SC.Sort(ref keys, length, Comparer<TKey>.Default);
+                    SC.IntroSort(ref keys, length, Comparer<TKey>.Default);
                 }
                 else
                 {
-                    SC.Sort(ref keys, length, comparer);
+                    SC.IntroSort(ref keys, length, comparer);
                 }
                 //}
                 //catch (IndexOutOfRangeException e)
@@ -210,12 +210,12 @@ namespace System
                     {
                         // NOTE: For Bogus Comparable the exception message will be different, when using Comparer<TKey>.Default
                         //       Since the exception message is thrown internally without knowledge of the comparer
-                        S.Sort(ref keys, length); 
+                        S.IntroSort(ref keys, length); 
                     }
                 }
                 else
                 {
-                    SC.Sort(ref keys, length, comparer);
+                    SC.IntroSort(ref keys, length, comparer);
                 }
                 //}
                 //catch (IndexOutOfRangeException e)
