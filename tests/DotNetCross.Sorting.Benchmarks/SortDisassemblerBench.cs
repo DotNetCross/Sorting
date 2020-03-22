@@ -9,7 +9,7 @@ using DotNetCross.Sorting.Sequences;
 namespace DotNetCross.Sorting.Benchmarks
 {
     [DisassemblyDiagnoser(printAsm: true, printSource: true, recursiveDepth: 4)]
-    [SimpleJob(RunStrategy.Monitoring, launchCount: 1, warmupCount: 1, targetCount: 3)]
+    [ShortRunJob]// SimpleJob(RunStrategy.Monitoring, launchCount: 1, warmupCount: 1, targetCount: 3, invocationCount: 3)]
     //[Config(typeof(SortDisassemblerBenchConfig))]
     public class SortDisassemblerBench<TKey>
         where TKey : IComparable<TKey>
@@ -58,27 +58,27 @@ namespace DotNetCross.Sorting.Benchmarks
         [Benchmark]
         public void Span_()
         {
-            new Span<TKey>(_work).Sort();
+            new Span<TKey>(_work).IntroSort();
         }
         [Benchmark]
         public void Span_NullComparer()
         {
-            new Span<TKey>(_work).Sort((IComparer<TKey>)null);
+            new Span<TKey>(_work).IntroSort((IComparer<TKey>)null);
         }
         [Benchmark]
         public void Span_ClassComparableComparer()
         {
-            new Span<TKey>(_work).Sort(ClassComparableComparer<TKey>.Instance);
+            new Span<TKey>(_work).IntroSort(ClassComparableComparer<TKey>.Instance);
         }
         [Benchmark]
         public void Span_StructComparableComparer()
         {
-            new Span<TKey>(_work).Sort(new StructComparableComparer<TKey>());
+            new Span<TKey>(_work).IntroSort(new StructComparableComparer<TKey>());
         }
         [Benchmark]
         public void Span_Comparison()
         {
-            new Span<TKey>(_work).Sort(ComparableComparison<TKey>.Instance);
+            new Span<TKey>(_work).IntroSort(ComparableComparison<TKey>.Instance);
         }
     }
 }

@@ -199,7 +199,7 @@ namespace System
         /// One or more elements do not implement the <see cref="IComparable" /> interface.
         /// </exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void Sort<T>(this Span<T> span)
+        public static void IntroSort<T>(this Span<T> span)
         {
             SHK.Sort(span);
         }
@@ -209,7 +209,7 @@ namespace System
         /// using the <typeparamref name="TComparer" />.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void Sort<T, TComparer>(this Span<T> span, TComparer comparer)
+        public static void IntroSort<T, TComparer>(this Span<T> span, TComparer comparer)
            where TComparer : IComparer<T>
         {
             SHK.Sort(span, comparer);
@@ -220,7 +220,7 @@ namespace System
         /// using the <see cref="Comparison{T}" />.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void Sort<T>(this Span<T> span, Comparison<T> comparison)
+        public static void IntroSort<T>(this Span<T> span, Comparison<T> comparison)
         {
             if (comparison == null)
                 ThrowHelper.ThrowArgumentNullException(ExceptionArgument.comparison);
@@ -237,7 +237,7 @@ namespace System
         /// element of the <see cref= "Span{TKey}"/>.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void Sort<TKey, TValue>(this Span<TKey> keys, Span<TValue> items)
+        public static void IntroSort<TKey, TValue>(this Span<TKey> keys, Span<TValue> items)
         {
             SHKV.Sort(keys, items);
         }
@@ -250,7 +250,7 @@ namespace System
         /// using the <typeparamref name="TComparer" />.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void Sort<TKey, TValue, TComparer>(this Span<TKey> keys,
+        public static void IntroSort<TKey, TValue, TComparer>(this Span<TKey> keys,
            Span<TValue> items, TComparer comparer)
            where TComparer : IComparer<TKey>
         {
@@ -265,7 +265,7 @@ namespace System
         /// using the <see cref="Comparison{TKey}" />.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void Sort<TKey, TValue>(this Span<TKey> keys,
+        public static void IntroSort<TKey, TValue>(this Span<TKey> keys,
            Span<TValue> items, Comparison<TKey> comparison)
         {
             if (comparison == null)

@@ -42,7 +42,7 @@ namespace DotNetCross.Sorting.Benchmarks
             // NOTE: IF FOR LOOP REMOVED CODE-GEN IS COMPLETELY DIFFERENT
             for (int i = 0; i <= MaxLength - Length; i += Length)
             {
-                new Span<string>(_work, i, Length).Sort();
+                new Span<string>(_work, i, Length).IntroSort();
             }
         }
     }
