@@ -11,9 +11,10 @@ using System.Runtime.InteropServices;
 //#endif
 
 using static System.SpanSortHelpersCommon;
+using DotNetCross.Sorting;
 using static DotNetCross.Sorting.Sorts;
 using S = System.SpanSortHelpersKeys;
-using SC = System.SpanSortHelpersKeys_Comparer;
+//using SC = System.SpanSortHelpersKeys_Comparer;
 using SDC = System.SpanSortHelpersKeys_DirectComparer;
 
 namespace System
@@ -98,7 +99,7 @@ namespace System
         {
             public void Sort(ref TKey keys, int length)
             {
-                SC.IntroSort(ref keys, length, Comparer<TKey>.Default);
+                TComparer.IntroSort(ref keys, length, Comparer<TKey>.Default);
             }
 
             public void Sort(ref TKey keys, int length, Comparison<TKey> comparison)
@@ -113,7 +114,7 @@ namespace System
         {
             public void Sort(ref TKey keys, int length)
             {
-                S.IntroSort(ref keys, length);
+                Sorts.IComparable.IntroSort(ref keys, length);
             }
 
             public void Sort(ref TKey keys, int length, Comparison<TKey> comparison)
@@ -168,11 +169,11 @@ namespace System
                 //{
                 if (typeof(TComparer) == typeof(IComparer<TKey>) && comparer == null)
                 {
-                    SC.IntroSort(ref keys, length, Comparer<TKey>.Default);
+                    Sorts.TComparer.IntroSort(ref keys, length, Comparer<TKey>.Default);
                 }
                 else
                 {
-                    SC.IntroSort(ref keys, length, comparer);
+                    Sorts.TComparer.IntroSort(ref keys, length, comparer);
                 }
                 //}
                 //catch (IndexOutOfRangeException e)
@@ -211,12 +212,12 @@ namespace System
                     {
                         // NOTE: For Bogus Comparable the exception message will be different, when using Comparer<TKey>.Default
                         //       Since the exception message is thrown internally without knowledge of the comparer
-                        S.IntroSort(ref keys, length); 
+                        Sorts.IComparable.IntroSort(ref keys, length); 
                     }
                 }
                 else
                 {
-                    SC.IntroSort(ref keys, length, comparer);
+                    Sorts.TComparer.IntroSort(ref keys, length, comparer);
                 }
                 //}
                 //catch (IndexOutOfRangeException e)

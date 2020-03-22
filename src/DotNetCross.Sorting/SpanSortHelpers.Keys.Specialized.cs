@@ -10,6 +10,7 @@ using System.Runtime.CompilerServices;
 //#endif
 
 using static System.SpanSortHelpersCommon;
+using static DotNetCross.Sorting.Sorts.TDirectComparer;
 
 namespace System
 {
