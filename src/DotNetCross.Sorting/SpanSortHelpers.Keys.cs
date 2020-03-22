@@ -11,6 +11,7 @@ using System.Runtime.InteropServices;
 //#endif
 
 using static System.SpanSortHelpersCommon;
+using static DotNetCross.Sorting.Sorts;
 using S = System.SpanSortHelpersKeys;
 using SC = System.SpanSortHelpersKeys_Comparer;
 using SDC = System.SpanSortHelpersKeys_DirectComparer;
@@ -102,7 +103,7 @@ namespace System
 
             public void Sort(ref TKey keys, int length, Comparison<TKey> comparison)
             {
-                S.IntroSort(ref keys, length, comparison);
+                Comparison.IntroSort(ref keys, length, comparison);
             }
         }
 
@@ -119,7 +120,7 @@ namespace System
             {
                 // TODO: Check if comparison is Comparer<TKey>.Default.Compare
 
-                S.IntroSort(ref keys, length, comparison);
+                Comparison.IntroSort(ref keys, length, comparison);
             }
         }
 
