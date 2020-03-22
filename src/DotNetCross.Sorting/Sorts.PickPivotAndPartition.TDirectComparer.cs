@@ -36,19 +36,19 @@ namespace DotNetCross.Sorting
 
                 TKey pivot = keysMiddle;
 
-                int left = lo;
-                int right = hi - 1;
                 // We already partitioned lo and hi and put the pivot in hi - 1.  
                 // And we pre-increment & decrement below.
                 keysRight = ref Unsafe.Add(ref keysRight, -1);
                 Swap(ref keysMiddle, ref keysRight);
 
+                int left = lo;
                 while (Unsafe.IsAddressLessThan(ref keysLeft, ref keysRight))
                 {
                     // PERF: For internal direct comparers the range checks are not needed
                     //       since we know they cannot be bogus i.e. pass the pivot without being false.
                     do { ++left; keysLeft = ref Unsafe.Add(ref keysLeft, 1); } 
                     while (comparer.LessThan(keysLeft, pivot));
+
                     do { keysRight = ref Unsafe.Add(ref keysRight, -1); }
                     while (comparer.LessThan(pivot, keysRight));
 
