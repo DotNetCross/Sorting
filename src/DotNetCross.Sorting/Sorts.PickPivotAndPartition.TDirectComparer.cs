@@ -18,7 +18,7 @@ namespace DotNetCross.Sorting
                 Debug.Assert(lo >= 0);
                 Debug.Assert(hi > lo);
 
-                // Compute median-of-three.  But also partition them, since we've done the comparison.
+                // Compute median-of-three. But also partition them, since we've done the comparison.
 
                 // PERF: `lo` or `hi` will never be negative inside the loop,
                 //       so computing median using uints is safe since we know 
@@ -29,39 +29,42 @@ namespace DotNetCross.Sorting
                 int middle = (int)(((uint)hi + (uint)lo) >> 1);
 
                 // Sort lo, mid and hi appropriately, then pick mid as the pivot.
-                ref TKey keysAtLo = ref Unsafe.Add(ref keys, lo);
-                ref TKey keysAtMiddle = ref Unsafe.Add(ref keys, middle);
-                ref TKey keysAtHi = ref Unsafe.Add(ref keys, hi);
-                Sort3(ref keysAtLo, ref keysAtMiddle, ref keysAtHi, comparer);
+                ref TKey keysLeft = ref Unsafe.Add(ref keys, lo);
+                ref TKey keysMiddle = ref Unsafe.Add(ref keys, middle);
+                ref TKey keysRight = ref Unsafe.Add(ref keys, hi);
+                Sort3(ref keysLeft, ref keysMiddle, ref keysRight, comparer);
 
-                TKey pivot = keysAtMiddle;
+                TKey pivot = keysMiddle;
 
                 int left = lo;
                 int right = hi - 1;
                 // We already partitioned lo and hi and put the pivot in hi - 1.  
                 // And we pre-increment & decrement below.
-                Swap(ref keysAtMiddle, ref Unsafe.Add(ref keys, right));
+                keysRight = ref Unsafe.Add(ref keysRight, -1);
+                Swap(ref keysMiddle, ref keysRight);
 
-                while (left < right)
+                while (Unsafe.IsAddressLessThan(ref keysLeft, ref keysRight))
                 {
-                    // TODO: Would be good to be able to update local ref here
-
                     // PERF: For internal direct comparers the range checks are not needed
                     //       since we know they cannot be bogus i.e. pass the pivot without being false.
-                    while (comparer.LessThan(Unsafe.Add(ref keys, ++left), pivot)) ;
-                    while (comparer.LessThan(pivot, Unsafe.Add(ref keys, --right))) ;
+                    do { ++left; keysLeft = ref Unsafe.Add(ref keysLeft, 1); } 
+                    while (comparer.LessThan(keysLeft, pivot));
+                    do { keysRight = ref Unsafe.Add(ref keysRight, -1); }
+                    while (comparer.LessThan(pivot, keysRight));
 
-                    if (left >= right)
+                    if (Unsafe.AreSame(ref keysLeft, ref keysRight) ||
+                        Unsafe.IsAddressGreaterThan(ref keysLeft, ref keysRight))// (left >= right)
                         break;
 
-                    Swap(ref keys, left, right);
+                    Swap(ref keysLeft, ref keysRight);
                 }
                 // Put pivot in the right location.
-                right = hi - 1;
-                if (left != right)
+                keysRight = ref Unsafe.Add(ref keys, hi - 1);
+                if (!Unsafe.AreSame(ref keysLeft, ref keysRight))
                 {
-                    Swap(ref keys, left, right);
+                    Swap(ref keysLeft, ref keysRight);
                 }
+
                 return left;
             }
         }
