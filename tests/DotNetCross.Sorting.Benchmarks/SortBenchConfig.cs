@@ -25,6 +25,7 @@ namespace DotNetCross.Sorting.Benchmarks
                     .With(InProcessToolchain.Instance)
                     );
             }
+            //Add(new SpeedupColumn());
             //Add(DisassemblyDiagnoser.Create(
             //    new DisassemblyDiagnoserConfig(printAsm: true, printSource: true, recursiveDepth: 3)));
            

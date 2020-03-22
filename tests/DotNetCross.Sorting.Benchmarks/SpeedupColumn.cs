@@ -1,21 +1,57 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using BenchmarkDotNet.Columns;
+using BenchmarkDotNet.Horology;
+using BenchmarkDotNet.Mathematics;
 using BenchmarkDotNet.Reports;
 using BenchmarkDotNet.Running;
 
 namespace DotNetCross.Sorting.Benchmarks
 {
-    //public class SpeedupColumn : IColumn
+    //public class SpeedupColumn : BaselineCustomColumn
     //{
     //    public string ColumnName => "Speedup";
 
     //    public string Legend => "Speedup";
 
+
+
+    //    public override string GetValue(Summary summary, BenchmarkCase benchmarkCase, Statistics baseline, IReadOnlyDictionary<string, Metric> baselineMetrics,
+    //        Statistics current, IReadOnlyDictionary<string, Metric> currentMetrics, bool isBaseline)
+    //    {
+    //        var ratio = GetRatioStatistics(current, baseline);
+    //        if (ratio == null)
+    //            return "NA";
+
+    //        var cultureInfo = summary.GetCultureInfo();
+    //        switch (Metric)
+    //        {
+    //            case RatioMetric.Mean:
+    //                return IsNonBaselinesPrecise(summary, baseline, benchmarkCase) ? ratio.Mean.ToString("N3", cultureInfo) : ratio.Mean.ToString("N2", cultureInfo);
+    //            case RatioMetric.StdDev:
+    //                return ratio.StandardDeviation.ToString("N2", cultureInfo);
+    //            default:
+    //                throw new NotSupportedException();
+    //        }
+    //    }
+
     //    public bool IsDefault(Summary summary, BenchmarkCase benchmark) => false;
-    //    public string GetValue(Summary summary, BenchmarkCase benchmark, ISummaryStyle style) => GetValue(summary, benchmark);
-    //    public string GetValue(Summary summary, BenchmarkCase benchmark) => string.Empty;
+    //    public string GetValue(Summary summary, BenchmarkCase benchmarkCase, SummaryStyle style) //=> GetValue(summary, benchmark);
+    //    {
+    //        //var valueOfN = (int)benchmarkCase.Parameters.Items.Single(p => p.Name == "N").Value;
+    //        var ratio = string.Join(",", summary[benchmarkCase].Metrics.Select(p => $"{p.Key}:{p.Value}"));
+    //        Console.WriteLine("// " + ratio);
+    //        return ratio;
+    //        //var ratio = summary[benchmarkCase].Metrics[Ratio.Metric.ToString()];
+    //        //return ratio.Value.ToString();
+    //        //return timePerN.ToTimeStr(benchmarkCase.Config.Encoding, TimeUnit.GetBestTimeUnit(timePerN));
+    //    }
+    //    public string GetValue(Summary summary, BenchmarkCase benchmark)
+    //    { 
+    //        return string.Empty; 
+    //    }
 
     //    public string Id => nameof(SpeedupColumn);
     //    public int PriorityInCategory => 0;
@@ -25,7 +61,12 @@ namespace DotNetCross.Sorting.Benchmarks
     //    public bool IsNumeric => true;
     //    public UnitType UnitType => UnitType.Dimensionless;
     //    public override string ToString() => ColumnName;
+
+
+    //    public static readonly BaselineRatioColumn Ratio = (BaselineRatioColumn)BaselineRatioColumn.RatioMean;
     //}
+
+
     //public class BaselineScaledColumn : IColumn
     //{
     //    public enum DiffKind
