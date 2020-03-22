@@ -12,7 +12,6 @@ namespace DotNetCross.Sorting
             internal static void InsertionSort<TKey>(
                  ref TKey keys, int lo, int hi,
                  Comparison<TKey> comparison)
-
             {
                 Debug.Assert(lo >= 0);
                 Debug.Assert(hi >= lo);
@@ -20,19 +19,19 @@ namespace DotNetCross.Sorting
                 for (int i = lo; i < hi; ++i)
                 {
                     int j = i;
-                    //t = keys[i + 1];
-                    var t = Unsafe.Add(ref keys, j + 1);
-                    // TODO: Would be good to be able to update local ref here
-                    if (j >= lo && comparison(t, Unsafe.Add(ref keys, j)) < 0)
+                    ref var keysAtJ = ref Unsafe.Add(ref keys, j);
+                    ref var keysAfterJ = ref Unsafe.Add(ref keysAtJ, 1);
+                    var t = keysAfterJ;
+                    if (comparison(t, keysAtJ) < 0)
                     {
                         do
                         {
-                            Unsafe.Add(ref keys, j + 1) = Unsafe.Add(ref keys, j);
-                            --j;
+                            keysAfterJ = keysAtJ;
+                            keysAfterJ = ref keysAtJ;
+                            keysAtJ = ref Unsafe.Subtract(ref keysAtJ, 1);
                         }
-                        while (j >= lo && comparison(t, Unsafe.Add(ref keys, j)) < 0);
-
-                        Unsafe.Add(ref keys, j + 1) = t;
+                        while (--j >= lo && comparison(t, keysAtJ) < 0);
+                        keysAfterJ = t;
                     }
                 }
             }

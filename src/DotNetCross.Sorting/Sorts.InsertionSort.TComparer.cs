@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using static DotNetCross.Sorting.Swapper;
 
 namespace DotNetCross.Sorting
 {
@@ -21,19 +20,19 @@ namespace DotNetCross.Sorting
                 for (int i = lo; i < hi; ++i)
                 {
                     int j = i;
-                    //t = keys[i + 1];
-                    var t = Unsafe.Add(ref keys, j + 1);
-                    // TODO: Would be good to be able to update local ref here
-                    if (j >= lo && comparer.Compare(t, Unsafe.Add(ref keys, j)) < 0)
+                    ref var keysAtJ = ref Unsafe.Add(ref keys, j);
+                    ref var keysAfterJ = ref Unsafe.Add(ref keysAtJ, 1);
+                    var t = keysAfterJ;
+                    if (comparer.LessThan(t, keysAtJ))
                     {
                         do
                         {
-                            Unsafe.Add(ref keys, j + 1) = Unsafe.Add(ref keys, j);
-                            --j;
+                            keysAfterJ = keysAtJ;
+                            keysAfterJ = ref keysAtJ;
+                            keysAtJ = ref Unsafe.Subtract(ref keysAtJ, 1);
                         }
-                        while (j >= lo && comparer.Compare(t, Unsafe.Add(ref keys, j)) < 0);
-
-                        Unsafe.Add(ref keys, j + 1) = t;
+                        while (--j >= lo && comparer.LessThan(t, keysAtJ));
+                        keysAfterJ = t;
                     }
                 }
             }
