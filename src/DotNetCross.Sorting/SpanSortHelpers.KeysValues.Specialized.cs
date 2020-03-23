@@ -30,51 +30,51 @@ namespace System
             if (typeof(TKey) == typeof(sbyte))
             {
                 ref var specificKeys = ref Unsafe.As<TKey, sbyte>(ref keys);
-                Sort(ref specificKeys, ref values, length, new SByteDirectComparer());
+                IntroSort(ref specificKeys, ref values, length, new SByteDirectComparer());
                 return true;
             }
             else if (typeof(TKey) == typeof(byte) ||
                      typeof(TKey) == typeof(bool)) // Use byte for bools to reduce code size
             {
                 ref var specificKeys = ref Unsafe.As<TKey, byte>(ref keys);
-                Sort(ref specificKeys, ref values, length, new ByteDirectComparer());
+                IntroSort(ref specificKeys, ref values, length, new ByteDirectComparer());
                 return true;
             }
             else if (typeof(TKey) == typeof(short))
             {
                 ref var specificKeys = ref Unsafe.As<TKey, short>(ref keys);
-                Sort(ref specificKeys, ref values, length, new Int16DirectComparer());
+                IntroSort(ref specificKeys, ref values, length, new Int16DirectComparer());
                 return true;
             }
             else if (typeof(TKey) == typeof(ushort) ||
                      typeof(TKey) == typeof(char)) // Use ushort for chars to reduce code size)
             {
                 ref var specificKeys = ref Unsafe.As<TKey, ushort>(ref keys);
-                Sort(ref specificKeys, ref values, length, new UInt16DirectComparer());
+                IntroSort(ref specificKeys, ref values, length, new UInt16DirectComparer());
                 return true;
             }
             else if (typeof(TKey) == typeof(int))
             {
                 ref var specificKeys = ref Unsafe.As<TKey, int>(ref keys);
-                Sort(ref specificKeys, ref values, length, new Int32DirectComparer());
+                IntroSort(ref specificKeys, ref values, length, new Int32DirectComparer());
                 return true;
             }
             else if (typeof(TKey) == typeof(uint))
             {
                 ref var specificKeys = ref Unsafe.As<TKey, uint>(ref keys);
-                Sort(ref specificKeys, ref values, length, new UInt32DirectComparer());
+                IntroSort(ref specificKeys, ref values, length, new UInt32DirectComparer());
                 return true;
             }
             else if (typeof(TKey) == typeof(long))
             {
                 ref var specificKeys = ref Unsafe.As<TKey, long>(ref keys);
-                Sort(ref specificKeys, ref values, length, new Int64DirectComparer());
+                IntroSort(ref specificKeys, ref values, length, new Int64DirectComparer());
                 return true;
             }
             else if (typeof(TKey) == typeof(ulong))
             {
                 ref var specificKeys = ref Unsafe.As<TKey, ulong>(ref keys);
-                Sort(ref specificKeys, ref values, length, new UInt64DirectComparer());
+                IntroSort(ref specificKeys, ref values, length, new UInt64DirectComparer());
                 return true;
             }
             // Array.Sort only uses NaNPrepass when both key and value are the same,
@@ -96,7 +96,7 @@ namespace System
                     {
                         ref var afterNaNsKeys = ref Unsafe.Add(ref specificKeys, left);
                         ref var afterNaNsValues = ref Unsafe.Add(ref values, left);
-                        Sort(ref afterNaNsKeys, ref afterNaNsValues, remaining, new SingleDirectComparer());
+                        IntroSort(ref afterNaNsKeys, ref afterNaNsValues, remaining, new SingleDirectComparer());
                     }
                 }
                 //else
@@ -124,7 +124,7 @@ namespace System
                     {
                         ref var afterNaNsKeys = ref Unsafe.Add(ref specificKeys, left);
                         ref var afterNaNsValues = ref Unsafe.Add(ref values, left);
-                        Sort(ref afterNaNsKeys, ref afterNaNsValues, remaining, new DoubleDirectComparer());
+                        IntroSort(ref afterNaNsKeys, ref afterNaNsValues, remaining, new DoubleDirectComparer());
                     }
                 }
                 //else

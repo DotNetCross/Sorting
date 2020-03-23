@@ -16,14 +16,7 @@ namespace System
     internal static partial class SpanSortHelpersKeysValues
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void Sort<TKey, TValue>(
-            ref TKey keys, ref TValue values, int length,
-            Comparison<TKey> comparison)
-        {
-            IntrospectiveSort(ref keys, ref values, length, comparison);
-        }
-
-        private static void IntrospectiveSort<TKey, TValue>(
+        internal static void IntroSort<TKey, TValue>(
             ref TKey keys, ref TValue values, int length,
             Comparison<TKey> comparison)
         {

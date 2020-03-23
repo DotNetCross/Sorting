@@ -73,7 +73,15 @@ namespace DotNetCross.Sorting.Benchmarks
                 Array.Sort(_work, i, Length, ClassComparableComparer<TKey>.Instance);
             }
         }
-        
+        [Benchmark]
+        public void Array_StructComparableComparer()
+        {
+            for (int i = 0; i <= _maxLength - Length; i += Length)
+            {
+                new Span<TKey>(_work, i, Length).Sort(new StructComparableComparer<TKey>());
+            }
+        }
+
         [Benchmark]
         public void Array_Comparison()
         {
@@ -81,7 +89,7 @@ namespace DotNetCross.Sorting.Benchmarks
             {
                 // Using span from .NET Core 3.1
                 var span = new Span<TKey>(_work, i, Length);
-                span.IntroSort(ComparableComparison<TKey>.Instance);
+                span.Sort(ComparableComparison<TKey>.Instance);
             }
         }
 

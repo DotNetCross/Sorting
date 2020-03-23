@@ -17,15 +17,7 @@ namespace System
     internal static partial class SpanSortHelpersKeysValues
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void Sort<TKey, TValue, TComparer>(
-            ref TKey keys, ref TValue values, int length,
-            TComparer comparer)
-            where TComparer : IComparer<TKey>
-        {
-            IntrospectiveSort(ref keys, ref values, length, comparer);
-        }
-
-        private static void IntrospectiveSort<TKey, TValue, TComparer>(
+        internal static void IntroSort<TKey, TValue, TComparer>(
             ref TKey keys, ref TValue values, int length,
             TComparer comparer)
             where TComparer : IComparer<TKey>

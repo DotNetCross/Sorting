@@ -15,7 +15,7 @@ namespace DotNetCross.Sorting.Benchmarks
             var envModes = new[] {
                 // NOTE: None of the other platforms work...
                 //new EnvMode { Runtime = Runtime.Core, Platform = Platform.X86 },
-                new EnvironmentMode { Runtime = CoreRuntime.Core31, Platform = Platform.X64 },
+                new EnvironmentMode { Runtime = CoreRuntime.Core50, Platform = Platform.X64 },
                 //new EnvMode { Runtime = Runtime.Clr, Platform = Platform.X86 },
                 //new EnvMode { Runtime = Runtime.Clr, Platform = Platform.X64 },
             };

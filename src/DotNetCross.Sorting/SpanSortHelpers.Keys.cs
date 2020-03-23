@@ -16,13 +16,14 @@ using static DotNetCross.Sorting.Sorts;
 using S = System.SpanSortHelpersKeys;
 //using SC = System.SpanSortHelpersKeys_Comparer;
 using SDC = System.SpanSortHelpersKeys_DirectComparer;
+using System.Reflection;
 
 namespace System
 {
     internal static partial class SpanSortHelpersKeys
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void Sort<TKey>(this Span<TKey> keys)
+        internal static void IntroSort<TKey>(Span<TKey> keys)
         {
             int length = keys.Length;
             if (length < 2)
@@ -41,8 +42,8 @@ namespace System
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void Sort<TKey, TComparer>(
-            this Span<TKey> keys, TComparer comparer)
+        internal static void IntroSort<TKey, TComparer>(
+            Span<TKey> keys, TComparer comparer)
             where TComparer : IComparer<TKey>
         {
             int length = keys.Length;
@@ -55,8 +56,8 @@ namespace System
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void Sort<TKey>(
-            this Span<TKey> keys, Comparison<TKey> comparison)
+        internal static void IntroSort<TKey>(
+            Span<TKey> keys, Comparison<TKey> comparison)
         {
             int length = keys.Length;
             if (length < 2)
@@ -73,11 +74,12 @@ namespace System
 
             private static ISpanSortHelper<TKey> CreateSortHelper()
             {
-                if (typeof(IComparable<TKey>).IsAssignableFrom(typeof(TKey)))
+                if (typeof(IComparable<TKey>).GetTypeInfo().IsAssignableFrom(typeof(TKey)))
                 {
                     // coreclr uses RuntimeTypeHandle.Allocate
                     var ctor = typeof(ComparableSpanSortHelper<>)
                         .MakeGenericType(new Type[] { typeof(TKey) })
+                        .GetTypeInfo()
                         .GetConstructor(Array.Empty<Type>());
 
                     return (ISpanSortHelper<TKey>)ctor.Invoke(Array.Empty<object>());
@@ -133,11 +135,12 @@ namespace System
 
             private static ISpanSortHelper<TKey, TComparer> CreateSortHelper()
             {
-                if (typeof(IComparable<TKey>).IsAssignableFrom(typeof(TKey)))
+                if (typeof(IComparable<TKey>).GetTypeInfo().IsAssignableFrom(typeof(TKey)))
                 {
                     // coreclr uses RuntimeTypeHandle.Allocate
                     var ctor = typeof(ComparableSpanSortHelper<,>)
                         .MakeGenericType(new Type[] { typeof(TKey), typeof(TComparer) })
+                        .GetTypeInfo()
                         .GetConstructor(Array.Empty<Type>());
 
                     return (ISpanSortHelper<TKey, TComparer>)ctor.Invoke(Array.Empty<object>());
@@ -205,7 +208,7 @@ namespace System
                 //{
                 if (comparer == null ||
                     // Cache this in generic traits helper class perhaps
-                    (!typeof(TComparer).IsValueType &&
+                    (!typeof(TComparer).GetTypeInfo().IsValueType &&
                      object.ReferenceEquals(comparer, Comparer<TKey>.Default))) // Or "=="?
                 {
                     if (!SDC.TrySortSpecialized(ref keys, length))

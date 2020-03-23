@@ -201,7 +201,7 @@ namespace System
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void IntroSort<T>(this Span<T> span)
         {
-            SHK.Sort(span);
+            SHK.IntroSort(span);
         }
 
         /// <summary>
@@ -212,7 +212,7 @@ namespace System
         public static void IntroSort<T, TComparer>(this Span<T> span, TComparer comparer)
            where TComparer : IComparer<T>
         {
-            SHK.Sort(span, comparer);
+            SHK.IntroSort(span, comparer);
         }
 
         /// <summary>
@@ -225,7 +225,7 @@ namespace System
             if (comparison == null)
                 ThrowHelper.ThrowArgumentNullException(ExceptionArgument.comparison);
 
-            SHK.Sort(span, comparison);
+            SHK.IntroSort(span, comparison);
         }
 
         /// <summary>
@@ -239,7 +239,7 @@ namespace System
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void IntroSort<TKey, TValue>(this Span<TKey> keys, Span<TValue> items)
         {
-            SHKV.Sort(keys, items);
+            SHKV.IntroSort(keys, items);
         }
 
         /// <summary>
@@ -254,7 +254,7 @@ namespace System
            Span<TValue> items, TComparer comparer)
            where TComparer : IComparer<TKey>
         {
-            SHKV.Sort(keys, items, comparer);
+            SHKV.IntroSort(keys, items, comparer);
         }
 
         /// <summary>
@@ -271,7 +271,7 @@ namespace System
             if (comparison == null)
                 ThrowHelper.ThrowArgumentNullException(ExceptionArgument.comparison);
 
-            SHKV.Sort(keys, items, comparison);
+            SHKV.IntroSort(keys, items, comparison);
         }
     }
 }
