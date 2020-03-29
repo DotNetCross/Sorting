@@ -1,10 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
-//#if !netstandard
-//using Internal.Runtime.CompilerServices;
-//#endif
-
 namespace DotNetCross.Sorting
 {
     public static partial class Sorts
