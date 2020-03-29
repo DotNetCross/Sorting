@@ -12,7 +12,7 @@ using System.Runtime.InteropServices;
 //using Internal.Runtime.CompilerServices;
 //#endif
 
-using static System.SpanSortHelpersCommon;
+using DotNetCross.Sorting;
 using S = System.SpanSortHelpersKeys_GenericLessThanMethod;
 
 namespace System
@@ -184,7 +184,7 @@ namespace System
             TComparer comparer)
             where TComparer : IDirectComparer
         {
-            var depthLimit = 2 * FloorLog2PlusOne(length);
+            var depthLimit = 2 * Sorts.FloorLog2PlusOne(length);
             IntroSort(ref keys, 0, length - 1, depthLimit, comparer);
         }
 
@@ -200,7 +200,7 @@ namespace System
             while (hi > lo)
             {
                 int partitionSize = hi - lo + 1;
-                if (partitionSize <= IntrosortSizeThreshold)
+                if (partitionSize <= Sorts.IntrosortSizeThreshold)
                 {
                     if (partitionSize == 1)
                     {

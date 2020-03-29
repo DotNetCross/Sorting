@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using static System.SpanSortHelpersCommon;
 
 namespace DotNetCross.Sorting
 {

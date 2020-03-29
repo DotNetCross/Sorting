@@ -10,7 +10,6 @@ using System.Runtime.InteropServices;
 //using Internal.Runtime.CompilerServices;
 //#endif
 
-using static System.SpanSortHelpersCommon;
 using DotNetCross.Sorting;
 using static DotNetCross.Sorting.Sorts;
 using S = System.SpanSortHelpersKeys;

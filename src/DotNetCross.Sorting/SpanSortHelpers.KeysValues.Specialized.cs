@@ -8,7 +8,7 @@ using System.Runtime.CompilerServices;
 //using Internal.Runtime.CompilerServices;
 //#endif
 
-using static System.SpanSortHelpersCommon;
+using DotNetCross.Sorting;
 using static DotNetCross.Sorting.Sorts.TDirectComparer;
 using static DotNetCross.Sorting.Swapper;
 

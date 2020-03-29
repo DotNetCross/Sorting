@@ -11,7 +11,6 @@ using System.Runtime.InteropServices;
 //using Internal.Runtime.CompilerServices;
 //#endif
 
-using static System.SpanSortHelpersCommon;
 using S = System.SpanSortHelpersKeysValues;
 using SC = DotNetCross.Sorting.Sorts.Comparison;
 using SIC = DotNetCross.Sorting.Sorts.IComparable;
