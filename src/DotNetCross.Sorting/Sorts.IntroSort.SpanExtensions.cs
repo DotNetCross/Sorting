@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 //using SHK = System.SpanSortHelpersKeysAndOrValues;
 //using SHKV = System.SpanSortHelpersKeysAndOrValues;
 // Specialized for either only keys or keys and values and for comparable or not
-using SHK = System.SpanSortHelpersKeys;
+using SHK = DotNetCross.Sorting.Sorts.Keys;
 using SHKV = System.SpanSortHelpersKeysValues;
 
 namespace DotNetCross.Sorting
