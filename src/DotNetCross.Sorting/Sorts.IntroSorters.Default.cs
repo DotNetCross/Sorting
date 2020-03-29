@@ -9,7 +9,7 @@ namespace DotNetCross.Sorting
     {
         internal static partial class IntroSorters
         {
-            internal static class DefaultSpanSortHelper<TKey>
+            internal static class Default<TKey>
             {
                 internal static readonly ISorter<TKey> s_default = CreateSortHelper();
 
@@ -18,7 +18,7 @@ namespace DotNetCross.Sorting
                     if (typeof(IComparable<TKey>).GetTypeInfo().IsAssignableFrom(typeof(TKey)))
                     {
                         // coreclr uses RuntimeTypeHandle.Allocate
-                        var ctor = typeof(ComparableSpanSortHelper<>)
+                        var ctor = typeof(Comparable<>)
                             .MakeGenericType(new Type[] { typeof(TKey) })
                             .GetTypeInfo()
                             .GetConstructor(Array.Empty<Type>());
@@ -27,12 +27,12 @@ namespace DotNetCross.Sorting
                     }
                     else
                     {
-                        return new SpanSortHelper<TKey>();
+                        return new NonComparable<TKey>();
                     }
                 }
             }
 
-            internal class SpanSortHelper<TKey> : ISorter<TKey>
+            internal class NonComparable<TKey> : ISorter<TKey>
             {
                 public void Sort(ref TKey keys, int length)
                 {
@@ -45,7 +45,7 @@ namespace DotNetCross.Sorting
                 }
             }
 
-            internal class ComparableSpanSortHelper<TKey>
+            internal class Comparable<TKey>
                 : ISorter<TKey>
                 where TKey : IComparable<TKey>
             {
@@ -62,8 +62,7 @@ namespace DotNetCross.Sorting
                 }
             }
 
-
-            internal static class DefaultSpanSortHelper<TKey, TComparer>
+            internal static class Default<TKey, TComparer>
                 where TComparer : IComparer<TKey>
             {
                 internal static readonly ISorter<TKey, TComparer> s_default = CreateSortHelper();
@@ -73,7 +72,7 @@ namespace DotNetCross.Sorting
                     if (typeof(IComparable<TKey>).GetTypeInfo().IsAssignableFrom(typeof(TKey)))
                     {
                         // coreclr uses RuntimeTypeHandle.Allocate
-                        var ctor = typeof(ComparableSpanSortHelper<,>)
+                        var ctor = typeof(Comparable<,>)
                             .MakeGenericType(new Type[] { typeof(TKey), typeof(TComparer) })
                             .GetTypeInfo()
                             .GetConstructor(Array.Empty<Type>());
@@ -82,13 +81,12 @@ namespace DotNetCross.Sorting
                     }
                     else
                     {
-                        return new SpanSortHelper<TKey, TComparer>();
+                        return new NonComparable<TKey, TComparer>();
                     }
                 }
             }
 
-
-            internal class SpanSortHelper<TKey, TComparer> : ISorter<TKey, TComparer>
+            internal class NonComparable<TKey, TComparer> : ISorter<TKey, TComparer>
                 where TComparer : IComparer<TKey>
             {
                 public void Sort(ref TKey keys, int length, TComparer comparer)
@@ -121,7 +119,7 @@ namespace DotNetCross.Sorting
                 }
             }
 
-            internal class ComparableSpanSortHelper<TKey, TComparer>
+            internal class Comparable<TKey, TComparer>
                 : ISorter<TKey, TComparer>
                 where TKey : IComparable<TKey>
                 where TComparer : IComparer<TKey>
@@ -138,7 +136,7 @@ namespace DotNetCross.Sorting
                     if (comparer == null ||
                         // Cache this in generic traits helper class perhaps
                         (!typeof(TComparer).GetTypeInfo().IsValueType &&
-                         object.ReferenceEquals(comparer, Comparer<TKey>.Default))) // Or "=="?
+                         object.ReferenceEquals(comparer, Comparer<TKey>.Default)))
                     {
                         if (!SDC.TrySortSpecialized(ref keys, length))
                         {
