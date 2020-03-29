@@ -11,6 +11,8 @@ using System.Runtime.CompilerServices;
 //#endif
 
 using static System.SpanSortHelpersCommon;
+using static DotNetCross.Sorting.Swapper;
+using static DotNetCross.Sorting.Sorts.TComparer;
 
 namespace System
 {
@@ -247,34 +249,6 @@ namespace System
             Sort2(ref r0, ref r2, comparer, ref values, i0, i2);
             Sort2(ref r1, ref r2, comparer, ref values, i1, i2);
             return ref r1;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void Sort2<TKey, TValue, TComparer>(
-            ref TKey keys, ref TValue values, int i, int j,
-            TComparer comparer)
-            where TComparer : IComparer<TKey>
-        {
-            Debug.Assert(i != j);
-
-            ref TKey a = ref Unsafe.Add(ref keys, i);
-            ref TKey b = ref Unsafe.Add(ref keys, j);
-            Sort2(ref a, ref b, comparer, ref values, i, j);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void Sort2<TKey, TValue, TComparer>(
-            ref TKey a, ref TKey b, TComparer comparer, 
-            ref TValue values, int i, int j) 
-            where TComparer : IComparer<TKey>
-        {
-            // This is one of the only places GreaterThan is needed
-            // but we need to preserve this due to bogus comparers or similar
-            if (comparer.Compare(a, b) > 0)
-            {
-                Swap(ref a, ref b);
-                Swap(ref values, i, j);
-            }
         }
     }
 }

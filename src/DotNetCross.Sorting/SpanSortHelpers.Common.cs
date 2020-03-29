@@ -28,21 +28,6 @@ namespace System
             }
             return result;
         }
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void Swap<T>(ref T items, int i, int j)
-        {
-            Debug.Assert(i != j);
-            Swap(ref Unsafe.Add(ref items, i), ref Unsafe.Add(ref items, j));
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void Swap<T>(ref T a, ref T b)
-        {
-            T temp = a;
-            a = b;
-            b = temp;
-        }
 
         // This started out with just LessThan.
         // However, due to bogus comparers, comparables etc.

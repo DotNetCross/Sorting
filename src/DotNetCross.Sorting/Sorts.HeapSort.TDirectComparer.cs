@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using static System.SpanSortHelpersCommon;
-//using static DotNetCross.Sorting.Swapper;
+using static DotNetCross.Sorting.Swapper;
 
 namespace DotNetCross.Sorting
 {

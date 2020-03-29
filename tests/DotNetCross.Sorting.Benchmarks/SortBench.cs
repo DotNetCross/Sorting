@@ -6,6 +6,7 @@ using DotNetCross.Sorting.Sequences;
 namespace DotNetCross.Sorting.Benchmarks
 {
     [Config(typeof(SortBenchConfig))]
+    [MemoryDiagnoser]
     public class SortBench<TKey>
         where TKey : IComparable<TKey>
     {
@@ -73,6 +74,7 @@ namespace DotNetCross.Sorting.Benchmarks
                 Array.Sort(_work, i, Length, ClassComparableComparer<TKey>.Instance);
             }
         }
+#if !NETCOREAPP3_1
         [Benchmark]
         public void Array_StructComparableComparer()
         {
@@ -81,7 +83,6 @@ namespace DotNetCross.Sorting.Benchmarks
                 new Span<TKey>(_work, i, Length).Sort(new StructComparableComparer<TKey>());
             }
         }
-
         [Benchmark]
         public void Array_Comparison()
         {
@@ -92,6 +93,7 @@ namespace DotNetCross.Sorting.Benchmarks
                 span.Sort(ComparableComparison<TKey>.Instance);
             }
         }
+#endif
 
         [Benchmark]
         public void DNX_Span_()
