@@ -5,6 +5,7 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using DotNetCross.Sorting;
 using DotNetCross.Sorting.Sequences;
 using Xunit;
 
