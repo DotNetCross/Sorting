@@ -31,6 +31,6 @@ jobs:
       with:
         dotnet-version: 3.1.101
     - name: Build with dotnet
-      run: dotnet build --configuration Release
+      run: dotnet build --framework netcoreapp3.1 --configuration Release
     - name: Test with dotnet
-      run: dotnet test --configuration Release
+      run: dotnet test --framework netcoreapp3.1 --configuration Release
