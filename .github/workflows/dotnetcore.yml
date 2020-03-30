@@ -32,6 +32,6 @@ jobs:
       with:
         dotnet-version: ${{ runner.dotnet }}
     - name: Build with dotnet
-      run: dotnet build --framework netcoreapp3.1 --configuration Release
+      run: dotnet build --configuration Release
     - name: Test with dotnet
-      run: dotnet test --framework netcoreapp3.1 --configuration Release
+      run: dotnet test --configuration Release
