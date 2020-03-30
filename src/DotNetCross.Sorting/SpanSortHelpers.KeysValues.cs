@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections.Generic;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -10,8 +11,10 @@ using System.Runtime.InteropServices;
 //using Internal.Runtime.CompilerServices;
 //#endif
 
-using static System.SpanSortHelpersCommon;
 using S = System.SpanSortHelpersKeysValues;
+using SC = DotNetCross.Sorting.ComparisonImpl;
+using SIC = DotNetCross.Sorting.IComparableImpl;
+using STC = DotNetCross.Sorting.TComparerImpl;
 using SDC = System.SpanSortHelpersKeysValues_DirectComparer;
 
 namespace System
@@ -19,7 +22,7 @@ namespace System
     internal static partial class SpanSortHelpersKeysValues
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void Sort<TKey, TValue>(this Span<TKey> keys, Span<TValue> values)
+        internal static void IntroSort<TKey, TValue>(Span<TKey> keys, Span<TValue> values)
         {
             int length = keys.Length;
             if (length != values.Length)
@@ -42,8 +45,8 @@ namespace System
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void Sort<TKey, TValue, TComparer>(
-            this Span<TKey> keys, Span<TValue> values, TComparer comparer)
+        internal static void IntroSort<TKey, TValue, TComparer>(
+            Span<TKey> keys, Span<TValue> values, TComparer comparer)
             where TComparer : IComparer<TKey>
         {
             int length = keys.Length;
@@ -59,8 +62,8 @@ namespace System
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void Sort<TKey, TValue>(
-            this Span<TKey> keys, Span<TValue> values, Comparison<TKey> comparison)
+        internal static void IntroSort<TKey, TValue>(
+            Span<TKey> keys, Span<TValue> values, Comparison<TKey> comparison)
         {
             int length = keys.Length;
             if (length != values.Length)
@@ -80,11 +83,12 @@ namespace System
 
             private static ISpanSortHelper<TKey, TValue> CreateSortHelper()
             {
-                if (typeof(IComparable<TKey>).IsAssignableFrom(typeof(TKey)))
+                if (typeof(IComparable<TKey>).GetTypeInfo().IsAssignableFrom(typeof(TKey)))
                 {
                     // coreclr uses RuntimeTypeHandle.Allocate
                     var ctor = typeof(ComparableSpanSortHelper<,>)
                         .MakeGenericType(new Type[] { typeof(TKey), typeof(TValue) })
+                        .GetTypeInfo()
                         .GetConstructor(Array.Empty<Type>());
 
                     return (ISpanSortHelper<TKey, TValue>)ctor.Invoke(Array.Empty<object>());
@@ -106,12 +110,12 @@ namespace System
         {
             public void Sort(ref TKey keys, ref TValue values, int length)
             {
-                S.Sort(ref keys, ref values, length, Comparer<TKey>.Default);
+                STC.IntroSort(ref keys, ref values, length, Comparer<TKey>.Default);
             }
 
             public void Sort(ref TKey keys, ref TValue values, int length, Comparison<TKey> comparison)
             {
-                S.Sort(ref keys, ref values, length, comparison);
+                SC.IntroSort(ref keys, ref values, length, comparison);
             }
         }
 
@@ -121,14 +125,14 @@ namespace System
         {
             public void Sort(ref TKey keys, ref TValue values, int length)
             {
-                S.Sort(ref keys, ref values, length);
+                SIC.IntroSort(ref keys, ref values, length);
             }
 
             public void Sort(ref TKey keys, ref TValue values, int length, Comparison<TKey> comparison)
             {
                 // TODO: Check if comparison is Comparer<TKey>.Default.Compare
 
-                S.Sort(ref keys, ref values, length, comparison);
+                SC.IntroSort(ref keys, ref values, length, comparison);
             }
         }
 
@@ -140,11 +144,12 @@ namespace System
 
             private static ISpanSortHelper<TKey, TValue, TComparer> CreateSortHelper()
             {
-                if (typeof(IComparable<TKey>).IsAssignableFrom(typeof(TKey)))
+                if (typeof(IComparable<TKey>).GetTypeInfo().IsAssignableFrom(typeof(TKey)))
                 {
                     // coreclr uses RuntimeTypeHandle.Allocate
                     var ctor = typeof(ComparableSpanSortHelper<,,>)
                         .MakeGenericType(new Type[] { typeof(TKey), typeof(TValue), typeof(TComparer) })
+                        .GetTypeInfo()
                         .GetConstructor(Array.Empty<Type>());
 
                     return (ISpanSortHelper<TKey, TValue, TComparer>)ctor.Invoke(Array.Empty<object>());
@@ -176,11 +181,11 @@ namespace System
                 //{
                 if (typeof(TComparer) == typeof(IComparer<TKey>) && comparer == null)
                 {
-                    S.Sort(ref keys, ref values, length, Comparer<TKey>.Default);
+                    STC.IntroSort(ref keys, ref values, length, Comparer<TKey>.Default);
                 }
                 else
                 {
-                    S.Sort(ref keys, ref values, length, comparer);
+                    STC.IntroSort(ref keys, ref values, length, comparer);
                 }
                 //}
                 //catch (IndexOutOfRangeException e)
@@ -212,19 +217,19 @@ namespace System
                 //{
                 if (comparer == null ||
                     // Cache this in generic traits helper class perhaps
-                    (!typeof(TComparer).IsValueType &&
+                    (!typeof(TComparer).GetTypeInfo().IsValueType &&
                      object.ReferenceEquals(comparer, Comparer<TKey>.Default))) // Or "=="?
                 {
                     if (!SDC.TrySortSpecialized(ref keys, ref values, length))
                     {
                         // NOTE: For Bogus Comparable the exception message will be different, when using Comparer<TKey>.Default
                         //       Since the exception message is thrown internally without knowledge of the comparer
-                        S.Sort(ref keys, ref values, length);
+                        SIC.IntroSort(ref keys, ref values, length);
                     }
                 }
                 else
                 {
-                    S.Sort(ref keys, ref values, length, comparer);
+                    STC.IntroSort(ref keys, ref values, length, comparer);
                 }
                 //}
                 //catch (IndexOutOfRangeException e)

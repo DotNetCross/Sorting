@@ -9,8 +9,9 @@ using System.Runtime.CompilerServices;
 //using Internal.Runtime.CompilerServices;
 //#endif
 
-using static System.SpanSortHelpersCommon;
-using static DotNetCross.Sorting.Sorts.TDirectComparer;
+using DotNetCross.Sorting;
+using static DotNetCross.Sorting.Swapper;
+using static DotNetCross.Sorting.TDirectComparerImpl;
 
 namespace System
 {

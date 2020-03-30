@@ -4,6 +4,7 @@
 
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -11,44 +12,44 @@ using System.Runtime.InteropServices;
 //using Internal.Runtime.CompilerServices;
 //#endif
 
-using static System.SpanSortHelpersCommon;
+using DotNetCross.Sorting;
 using S = System.SpanSortHelpersKeys_GenericLessThanMethod;
 
 namespace System
 {
     internal static partial class SpanSortHelpersKeys_GenericLessThanMethod
     {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void Sort<TKey>(this Span<TKey> keys)
-        {
-            int length = keys.Length;
-            if (length < 2)
-                return;
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        //internal static void IntroSort<TKey>(Span<TKey> keys)
+        //{
+        //    int length = keys.Length;
+        //    if (length < 2)
+        //        return;
 
-            // PERF: Try specialized here for optimal performance
-            // Code-gen is weird unless used in loop outside
-            if (!TrySortSpecialized(
-                ref MemoryMarshal.GetReference(keys), length))
-            {
-                DefaultSpanSortHelper<TKey>.s_default.Sort(
-                    ref MemoryMarshal.GetReference(keys),
-                    length);
-            }
-        }
+        //    // PERF: Try specialized here for optimal performance
+        //    // Code-gen is weird unless used in loop outside
+        //    if (!TrySortSpecialized(
+        //        ref MemoryMarshal.GetReference(keys), length))
+        //    {
+        //        DefaultSpanSortHelper<TKey>.s_default.Sort(
+        //            ref MemoryMarshal.GetReference(keys),
+        //            length);
+        //    }
+        //}
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void Sort<TKey, TComparer>(
-            this Span<TKey> keys, TComparer comparer)
-            where TComparer : IComparer<TKey>
-        {
-            int length = keys.Length;
-            if (length < 2)
-                return;
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        //internal static void IntroSort<TKey, TComparer>(
+        //    Span<TKey> keys, TComparer comparer)
+        //    where TComparer : IComparer<TKey>
+        //{
+        //    int length = keys.Length;
+        //    if (length < 2)
+        //        return;
 
-            DefaultSpanSortHelper<TKey, TComparer>.s_default.Sort(
-                ref MemoryMarshal.GetReference(keys),
-                keys.Length, comparer);
-        }
+        //    DefaultSpanSortHelper<TKey, TComparer>.s_default.Sort(
+        //        ref MemoryMarshal.GetReference(keys),
+        //        keys.Length, comparer);
+        //}
 
         // https://github.com/dotnet/coreclr/blob/master/src/mscorlib/src/System/Collections/Generic/ArraySortHelper.cs
         // https://github.com/dotnet/coreclr/blob/master/src/classlibnative/bcltype/arrayhelpers.cpp
@@ -183,7 +184,7 @@ namespace System
             TComparer comparer)
             where TComparer : IDirectComparer
         {
-            var depthLimit = 2 * FloorLog2PlusOne(length);
+            var depthLimit = 2 * Common.FloorLog2PlusOne(length);
             IntroSort(ref keys, 0, length - 1, depthLimit, comparer);
         }
 
@@ -199,7 +200,7 @@ namespace System
             while (hi > lo)
             {
                 int partitionSize = hi - lo + 1;
-                if (partitionSize <= IntrosortSizeThreshold)
+                if (partitionSize <= Common.IntrosortSizeThreshold)
                 {
                     if (partitionSize == 1)
                     {
@@ -465,14 +466,15 @@ namespace System
 
             private static ISpanSortHelper<TKey> CreateSortHelper()
             {
-                if (typeof(IComparable<TKey>).IsAssignableFrom(typeof(TKey)))
+                if (typeof(IComparable<TKey>).GetTypeInfo().IsAssignableFrom(typeof(TKey)))
                 {
-                    if (typeof(TKey).IsValueType)
+                    if (typeof(TKey).GetTypeInfo().IsValueType)
                     {
                         // TODO: Is there a faster way? A way without heap alloc? 
                         // Albeit, this only happens once for each type combination
                         var ctor = typeof(ComparableSpanSortHelper<>)
                         .MakeGenericType(new Type[] { typeof(TKey) })
+                        .GetTypeInfo()
                         .GetConstructor(Array.Empty<Type>());
 
                         return (ISpanSortHelper<TKey>)ctor.Invoke(Array.Empty<object>());
@@ -487,6 +489,7 @@ namespace System
                         // Albeit, this only happens once for each type combination
                         var ctor = typeof(IComparableSpanSortHelper<>)
                         .MakeGenericType(new Type[] { typeof(TKey) })
+                        .GetTypeInfo()
                         .GetConstructor(Array.Empty<Type>());
 
                         return (ISpanSortHelper<TKey>)ctor.Invoke(Array.Empty<object>());
@@ -554,14 +557,15 @@ namespace System
 
             private static ISpanSortHelper<TKey, TComparer> CreateSortHelper()
             {
-                if (typeof(IComparable<TKey>).IsAssignableFrom(typeof(TKey)))
+                if (typeof(IComparable<TKey>).GetTypeInfo().IsAssignableFrom(typeof(TKey)))
                 {
-                    if (typeof(TKey).IsValueType)
+                    if (typeof(TKey).GetTypeInfo().IsValueType)
                     {
                         // TODO: Is there a faster way? A way without heap alloc? 
                         // Albeit, this only happens once for each type combination
                         var ctor = typeof(ComparableSpanSortHelper<,>)
                             .MakeGenericType(new Type[] { typeof(TKey), typeof(TComparer) })
+                            .GetTypeInfo()
                             .GetConstructor(Array.Empty<Type>());
 
                         return (ISpanSortHelper<TKey, TComparer>)ctor.Invoke(Array.Empty<object>());
@@ -576,6 +580,7 @@ namespace System
                         // Albeit, this only happens once for each type combination
                         var ctor = typeof(IComparableSpanSortHelper<,>)
                             .MakeGenericType(new Type[] { typeof(TKey), typeof(TComparer) })
+                            .GetTypeInfo()
                             .GetConstructor(Array.Empty<Type>());
 
                         return (ISpanSortHelper<TKey, TComparer>)ctor.Invoke(Array.Empty<object>());
@@ -646,7 +651,7 @@ namespace System
                 //{
                 if (comparer == null ||
                     // Cache this in generic traits helper class perhaps
-                    (!typeof(TComparer).IsValueType &&
+                    (!typeof(TComparer).GetTypeInfo().IsValueType &&
                      object.ReferenceEquals(comparer, Comparer<TKey>.Default))) // Or "=="?
                 {
                     if (!S.TrySortSpecialized(ref keys, length))
@@ -689,7 +694,7 @@ namespace System
                 //{
                 if (comparer == null ||
                     // Cache this in generic traits helper class perhaps
-                    (!typeof(TComparer).IsValueType &&
+                    (!typeof(TComparer).GetTypeInfo().IsValueType &&
                      object.ReferenceEquals(comparer, Comparer<TKey>.Default))) // Or "=="?
                 {
                     if (!S.TrySortSpecialized(ref keys, length))

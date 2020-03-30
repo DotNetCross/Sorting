@@ -26,7 +26,7 @@ namespace DotNetCross.Sorting.Benchmarks
     public class Int32SortBench : SortBench<int>
     {
         public Int32SortBench()
-            : base(maxLength: 3000000, new[] { 2, 3, 10, 16, 100, 1000, 10000, 1000000 },
+            : base(maxLength: 3000000, new[] { 100, 1000, 10000, 1000000 },
                    SpanFillers.RandomOnly, i => i)
         { }
     }
