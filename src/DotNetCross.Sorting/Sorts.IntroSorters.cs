@@ -36,12 +36,12 @@ namespace DotNetCross.Sorting
             {
                 public void Sort(ref TKey keys, int length)
                 {
-                    TComparer.IntroSort(ref keys, length, Comparer<TKey>.Default);
+                    TComparerImpl.IntroSort(ref keys, length, Comparer<TKey>.Default);
                 }
 
                 public void Sort(ref TKey keys, int length, Comparison<TKey> comparison)
                 {
-                    Comparison.IntroSort(ref keys, length, comparison);
+                    ComparisonImpl.IntroSort(ref keys, length, comparison);
                 }
             }
 
@@ -51,14 +51,14 @@ namespace DotNetCross.Sorting
             {
                 public void Sort(ref TKey keys, int length)
                 {
-                    Sorts.IComparable.IntroSort(ref keys, length);
+                    IComparableImpl.IntroSort(ref keys, length);
                 }
 
                 public void Sort(ref TKey keys, int length, Comparison<TKey> comparison)
                 {
                     // TODO: Check if comparison is Comparer<TKey>.Default.Compare
 
-                    Comparison.IntroSort(ref keys, length, comparison);
+                    ComparisonImpl.IntroSort(ref keys, length, comparison);
                 }
             }
 
@@ -99,11 +99,11 @@ namespace DotNetCross.Sorting
                     //{
                     if (typeof(TComparer) == typeof(IComparer<TKey>) && comparer == null)
                     {
-                        Sorts.TComparer.IntroSort(ref keys, length, Comparer<TKey>.Default);
+                        TComparerImpl.IntroSort(ref keys, length, Comparer<TKey>.Default);
                     }
                     else
                     {
-                        Sorts.TComparer.IntroSort(ref keys, length, comparer);
+                        TComparerImpl.IntroSort(ref keys, length, comparer);
                     }
                     //}
                     //catch (IndexOutOfRangeException e)
@@ -142,12 +142,12 @@ namespace DotNetCross.Sorting
                         {
                             // NOTE: For Bogus Comparable the exception message will be different, when using Comparer<TKey>.Default
                             //       Since the exception message is thrown internally without knowledge of the comparer
-                            Sorts.IComparable.IntroSort(ref keys, length);
+                            IComparableImpl.IntroSort(ref keys, length);
                         }
                     }
                     else
                     {
-                        Sorts.TComparer.IntroSort(ref keys, length, comparer);
+                        TComparerImpl.IntroSort(ref keys, length, comparer);
                     }
                     //}
                     //catch (IndexOutOfRangeException e)

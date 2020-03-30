@@ -184,7 +184,7 @@ namespace System
             TComparer comparer)
             where TComparer : IDirectComparer
         {
-            var depthLimit = 2 * Sorts.FloorLog2PlusOne(length);
+            var depthLimit = 2 * Common.FloorLog2PlusOne(length);
             IntroSort(ref keys, 0, length - 1, depthLimit, comparer);
         }
 
@@ -200,7 +200,7 @@ namespace System
             while (hi > lo)
             {
                 int partitionSize = hi - lo + 1;
-                if (partitionSize <= Sorts.IntrosortSizeThreshold)
+                if (partitionSize <= Common.IntrosortSizeThreshold)
                 {
                     if (partitionSize == 1)
                     {

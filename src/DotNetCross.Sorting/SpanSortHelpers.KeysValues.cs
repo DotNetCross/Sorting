@@ -12,9 +12,9 @@ using System.Runtime.InteropServices;
 //#endif
 
 using S = System.SpanSortHelpersKeysValues;
-using SC = DotNetCross.Sorting.Sorts.Comparison;
-using SIC = DotNetCross.Sorting.Sorts.IComparable;
-using STC = DotNetCross.Sorting.Sorts.TComparer;
+using SC = DotNetCross.Sorting.ComparisonImpl;
+using SIC = DotNetCross.Sorting.IComparableImpl;
+using STC = DotNetCross.Sorting.TComparerImpl;
 using SDC = System.SpanSortHelpersKeysValues_DirectComparer;
 
 namespace System

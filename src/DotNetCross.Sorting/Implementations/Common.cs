@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 
 namespace DotNetCross.Sorting
 {
-    public static partial class Sorts
+    public static partial class Common
     {
         // This is the threshold where Introspective sort switches to Insertion sort.
         // Empirically, 16 seems to speed up most cases without slowing down others, at least for integers.

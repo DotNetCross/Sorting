@@ -9,7 +9,7 @@ using System.Runtime.CompilerServices;
 //#endif
 
 using DotNetCross.Sorting;
-using static DotNetCross.Sorting.Sorts.TDirectComparer;
+using static DotNetCross.Sorting.TDirectComparerImpl;
 using static DotNetCross.Sorting.Swapper;
 
 namespace System

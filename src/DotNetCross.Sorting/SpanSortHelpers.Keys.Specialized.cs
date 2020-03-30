@@ -11,7 +11,7 @@ using System.Runtime.CompilerServices;
 
 using DotNetCross.Sorting;
 using static DotNetCross.Sorting.Swapper;
-using static DotNetCross.Sorting.Sorts.TDirectComparer;
+using static DotNetCross.Sorting.TDirectComparerImpl;
 
 namespace System
 {
