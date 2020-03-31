@@ -2,94 +2,98 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using SDC = System.SpanSortHelpersKeys_DirectComparer;
+using SC = DotNetCross.Sorting.ComparisonImpl;
+using SIC = DotNetCross.Sorting.IComparableImpl;
+using STC = DotNetCross.Sorting.TComparerImpl;
+using SDC = System.SpanSortHelpersKeysValues_DirectComparer;
 
 namespace DotNetCross.Sorting
 {
-    internal static partial class IntroSorters
+    internal static partial class IntroKeysValuesSorters
     {
-        static readonly Type[] EmptyTypes = new Type[0];
         static readonly object[] EmptyObjects = new object[0];
 
-        internal static class Default<TKey>
+        internal static class Default<TKey, TValue>
         {
-            internal static readonly ISorter<TKey> s_default = CreateSorter();
+            internal static readonly IKeysValuesSorter<TKey, TValue> s_default = CreateSorter();
 
-            private static ISorter<TKey> CreateSorter()
+            private static IKeysValuesSorter<TKey, TValue> CreateSorter()
             {
                 if (IComparableTraits<TKey>.IsComparable)
                 {
                     // coreclr uses RuntimeTypeHandle.Allocate
-                    var ctor = typeof(Comparable<>)
-                        .MakeGenericType(new Type[] { typeof(TKey) })
+                    var ctor = typeof(Comparable<,,>)
+                        .MakeGenericType(new Type[] { typeof(TKey), typeof(TValue) })
                         .GetTypeInfo().DeclaredConstructors.Single();
 
-                    return (ISorter<TKey>)ctor.Invoke(EmptyObjects);
+                    return (IKeysValuesSorter<TKey, TValue>)ctor.Invoke(EmptyObjects);
                 }
                 else
                 {
-                    return new NonComparable<TKey>();
+                    return new NonComparable<TKey, TValue>();
                 }
             }
         }
 
-        internal sealed class NonComparable<TKey> : ISorter<TKey>
+        internal class NonComparable<TKey, TValue>
+            : IKeysValuesSorter<TKey, TValue>
         {
-            public void Sort(ref TKey keys, int length)
+            public void Sort(ref TKey keys, ref TValue values, int length)
             {
-                TComparerImpl.IntroSort(ref keys, length, Comparer<TKey>.Default);
+                STC.IntroSort(ref keys, ref values, length, Comparer<TKey>.Default);
             }
 
-            public void Sort(ref TKey keys, int length, Comparison<TKey> comparison)
+            public void Sort(ref TKey keys, ref TValue values, int length, Comparison<TKey> comparison)
             {
-                ComparisonImpl.IntroSort(ref keys, length, comparison);
+                SC.IntroSort(ref keys, ref values, length, comparison);
             }
         }
 
-        internal sealed class Comparable<TKey>
-            : ISorter<TKey>
+        internal class Comparable<TKey, TValue>
+            : IKeysValuesSorter<TKey, TValue>
             where TKey : IComparable<TKey>
         {
-            public void Sort(ref TKey keys, int length)
+            public void Sort(ref TKey keys, ref TValue values, int length)
             {
-                IComparableImpl.IntroSort(ref keys, length);
+                SIC.IntroSort(ref keys, ref values, length);
             }
 
-            public void Sort(ref TKey keys, int length, Comparison<TKey> comparison)
+            public void Sort(ref TKey keys, ref TValue values, int length, Comparison<TKey> comparison)
             {
                 // TODO: Check if comparison is Comparer<TKey>.Default.Compare
 
-                ComparisonImpl.IntroSort(ref keys, length, comparison);
+                SC.IntroSort(ref keys, ref values, length, comparison);
             }
         }
 
-        internal static class Default<TKey, TComparer>
+        internal static class Default<TKey, TValue, TComparer>
             where TComparer : IComparer<TKey>
         {
-            internal static readonly ISorter<TKey, TComparer> s_default = CreateSorter();
+            internal static readonly IKeysValuesSorter<TKey, TValue, TComparer> s_default = CreateSortHelper();
 
-            private static ISorter<TKey, TComparer> CreateSorter()
+            private static IKeysValuesSorter<TKey, TValue, TComparer> CreateSortHelper()
             {
                 if (IComparableTraits<TKey>.IsComparable)
                 {
                     // coreclr uses RuntimeTypeHandle.Allocate
-                    var ctor = typeof(Comparable<>)
-                        .MakeGenericType(new Type[] { typeof(TKey), typeof(TComparer) })
+                    var ctor = typeof(Comparable<,,>)
+                        .MakeGenericType(new Type[] { typeof(TKey), typeof(TValue), typeof(TComparer) })
                         .GetTypeInfo().DeclaredConstructors.Single();
 
-                    return (ISorter<TKey, TComparer>)ctor.Invoke(EmptyObjects);
+                    return (IKeysValuesSorter<TKey, TValue, TComparer>)ctor.Invoke(EmptyObjects);
                 }
                 else
                 {
-                    return new NonComparable<TKey, TComparer>();
+                    return new NonComparable<TKey, TValue, TComparer>();
                 }
             }
         }
 
-        internal sealed class NonComparable<TKey, TComparer> : ISorter<TKey, TComparer>
+        internal class NonComparable<TKey, TValue, TComparer>
+            : IKeysValuesSorter<TKey, TValue, TComparer>
             where TComparer : IComparer<TKey>
         {
-            public void Sort(ref TKey keys, int length, TComparer comparer)
+            public void Sort(ref TKey keys, ref TValue values, int length, TComparer comparer)
             {
                 // Add a try block here to detect IComparers (or their
                 // underlying IComparables, etc) that are bogus.
@@ -99,11 +103,11 @@ namespace DotNetCross.Sorting
                 //{
                 if (typeof(TComparer) == typeof(IComparer<TKey>) && comparer == null)
                 {
-                    TComparerImpl.IntroSort(ref keys, length, Comparer<TKey>.Default);
+                    STC.IntroSort(ref keys, ref values, length, Comparer<TKey>.Default);
                 }
                 else
                 {
-                    TComparerImpl.IntroSort(ref keys, length, comparer);
+                    STC.IntroSort(ref keys, ref values, length, comparer);
                 }
                 //}
                 //catch (IndexOutOfRangeException e)
@@ -119,12 +123,12 @@ namespace DotNetCross.Sorting
             }
         }
 
-        internal sealed class Comparable<TKey, TComparer>
-            : ISorter<TKey, TComparer>
+        internal class Comparable<TKey, TValue, TComparer>
+            : IKeysValuesSorter<TKey, TValue, TComparer>
             where TKey : IComparable<TKey>
             where TComparer : IComparer<TKey>
         {
-            public void Sort(ref TKey keys, int length,
+            public void Sort(ref TKey keys, ref TValue values, int length,
                 TComparer comparer)
             {
                 // Add a try block here to detect IComparers (or their
@@ -135,19 +139,19 @@ namespace DotNetCross.Sorting
                 //{
                 if (comparer == null ||
                     // Cache this in generic traits helper class perhaps
-                    (!typeof(TComparer).GetTypeInfo().IsValueType &&
-                     object.ReferenceEquals(comparer, Comparer<TKey>.Default)))
+                    (!ValueTraits<TComparer>.IsValueType &&
+                     ReferenceEquals(comparer, Comparer<TKey>.Default))) // Or "=="?
                 {
-                    if (!SDC.TrySortSpecialized(ref keys, length))
+                    if (!SDC.TrySortSpecialized(ref keys, ref values, length))
                     {
                         // NOTE: For Bogus Comparable the exception message will be different, when using Comparer<TKey>.Default
                         //       Since the exception message is thrown internally without knowledge of the comparer
-                        IComparableImpl.IntroSort(ref keys, length);
+                        SIC.IntroSort(ref keys, ref values, length);
                     }
                 }
                 else
                 {
-                    TComparerImpl.IntroSort(ref keys, length, comparer);
+                    STC.IntroSort(ref keys, ref values, length, comparer);
                 }
                 //}
                 //catch (IndexOutOfRangeException e)

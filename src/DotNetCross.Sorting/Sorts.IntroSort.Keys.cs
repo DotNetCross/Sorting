@@ -23,7 +23,7 @@ namespace DotNetCross.Sorting
                     ref MemoryMarshal.GetReference(keys),
                     length))
                 {
-                    IntroSorters.Default<TKey>.s_default.Sort(
+                    IntroKeysSorters.Default<TKey>.s_default.Sort(
                         ref MemoryMarshal.GetReference(keys),
                         length);
                 }
@@ -38,7 +38,7 @@ namespace DotNetCross.Sorting
                 if (length < 2)
                     return;
 
-                IntroSorters.Default<TKey, TComparer>.s_default.Sort(
+                IntroKeysSorters.Default<TKey, TComparer>.s_default.Sort(
                     ref MemoryMarshal.GetReference(keys),
                     length, comparer);
             }
@@ -51,7 +51,7 @@ namespace DotNetCross.Sorting
                 if (length < 2)
                     return;
 
-                IntroSorters.Default<TKey>.s_default.Sort(
+                IntroKeysSorters.Default<TKey>.s_default.Sort(
                     ref MemoryMarshal.GetReference(keys),
                     length, comparison);
             }
