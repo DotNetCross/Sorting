@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using SDC = System.SpanSortHelpersKeys_DirectComparer;
 
@@ -7,21 +8,23 @@ namespace DotNetCross.Sorting
 {
     internal static partial class IntroSorters
     {
+        static readonly Type[] EmptyTypes = new Type[0];
+        static readonly object[] EmptyObjects = new object[0];
+
         internal static class Default<TKey>
         {
             internal static readonly ISorter<TKey> s_default = CreateSorter();
 
             private static ISorter<TKey> CreateSorter()
             {
-                if (typeof(IComparable<TKey>).GetTypeInfo().IsAssignableFrom(typeof(TKey)))
+                if (IComparableTraits<TKey>.IsComparable)
                 {
                     // coreclr uses RuntimeTypeHandle.Allocate
                     var ctor = typeof(Comparable<>)
                         .MakeGenericType(new Type[] { typeof(TKey) })
-                        .GetTypeInfo()
-                        .GetConstructor(Array.Empty<Type>());
+                        .GetTypeInfo().DeclaredConstructors.Single();
 
-                    return (ISorter<TKey>)ctor.Invoke(Array.Empty<object>());
+                    return (ISorter<TKey>)ctor.Invoke(EmptyObjects);
                 }
                 else
                 {
@@ -30,7 +33,7 @@ namespace DotNetCross.Sorting
             }
         }
 
-        internal class NonComparable<TKey> : ISorter<TKey>
+        internal sealed class NonComparable<TKey> : ISorter<TKey>
         {
             public void Sort(ref TKey keys, int length)
             {
@@ -43,7 +46,7 @@ namespace DotNetCross.Sorting
             }
         }
 
-        internal class Comparable<TKey>
+        internal sealed class Comparable<TKey>
             : ISorter<TKey>
             where TKey : IComparable<TKey>
         {
@@ -67,15 +70,14 @@ namespace DotNetCross.Sorting
 
             private static ISorter<TKey, TComparer> CreateSorter()
             {
-                if (typeof(IComparable<TKey>).GetTypeInfo().IsAssignableFrom(typeof(TKey)))
+                if (IComparableTraits<TKey>.IsComparable)
                 {
                     // coreclr uses RuntimeTypeHandle.Allocate
-                    var ctor = typeof(Comparable<,>)
+                    var ctor = typeof(Comparable<>)
                         .MakeGenericType(new Type[] { typeof(TKey), typeof(TComparer) })
-                        .GetTypeInfo()
-                        .GetConstructor(Array.Empty<Type>());
+                        .GetTypeInfo().DeclaredConstructors.Single();
 
-                    return (ISorter<TKey, TComparer>)ctor.Invoke(Array.Empty<object>());
+                    return (ISorter<TKey, TComparer>)ctor.Invoke(EmptyObjects);
                 }
                 else
                 {
@@ -84,7 +86,7 @@ namespace DotNetCross.Sorting
             }
         }
 
-        internal class NonComparable<TKey, TComparer> : ISorter<TKey, TComparer>
+        internal sealed class NonComparable<TKey, TComparer> : ISorter<TKey, TComparer>
             where TComparer : IComparer<TKey>
         {
             public void Sort(ref TKey keys, int length, TComparer comparer)
@@ -117,7 +119,7 @@ namespace DotNetCross.Sorting
             }
         }
 
-        internal class Comparable<TKey, TComparer>
+        internal sealed class Comparable<TKey, TComparer>
             : ISorter<TKey, TComparer>
             where TKey : IComparable<TKey>
             where TComparer : IComparer<TKey>
