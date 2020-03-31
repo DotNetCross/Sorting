@@ -22,7 +22,7 @@ namespace DotNetCross.Sorting
                 if (IComparableTraits<TKey>.IsComparable)
                 {
                     // coreclr uses RuntimeTypeHandle.Allocate
-                    var ctor = typeof(Comparable<,,>)
+                    var ctor = typeof(Comparable<,>)
                         .MakeGenericType(new Type[] { typeof(TKey), typeof(TValue) })
                         .GetTypeInfo().DeclaredConstructors.Single();
 
