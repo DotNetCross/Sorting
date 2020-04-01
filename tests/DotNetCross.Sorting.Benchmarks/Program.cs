@@ -197,6 +197,7 @@ namespace DotNetCross.Sorting.Benchmarks
         {
             if (true && !Debugger.IsAttached)
             {
+                //BenchmarkRunner.Run<SortDictionary>();
                 // TKey benchs
                 BenchmarkRunner.Run<Int32SortBench>();
                 //BenchmarkRunner.Run<Int32SortDisassemblerBench>();
