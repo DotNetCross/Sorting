@@ -91,7 +91,7 @@ namespace System
                 {
                     // Comparison to NaN is always false, so do a linear pass 
                     // and swap all NaNs to the front of the array
-                    var left = NaNPrepass(ref specificKeys, ref values, length, new SingleIsNaN());
+                    var left = Common.NaNPrepass(ref specificKeys, ref values, length, new SingleIsNaN());
 
                     var remaining = length - left;
                     if (remaining > 1)
@@ -119,7 +119,7 @@ namespace System
                 {
                     // Comparison to NaN is always false, so do a linear pass 
                     // and swap all NaNs to the front of the array
-                    var left = NaNPrepass(ref specificKeys, ref values, length, new DoubleIsNaN());
+                    var left = Common.NaNPrepass(ref specificKeys, ref values, length, new DoubleIsNaN());
 
                     var remaining = length - left;
                     if (remaining > 1)
@@ -146,32 +146,6 @@ namespace System
             {
                 return false;
             }
-        }
-
-        // For sorting, move all NaN instances to front of the input array
-        private static int NaNPrepass<TKey, TValue, TIsNaN>(
-            ref TKey keys, ref TValue values, int length,
-            TIsNaN isNaN)
-            where TIsNaN : struct, IIsNaN<TKey>
-        {
-            int left = 0;
-            for (int i = 0; i < length; i++)
-            {
-                ref TKey current = ref Unsafe.Add(ref keys, i);
-                if (isNaN.IsNaN(current))
-                {
-                    // TODO: If first index is not NaN or we find just one not NaNs 
-                    //       we could skip to version that no longer checks this
-                    if (left != i)
-                    {
-                        ref TKey previous = ref Unsafe.Add(ref keys, left);
-                        Swap(ref previous, ref current);
-                        Swap(ref values, left, i);
-                    }
-                    ++left;
-                }
-            }
-            return left;
         }
     }
 }
