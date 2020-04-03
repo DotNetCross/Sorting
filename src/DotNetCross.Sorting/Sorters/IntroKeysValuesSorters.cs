@@ -35,7 +35,7 @@ namespace DotNetCross.Sorting
             }
         }
 
-        internal class NonComparable<TKey, TValue>
+        internal sealed class NonComparable<TKey, TValue>
             : IKeysValuesSorter<TKey, TValue>
         {
             public void Sort(ref TKey keys, ref TValue values, int length)
@@ -49,7 +49,7 @@ namespace DotNetCross.Sorting
             }
         }
 
-        internal class Comparable<TKey, TValue>
+        internal sealed class Comparable<TKey, TValue>
             : IKeysValuesSorter<TKey, TValue>
             where TKey : IComparable<TKey>
         {
@@ -89,7 +89,7 @@ namespace DotNetCross.Sorting
             }
         }
 
-        internal class NonComparable<TKey, TValue, TComparer>
+        internal sealed class NonComparable<TKey, TValue, TComparer>
             : IKeysValuesSorter<TKey, TValue, TComparer>
             where TComparer : IComparer<TKey>
         {
@@ -123,7 +123,7 @@ namespace DotNetCross.Sorting
             }
         }
 
-        internal class Comparable<TKey, TValue, TComparer>
+        internal sealed class Comparable<TKey, TValue, TComparer>
             : IKeysValuesSorter<TKey, TValue, TComparer>
             where TKey : IComparable<TKey>
             where TComparer : IComparer<TKey>
