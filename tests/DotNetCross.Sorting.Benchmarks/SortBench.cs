@@ -11,11 +11,11 @@ namespace DotNetCross.Sorting.Benchmarks
         where TKey : IComparable<TKey>
     {
         static readonly ClassComparableComparer<TKey> _classComparer = new ClassComparableComparer<TKey>();
-        readonly int _maxLength;
-        readonly ISpanFiller[] _fillers;
-        readonly Func<int, TKey> _toValue;
-        readonly TKey[] _filled;
-        readonly TKey[] _work;
+        protected readonly int _maxLength;
+        protected readonly ISpanFiller[] _fillers;
+        protected readonly Func<int, TKey> _toValue;
+        protected readonly TKey[] _filled;
+        protected readonly TKey[] _work;
 
         public SortBench(int maxLength, int[] sliceLengths, ISpanFiller[] fillers, Func<int, TKey> toValue)
         {

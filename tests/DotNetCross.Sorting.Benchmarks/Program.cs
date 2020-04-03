@@ -1,5 +1,9 @@
-﻿using System;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
+using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
 using DotNetCross.Sorting.Sequences;
 
@@ -29,6 +33,29 @@ namespace DotNetCross.Sorting.Benchmarks
             : base(maxLength: 3000000, new[] { 100, 1000, 10000, 1000000 },
                    SpanFillers.RandomOnly, i => i)
         { }
+
+        [Benchmark]
+        public void DNX_Span_CustomStructComparer()
+        {
+            for (int i = 0; i <= _maxLength - Length; i += Length)
+            {
+                new Span<int>(_work, i, Length).IntroSort(new CustomStructComparer());
+            }
+        }
+
+        struct CustomStructComparer : IComparer<int>
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public int Compare(int x, int y) => x.CompareTo(y);
+        }
+
+        //int[] a = new int[3];
+        //public void SortTest()
+        //{
+        //    TComparerImpl.Sort3(ref a[0], ref a[1], ref a[2],
+        //        new CustomStructComparer());
+        //}
+
     }
     public class SingleSortBench : SortBench<float>
     {
