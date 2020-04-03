@@ -38,7 +38,7 @@ namespace System
                 ref MemoryMarshal.GetReference(values),
                 length))
             {
-                IntroKeysValuesSorters.Default<TKey, TValue>.s_default.Sort(
+                IntroKeysValuesSorters.Default<TKey, TValue>.Instance.Sort(
                     ref MemoryMarshal.GetReference(keys),
                     ref MemoryMarshal.GetReference(values),
                     length);
@@ -56,7 +56,7 @@ namespace System
             if (length < 2)
                 return;
 
-            IntroKeysValuesSorters.Default<TKey, TValue, TComparer>.s_default.Sort(
+            IntroKeysValuesSorters.Default<TKey, TValue, TComparer>.Instance.Sort(
                 ref MemoryMarshal.GetReference(keys),
                 ref MemoryMarshal.GetReference(values),
                 length, comparer);
@@ -72,7 +72,7 @@ namespace System
             if (length < 2)
                 return;
 
-            IntroKeysValuesSorters.Default<TKey, TValue>.s_default.Sort(
+            IntroKeysValuesSorters.Default<TKey, TValue>.Instance.Sort(
                 ref MemoryMarshal.GetReference(keys),
                 ref MemoryMarshal.GetReference(values),
                 length, comparison);

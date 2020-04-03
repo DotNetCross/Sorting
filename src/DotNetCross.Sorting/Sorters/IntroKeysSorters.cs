@@ -12,7 +12,7 @@ namespace DotNetCross.Sorting
 
         internal static class Default<TKey>
         {
-            internal static readonly IKeysSorter<TKey> s_default = CreateSorter();
+            internal static readonly IKeysSorter<TKey> Instance = CreateSorter();
 
             private static IKeysSorter<TKey> CreateSorter()
             {
@@ -65,7 +65,7 @@ namespace DotNetCross.Sorting
         internal static class Default<TKey, TComparer>
             where TComparer : IComparer<TKey>
         {
-            internal static readonly IKeysSorter<TKey, TComparer> s_default = CreateSorter();
+            internal static readonly IKeysSorter<TKey, TComparer> Instance = CreateSorter();
 
             private static IKeysSorter<TKey, TComparer> CreateSorter()
             {
