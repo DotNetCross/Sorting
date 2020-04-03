@@ -1,27 +1,29 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using SDC = System.SpanSortHelpersKeys_DirectComparer;
 
 namespace DotNetCross.Sorting
 {
-    internal static partial class IntroSorters
+    internal static partial class IntroKeysSorters
     {
+        static readonly object[] EmptyObjects = new object[0];
+
         internal static class Default<TKey>
         {
-            internal static readonly ISorter<TKey> s_default = CreateSorter();
+            internal static readonly IKeysSorter<TKey> Instance = CreateSorter();
 
-            private static ISorter<TKey> CreateSorter()
+            private static IKeysSorter<TKey> CreateSorter()
             {
-                if (typeof(IComparable<TKey>).GetTypeInfo().IsAssignableFrom(typeof(TKey)))
+                if (IComparableTraits<TKey>.IsComparable)
                 {
                     // coreclr uses RuntimeTypeHandle.Allocate
                     var ctor = typeof(Comparable<>)
                         .MakeGenericType(new Type[] { typeof(TKey) })
-                        .GetTypeInfo()
-                        .GetConstructor(Array.Empty<Type>());
+                        .GetTypeInfo().DeclaredConstructors.Single();
 
-                    return (ISorter<TKey>)ctor.Invoke(Array.Empty<object>());
+                    return (IKeysSorter<TKey>)ctor.Invoke(EmptyObjects);
                 }
                 else
                 {
@@ -30,7 +32,7 @@ namespace DotNetCross.Sorting
             }
         }
 
-        internal class NonComparable<TKey> : ISorter<TKey>
+        internal sealed class NonComparable<TKey> : IKeysSorter<TKey>
         {
             public void Sort(ref TKey keys, int length)
             {
@@ -43,8 +45,8 @@ namespace DotNetCross.Sorting
             }
         }
 
-        internal class Comparable<TKey>
-            : ISorter<TKey>
+        internal sealed class Comparable<TKey>
+            : IKeysSorter<TKey>
             where TKey : IComparable<TKey>
         {
             public void Sort(ref TKey keys, int length)
@@ -63,19 +65,18 @@ namespace DotNetCross.Sorting
         internal static class Default<TKey, TComparer>
             where TComparer : IComparer<TKey>
         {
-            internal static readonly ISorter<TKey, TComparer> s_default = CreateSorter();
+            internal static readonly IKeysSorter<TKey, TComparer> Instance = CreateSorter();
 
-            private static ISorter<TKey, TComparer> CreateSorter()
+            private static IKeysSorter<TKey, TComparer> CreateSorter()
             {
-                if (typeof(IComparable<TKey>).GetTypeInfo().IsAssignableFrom(typeof(TKey)))
+                if (IComparableTraits<TKey>.IsComparable)
                 {
                     // coreclr uses RuntimeTypeHandle.Allocate
                     var ctor = typeof(Comparable<,>)
                         .MakeGenericType(new Type[] { typeof(TKey), typeof(TComparer) })
-                        .GetTypeInfo()
-                        .GetConstructor(Array.Empty<Type>());
+                        .GetTypeInfo().DeclaredConstructors.Single();
 
-                    return (ISorter<TKey, TComparer>)ctor.Invoke(Array.Empty<object>());
+                    return (IKeysSorter<TKey, TComparer>)ctor.Invoke(EmptyObjects);
                 }
                 else
                 {
@@ -84,7 +85,7 @@ namespace DotNetCross.Sorting
             }
         }
 
-        internal class NonComparable<TKey, TComparer> : ISorter<TKey, TComparer>
+        internal sealed class NonComparable<TKey, TComparer> : IKeysSorter<TKey, TComparer>
             where TComparer : IComparer<TKey>
         {
             public void Sort(ref TKey keys, int length, TComparer comparer)
@@ -117,8 +118,8 @@ namespace DotNetCross.Sorting
             }
         }
 
-        internal class Comparable<TKey, TComparer>
-            : ISorter<TKey, TComparer>
+        internal sealed class Comparable<TKey, TComparer>
+            : IKeysSorter<TKey, TComparer>
             where TKey : IComparable<TKey>
             where TComparer : IComparer<TKey>
         {
