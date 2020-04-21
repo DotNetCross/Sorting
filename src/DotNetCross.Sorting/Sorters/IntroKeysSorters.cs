@@ -6,6 +6,23 @@ using SDC = System.SpanSortHelpersKeys_DirectComparer;
 
 namespace DotNetCross.Sorting
 {
+    internal sealed partial class IntroKeysSortersComparable<TKey>
+        : IKeysSorter<TKey>
+        where TKey : IComparable<TKey>
+    {
+        public void Sort(ref TKey keys, int length)
+        {
+            IntroSort(ref keys, length);
+        }
+
+        public void Sort(ref TKey keys, int length, Comparison<TKey> comparison)
+        {
+            // TODO: Check if comparison is Comparer<TKey>.Default.Compare
+
+            ComparisonImpl.IntroSort(ref keys, length, comparison);
+        }
+    }
+
     internal static partial class IntroKeysSorters
     {
         static readonly object[] EmptyObjects = new object[0];
@@ -19,9 +36,9 @@ namespace DotNetCross.Sorting
                 if (IComparableTraits<TKey>.IsComparable)
                 {
                     // coreclr uses RuntimeTypeHandle.Allocate
-                    var ctor = typeof(Comparable<>)
+                    var ctor = typeof(IntroKeysSortersComparable<>)
                         .MakeGenericType(new Type[] { typeof(TKey) })
-                        .GetTypeInfo().DeclaredConstructors.Single();
+                        .GetTypeInfo().DeclaredConstructors.Where(ci => !ci.IsStatic).Single();
 
                     return (IKeysSorter<TKey>)ctor.Invoke(EmptyObjects);
                 }
@@ -45,22 +62,6 @@ namespace DotNetCross.Sorting
             }
         }
 
-        internal sealed class Comparable<TKey>
-            : IKeysSorter<TKey>
-            where TKey : IComparable<TKey>
-        {
-            public void Sort(ref TKey keys, int length)
-            {
-                IComparableImpl.IntroSort(ref keys, length);
-            }
-
-            public void Sort(ref TKey keys, int length, Comparison<TKey> comparison)
-            {
-                // TODO: Check if comparison is Comparer<TKey>.Default.Compare
-
-                ComparisonImpl.IntroSort(ref keys, length, comparison);
-            }
-        }
 
         internal static class Default<TKey, TComparer>
             where TComparer : IComparer<TKey>
@@ -74,7 +75,7 @@ namespace DotNetCross.Sorting
                     // coreclr uses RuntimeTypeHandle.Allocate
                     var ctor = typeof(Comparable<,>)
                         .MakeGenericType(new Type[] { typeof(TKey), typeof(TComparer) })
-                        .GetTypeInfo().DeclaredConstructors.Single();
+                        .GetTypeInfo().DeclaredConstructors.Where(ci => !ci.IsStatic).Single();
 
                     return (IKeysSorter<TKey, TComparer>)ctor.Invoke(EmptyObjects);
                 }
@@ -123,6 +124,8 @@ namespace DotNetCross.Sorting
             where TKey : IComparable<TKey>
             where TComparer : IComparer<TKey>
         {
+            internal static readonly IntroKeysSortersComparable<TKey> NonComparerInstance = new IntroKeysSortersComparable<TKey>();
+
             public void Sort(ref TKey keys, int length,
                 TComparer comparer)
             {
@@ -141,7 +144,8 @@ namespace DotNetCross.Sorting
                     {
                         // NOTE: For Bogus Comparable the exception message will be different, when using Comparer<TKey>.Default
                         //       Since the exception message is thrown internally without knowledge of the comparer
-                        IComparableImpl.IntroSort(ref keys, length);
+                        //IComparableImpl.IntroSort(ref keys, length);
+                        NonComparerInstance.IntroSort(ref keys, length);
                     }
                 }
                 else

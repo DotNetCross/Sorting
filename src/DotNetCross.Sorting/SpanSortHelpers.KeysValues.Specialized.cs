@@ -139,7 +139,7 @@ namespace System
             //else if (typeof(TKey) == typeof(string))
             //{
             //    ref var specificKeys = ref Unsafe.As<TKey, string>(ref keys);
-            //    Sort(ref specificKeys, ref values, length, new StringDirectComparer());
+            //    IntroSort(ref specificKeys, ref values, length, StringDirectComparer.CreateForCurrentCulture());
             //    return true;
             //}
             else
