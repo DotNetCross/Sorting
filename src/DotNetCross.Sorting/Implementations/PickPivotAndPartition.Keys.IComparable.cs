@@ -76,8 +76,7 @@ namespace DotNetCross.Sorting
                 if (left >= right)
                     break;
 
-                //Swap(ref keys, left, right);
-                //Swap(ref keysLeft, ref keysRight);
+                // PERF: Swap manually inlined here for better code-gen
                 var t = keysLeft;
                 keysLeft = keysRight;
                 keysRight = t;
