@@ -70,6 +70,6 @@ jobs:
     #    dotnet-version: '5.0.100-preview.3.20216.6' #${{ matrix.dotnet }}
 
     - name: Build with dotnet
-      run: dotnet build --framework netcoreapp3.1 --configuration ${{ matrix.configuration }}
+      run: dotnet build --configuration ${{ matrix.configuration }}
     - name: Test with dotnet
       run: dotnet test --framework netcoreapp3.1 --configuration ${{ matrix.configuration }}
