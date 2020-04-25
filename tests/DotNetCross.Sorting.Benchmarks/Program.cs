@@ -1,5 +1,10 @@
-﻿using System;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
+using System.Threading;
+using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
 using DotNetCross.Sorting.Sequences;
 
@@ -29,6 +34,29 @@ namespace DotNetCross.Sorting.Benchmarks
             : base(maxLength: 3000000, new[] { 100, 1000, 10000, 1000000 },
                    SpanFillers.RandomOnly, i => i)
         { }
+
+        [Benchmark]
+        public void DNX_Span_CustomStructComparer()
+        {
+            for (int i = 0; i <= _maxLength - Length; i += Length)
+            {
+                new Span<int>(_work, i, Length).IntroSort(new CustomStructComparer());
+            }
+        }
+
+        struct CustomStructComparer : IComparer<int>
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public int Compare(int x, int y) => x.CompareTo(y);
+        }
+
+        //int[] a = new int[3];
+        //public void SortTest()
+        //{
+        //    TComparerImpl.Sort3(ref a[0], ref a[1], ref a[2],
+        //        new CustomStructComparer());
+        //}
+
     }
     public class SingleSortBench : SortBench<float>
     {
@@ -41,7 +69,7 @@ namespace DotNetCross.Sorting.Benchmarks
     {
         public StringSortBench()
             : base(maxLength: 100000, new[] { 2, 3, 10, 100, 1000, 10000 },
-                   SpanFillers.Default, i => i.ToString("D9"))
+                   SpanFillers.RandomOnly, i => i.ToString("D9"))
         { }
     }
     public class ComparableStructInt32SortBench : SortBench<ComparableStructInt32>
@@ -54,8 +82,8 @@ namespace DotNetCross.Sorting.Benchmarks
     public class ComparableClassInt32SortBench : SortBench<ComparableClassInt32>
     {
         public ComparableClassInt32SortBench()
-            : base(maxLength: 100000, new[] { 2, 3, 10, 100, 10000, 100000 },
-                   SpanFillers.Default, i => new ComparableClassInt32(i))
+            : base(maxLength: 400000, new[] { 2, 3, 10, 100, 10000, 100000 },
+                   SpanFillers.RandomOnly, i => new ComparableClassInt32(i))
         { }
     }
 
@@ -195,17 +223,19 @@ namespace DotNetCross.Sorting.Benchmarks
     {
         static void Main(string[] args)
         {
+            Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.RealTime;
+            Thread.CurrentThread.Priority = ThreadPriority.Highest;
+
             if (true && !Debugger.IsAttached)
             {
                 //BenchmarkRunner.Run<SortDictionary>();
                 // TKey benchs
-                BenchmarkRunner.Run<Int32SortBench>();
-                //BenchmarkRunner.Run<Int32SortDisassemblerBench>();
-                return;
-                BenchmarkRunner.Run<SingleSortBench>();
+                //BenchmarkRunner.Run<Int32SortBench>();
+                //BenchmarkRunner.Run<SingleSortBench>();
                 BenchmarkRunner.Run<ComparableStructInt32SortBench>();
                 BenchmarkRunner.Run<ComparableClassInt32SortBench>();
                 BenchmarkRunner.Run<StringSortBench>();
+                return;
                 // TKey,TValue benchs
                 BenchmarkRunner.Run<Int32Int32SortBench>();
                 BenchmarkRunner.Run<Int32SingleSortBench>();
@@ -238,23 +268,25 @@ namespace DotNetCross.Sorting.Benchmarks
             }
             else if (true)
             {
-                var sut = new ComparableClassInt32SortBench();
-                //var sut = new StringSortBench();
+                //var sut = new ComparableClassInt32SortBench();
+                var sut = new StringSortBench();
                 sut.Filler = new RandomSpanFiller(SpanFillers.RandomSeed);
-                sut.Length = 1000; // 1000000;
+                sut.Length = 10000; // 1000000;
                 sut.GlobalSetup();
                 sut.IterationSetup();
                 sut.DNX_Span_();
                 sut.IterationSetup();
-                sut.DNX_Span_();
+                sut.Array_();
 
-                Console.WriteLine("Enter key...");
-                Console.ReadKey();
+                //Console.WriteLine("Enter key...");
+                //Console.ReadKey();
 
-                for (int i = 0; i < 1000; i++)
+                for (int i = 0; i < 200; i++)
                 {
                     sut.IterationSetup();
                     sut.DNX_Span_();
+                    sut.IterationSetup();
+                    sut.Array_();
                 }
             }
             else

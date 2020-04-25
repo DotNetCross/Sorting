@@ -1,10 +1,12 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System;
+using System.Globalization;
+using System.Runtime.CompilerServices;
 
 namespace DotNetCross.Sorting
 {
     // This started out with just LessThan.
     // However, due to bogus comparers, comparables etc.
-    // we need to preserve semantics completely to get same result.
+    // we need to preserve semantics completely to get same result. REVISIT THIS BY MAKING TESTS ROBUST AGAINST SAME KEY DIFFERENCES
     internal interface IDirectComparer<in T>
     {
         bool GreaterThan(T x, T y);
@@ -104,14 +106,24 @@ namespace DotNetCross.Sorting
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool LessThanEqual(double x, double y) => x <= y;
     }
-    // TODO: Revise whether this is needed
+
     internal struct StringDirectComparer : IDirectComparer<string>
     {
+        readonly CompareInfo m_compareInfo;
+
+        public StringDirectComparer(CompareInfo compareInfo) =>
+            m_compareInfo = compareInfo;
+
+        // Getting CurrentCulture.CompareInfo for each compare is slower,
+        // so instead we get it once and use for default string sorting.
+        public static StringDirectComparer CreateForCurrentCulture() =>
+            new StringDirectComparer(CultureInfo.CurrentCulture.CompareInfo);
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool GreaterThan(string x, string y) => x.CompareTo(y) > 0;
+        public bool GreaterThan(string x, string y) => m_compareInfo.Compare(x, y) > 0;
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool LessThan(string x, string y) => x.CompareTo(y) < 0;
+        public bool LessThan(string x, string y) => m_compareInfo.Compare(x, y) < 0;
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool LessThanEqual(string x, string y) => x.CompareTo(y) <= 0;
+        public bool LessThanEqual(string x, string y) => m_compareInfo.Compare(x, y) <= 0;
     }
 }

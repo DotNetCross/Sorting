@@ -14,8 +14,9 @@ namespace DotNetCross.Sorting.Benchmarks
             var runMode = new BenchmarkDotNet.Jobs.RunMode() { LaunchCount = 1, WarmupCount = 3, IterationCount = 9, /*TargetCount = 11, */RunStrategy = RunStrategy.Monitoring };
             var envModes = new[] {
                 // NOTE: None of the other platforms work...
-                //new EnvMode { Runtime = Runtime.Core, Platform = Platform.X86 },
-                new EnvironmentMode { Runtime = CoreRuntime.Core50, Platform = Platform.X64 },
+                //new EnvironmentMode { Platform = Platform.X86 },
+                //new EnvironmentMode { Platform = Platform.X64 },
+                new EnvironmentMode { Runtime =  CoreRuntime.Core50, Platform = Platform.X64 },
                 //new EnvMode { Runtime = Runtime.Clr, Platform = Platform.X86 },
                 //new EnvMode { Runtime = Runtime.Clr, Platform = Platform.X64 },
             };

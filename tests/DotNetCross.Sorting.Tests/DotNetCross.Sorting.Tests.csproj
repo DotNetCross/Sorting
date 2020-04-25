@@ -1,7 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFrameworks>netcoreapp3.1</TargetFrameworks>
+    <!--Simply can't get the below working with GitHub CI since can't have multiple SDKs installed.
+        The whole way of specifying target framework when building is messy from command line-->
+    <!--<TargetFrameworks>netcoreapp3.1;netcoreapp5.0</TargetFrameworks>-->
     <OutputPath>..\..\build\Tests_$(AssemblyName)_$(Configuration)</OutputPath>
     <IsPackable>false</IsPackable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>

@@ -5,11 +5,10 @@ using static DotNetCross.Sorting.Swapper;
 
 namespace DotNetCross.Sorting
 {
-    internal static partial class IComparableImpl
+    internal partial class KeysSorter_Comparable<TKey>
     {
-        internal static int PickPivotAndPartition<TKey>(
+        internal int PickPivotAndPartition(
             ref TKey keys, int lo, int hi)
-            where TKey : IComparable<TKey>
         {
 
             Debug.Assert(lo >= 0);
@@ -26,45 +25,59 @@ namespace DotNetCross.Sorting
             int middle = (int)(((uint)hi + (uint)lo) >> 1);
 
             // Sort lo, mid and hi appropriately, then pick mid as the pivot.
-            ref TKey keysAtLo = ref Unsafe.Add(ref keys, lo);
-            ref TKey keysAtMiddle = ref Unsafe.Add(ref keys, middle);
-            ref TKey keysAtHi = ref Unsafe.Add(ref keys, hi);
-            Sort3(ref keysAtLo, ref keysAtMiddle, ref keysAtHi);
+            ref TKey keysLeft = ref Unsafe.Add(ref keys, lo);
+            ref TKey keysMiddle = ref Unsafe.Add(ref keys, middle);
+            ref TKey keysRight = ref Unsafe.Add(ref keys, hi);
+            Sort3(ref keysLeft, ref keysMiddle, ref keysRight);
 
-            TKey pivot = keysAtMiddle;
+            TKey pivot = keysMiddle;
+
+            // We already partitioned lo and hi and put the pivot in hi - 1.  
+            // And we pre-increment & decrement below.
+            keysRight = ref Unsafe.Add(ref keysRight, -1);
+            Swap(ref keysMiddle, ref keysRight);
 
             int left = lo;
             int right = hi - 1;
-            // We already partitioned lo and hi and put the pivot in hi - 1.  
-            // And we pre-increment & decrement below.
-            Swap(ref keysAtMiddle, ref Unsafe.Add(ref keys, right));
-
             while (left < right)
             {
                 // TODO: Would be good to be able to update local ref here
 
                 if (pivot == null)
                 {
-                    while (left < (hi - 1) && Unsafe.Add(ref keys, ++left) == null) ;
-                    while (right > lo && Unsafe.Add(ref keys, --right) != null) ;
+                    //while (left < (hi - 1) && Unsafe.Add(ref keys, ++left) == null) ;
+                    do { ++left; keysLeft = ref Unsafe.Add(ref keysLeft, 1); }
+                    while (left < right && keysLeft == null);
+
+                    //while (right > lo && Unsafe.Add(ref keys, --right) != null) ;
+                    do { --right; keysRight = ref Unsafe.Add(ref keysRight, -1); }
+                    while (right > lo && keysRight != null);
                 }
                 else
                 {
-                    while (left < (hi - 1) && pivot.CompareTo(Unsafe.Add(ref keys, ++left)) > 0) ;
+                    //while (left < (hi - 1) && pivot.CompareTo(Unsafe.Add(ref keys, ++left)) > 0) ;
+                    //while (left < right && pivot.CompareTo(Unsafe.Add(ref keys, ++left)) > 0) ;
+                    do { ++left; keysLeft = ref Unsafe.Add(ref keysLeft, 1); }
+                    while (left < right && pivot.CompareTo(keysLeft) > 0);
                     // Check if bad comparable/comparer
-                    if (left == (hi - 1) && pivot.CompareTo(Unsafe.Add(ref keys, left)) > 0)
+                    if (left == right && pivot.CompareTo(keysLeft) > 0)
                         ThrowHelper.ThrowArgumentException_BadComparable(typeof(TKey));
 
-                    while (right > lo && pivot.CompareTo(Unsafe.Add(ref keys, --right)) < 0) ;
+                    //while (right > lo && pivot.CompareTo(Unsafe.Add(ref keys, --right)) < 0) ;
+                    do { --right; keysRight = ref Unsafe.Add(ref keysRight, -1); }
+                    while (right > lo && pivot.CompareTo(keysRight) < 0);
                     // Check if bad comparable/comparer
-                    if (right == lo && pivot.CompareTo(Unsafe.Add(ref keys, right)) < 0)
+                    if (right == lo && pivot.CompareTo(keysRight) < 0)
                         ThrowHelper.ThrowArgumentException_BadComparable(typeof(TKey));
                 }
 
                 if (left >= right)
                     break;
 
-                Swap(ref keys, left, right);
+                // PERF: Swap manually inlined here for better code-gen
+                var t = keysLeft;
+                keysLeft = keysRight;
+                keysRight = t;
             }
             // Put pivot in the right location.
             right = hi - 1;

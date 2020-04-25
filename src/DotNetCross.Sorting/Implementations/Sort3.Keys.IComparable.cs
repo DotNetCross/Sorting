@@ -4,12 +4,10 @@ using System.Runtime.CompilerServices;
 
 namespace DotNetCross.Sorting
 {
-    internal static partial class IComparableImpl
+    internal partial class KeysSorter_Comparable<TKey>
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void Sort3<TKey>(
-            ref TKey r0, ref TKey r1, ref TKey r2)
-            where TKey : IComparable<TKey>
+        internal void Sort3(ref TKey r0, ref TKey r1, ref TKey r2)
         {
             Sort2(ref r0, ref r1);
             Sort2(ref r0, ref r2);

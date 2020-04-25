@@ -11,11 +11,11 @@ namespace DotNetCross.Sorting.Benchmarks
         where TKey : IComparable<TKey>
     {
         static readonly ClassComparableComparer<TKey> _classComparer = new ClassComparableComparer<TKey>();
-        readonly int _maxLength;
-        readonly ISpanFiller[] _fillers;
-        readonly Func<int, TKey> _toValue;
-        readonly TKey[] _filled;
-        readonly TKey[] _work;
+        protected readonly int _maxLength;
+        protected readonly ISpanFiller[] _fillers;
+        protected readonly Func<int, TKey> _toValue;
+        protected readonly TKey[] _filled;
+        protected readonly TKey[] _work;
 
         public SortBench(int maxLength, int[] sliceLengths, ISpanFiller[] fillers, Func<int, TKey> toValue)
         {
@@ -58,7 +58,7 @@ namespace DotNetCross.Sorting.Benchmarks
                 Array.Sort(_work, i, Length);
             }
         }
-        [Benchmark]
+        //[Benchmark]
         public void Array_NullComparer()
         {
             for (int i = 0; i <= _maxLength - Length; i += Length)
@@ -66,7 +66,7 @@ namespace DotNetCross.Sorting.Benchmarks
                 Array.Sort(_work, i, Length, (IComparer<TKey>)null);
             }
         }
-        [Benchmark]
+        //[Benchmark]
         public void Array_ClassComparableComparer()
         {
             for (int i = 0; i <= _maxLength - Length; i += Length)
@@ -76,15 +76,24 @@ namespace DotNetCross.Sorting.Benchmarks
         }
 #if !NETCOREAPP3_1
         [Benchmark]
-        public void Array_StructComparableComparer()
+        public void CLR_Span_()
+        {
+            for (int i = 0; i <= _maxLength - Length; i += Length)
+            {
+                new Span<TKey>(_work, i, Length).Sort();
+            }
+        }
+
+        //[Benchmark]
+        public void CLR_Span_StructComparableComparer()
         {
             for (int i = 0; i <= _maxLength - Length; i += Length)
             {
                 new Span<TKey>(_work, i, Length).Sort(new StructComparableComparer<TKey>());
             }
         }
-        [Benchmark]
-        public void Array_Comparison()
+        //[Benchmark]
+        public void CLR_Span_Comparison()
         {
             for (int i = 0; i <= _maxLength - Length; i += Length)
             {
@@ -103,7 +112,7 @@ namespace DotNetCross.Sorting.Benchmarks
                 new Span<TKey>(_work, i, Length).IntroSort();
             }
         }
-        [Benchmark]
+        //[Benchmark]
         public void DNX_Span_NullComparer()
         {
             for (int i = 0; i <= _maxLength - Length; i += Length)
@@ -111,7 +120,7 @@ namespace DotNetCross.Sorting.Benchmarks
                 new Span<TKey>(_work, i, Length).IntroSort((IComparer<TKey>)null);
             }
         }
-        [Benchmark]
+        //[Benchmark]
         public void DNX_Span_ClassComparableComparer()
         {
             for (int i = 0; i <= _maxLength - Length; i += Length)
@@ -119,7 +128,7 @@ namespace DotNetCross.Sorting.Benchmarks
                 new Span<TKey>(_work, i, Length).IntroSort(ClassComparableComparer<TKey>.Instance);
             }
         }
-        [Benchmark]
+        //[Benchmark]
         public void DNX_Span_StructComparableComparer()
         {
             for (int i = 0; i <= _maxLength - Length; i += Length)
@@ -127,7 +136,7 @@ namespace DotNetCross.Sorting.Benchmarks
                 new Span<TKey>(_work, i, Length).IntroSort(new StructComparableComparer<TKey>());
             }
         }
-        [Benchmark]
+        //[Benchmark]
         public void DNX_Span_Comparison()
         {
             for (int i = 0; i <= _maxLength - Length; i += Length)

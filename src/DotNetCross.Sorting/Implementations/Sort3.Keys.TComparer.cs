@@ -26,7 +26,6 @@ namespace DotNetCross.Sorting
             //    if (comparer.LessThanEqual(r1, r2))
             //    {
             //        // r0 <= r1 <= r2
-            //        return; // Is this return good or bad for perf?
             //    }
             //    // r0 <= r1
             //    // r2 < r1
