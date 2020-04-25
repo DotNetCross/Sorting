@@ -15,8 +15,8 @@ jobs:
       fail-fast: false
       matrix:
         os: [ ubuntu-latest, windows-latest, macos-latest ]
-        configuration: [ Release, Debug ]
         dotnet: [ '3.1.201' ]
+        configuration: [ Release, Debug ]
 
     steps:
     - name: Dump GitHub context
@@ -73,9 +73,9 @@ jobs:
     #  run: dotnet build --configuration ${{ matrix.configuration }}
     # https://help.github.com/en/actions/reference/context-and-expression-syntax-for-github-actions
     - name: Test with dotnet 3.1
-      if: startsWith(${{ matrix.dotnet }}, "3.1") # Should set a framework variable instead
+      if: startsWith(matrix.dotnet, "3.1") # Should set a framework variable instead
       run: dotnet test --framework netcoreapp3.1 --configuration ${{ matrix.configuration }}
 
     - name: Test with dotnet 5.0
-      if: startsWith(${{ matrix.dotnet }}, "5.0")
+      if: startsWith(matrix.dotnet, "5.0")
       run: dotnet test --framework netcoreapp5.0 --configuration ${{ matrix.configuration }}
