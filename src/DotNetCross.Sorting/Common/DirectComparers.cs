@@ -6,7 +6,7 @@ namespace DotNetCross.Sorting
 {
     // This started out with just LessThan.
     // However, due to bogus comparers, comparables etc.
-    // we need to preserve semantics completely to get same result.
+    // we need to preserve semantics completely to get same result. REVISIT THIS BY MAKING TESTS ROBUST AGAINST SAME KEY DIFFERENCES
     internal interface IDirectComparer<in T>
     {
         bool GreaterThan(T x, T y);
@@ -106,7 +106,7 @@ namespace DotNetCross.Sorting
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool LessThanEqual(double x, double y) => x <= y;
     }
-    // TODO: Revise whether this is needed
+
     internal struct StringDirectComparer : IDirectComparer<string>
     {
         readonly CompareInfo m_compareInfo;
