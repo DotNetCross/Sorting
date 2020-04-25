@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>netcoreapp3.1</TargetFrameworks>
+    <TargetFrameworks>netcoreapp5.0</TargetFrameworks>
     <!--Simply can't get the below working with GitHub CI since can't have multiple SDKs installed.
         The whole way of specifying target framework when building is messy from command line-->
     <!--<TargetFrameworks>netcoreapp3.1;netcoreapp5.0</TargetFrameworks>-->
