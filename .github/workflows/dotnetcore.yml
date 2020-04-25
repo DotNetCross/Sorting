@@ -1,4 +1,5 @@
 name: dotnetcore
+# https://www.edwardthomson.com/blog/github_actions_advent_calendar.html
 
 on:
   push:
@@ -14,30 +15,56 @@ jobs:
       fail-fast: false
       matrix:
         os: [ ubuntu-latest, windows-latest, macos-latest ]
+        configuration: [ Release, Debug ]
         #dotnet: [ '5.x' ]
 
     steps:
+    - name: Dump GitHub context
+      env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+      run: echo "$GITHUB_CONTEXT"
+      - name: Dump job context
+      env:
+          JOB_CONTEXT: ${{ toJson(job) }}
+      run: echo "$JOB_CONTEXT"
+    - name: Dump steps context
+      env:
+          STEPS_CONTEXT: ${{ toJson(steps) }}
+      run: echo "$STEPS_CONTEXT"
+    - name: Dump runner context
+      env:
+          RUNNER_CONTEXT: ${{ toJson(runner) }}
+      run: echo "$RUNNER_CONTEXT"
+    - name: Dump strategy context
+      env:
+          STRATEGY_CONTEXT: ${{ toJson(strategy) }}
+      run: echo "$STRATEGY_CONTEXT"
+    - name: Dump matrix context
+      env:
+          MATRIX_CONTEXT: ${{ toJson(matrix) }}
+      run: echo "$MATRIX_CONTEXT"
+
     - name: Checkout
       uses: actions/checkout@v2
       
     - uses: actions/cache@v1
       with:
         path: ~/.nuget/packages
-        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+        key: ${{ matrix.os }}-nuget-${{ hashFiles('**/*.csproj') }}
         restore-keys: |
-          ${{ runner.os }}-nuget-
+          ${{ matrix.os }}-nuget-
       
     - name: Setup .NET Core 3.1
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: '3.1.201' #${{ runner.dotnet }}
+        dotnet-version: '3.1.201' #${{ matrix.dotnet }}
 
-    - name: Setup .NET Core 5.0
-      uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: '5.0.100-preview.3.20216.6' #${{ runner.dotnet }}
+    #- name: Setup .NET Core 5.0
+    #  uses: actions/setup-dotnet@v1
+    #  with:
+    #    dotnet-version: '5.0.100-preview.3.20216.6' #${{ matrix.dotnet }}
 
     - name: Build with dotnet
-      run: dotnet build --configuration Release
+      run: dotnet build --framework netcoreapp3.1 --configuration ${{ matrix.configuration }}
     - name: Test with dotnet
-      run: dotnet test --configuration Release
+      run: dotnet test --framework netcoreapp3.1 --configuration ${{ matrix.configuration }}
