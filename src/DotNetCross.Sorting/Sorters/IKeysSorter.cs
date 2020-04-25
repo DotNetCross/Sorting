@@ -5,8 +5,8 @@ namespace DotNetCross.Sorting
 {
     internal interface IKeysSorter<TKey>
     {
-        void Sort(ref TKey keys, int length);
-        void Sort(ref TKey keys, int length, Comparison<TKey> comparison);
+        void IntroSort(ref TKey keys, int length);
+        void IntroSort(ref TKey keys, int length, Comparison<TKey> comparison);
     }
 
     internal interface IKeysSorter<TKey, TComparer>

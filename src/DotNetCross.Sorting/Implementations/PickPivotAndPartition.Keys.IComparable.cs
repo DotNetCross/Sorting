@@ -5,9 +5,7 @@ using static DotNetCross.Sorting.Swapper;
 
 namespace DotNetCross.Sorting
 {
-    internal partial class IntroKeysSortersComparable<TKey>
-                : IKeysSorter<TKey>
-                where TKey : IComparable<TKey>
+    internal partial class KeysSorter_Comparable<TKey>
     {
         internal int PickPivotAndPartition(
             ref TKey keys, int lo, int hi)

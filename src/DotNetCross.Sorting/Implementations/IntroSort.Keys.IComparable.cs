@@ -5,12 +5,10 @@ using static DotNetCross.Sorting.Common;
 
 namespace DotNetCross.Sorting
 {
-    internal partial class IntroKeysSortersComparable<TKey>
-        : IKeysSorter<TKey>
-        where TKey : IComparable<TKey>
+    internal partial class KeysSorter_Comparable<TKey>
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal void IntroSort(ref TKey keys, int length)
+        public void IntroSort(ref TKey keys, int length)
         {
             var depthLimit = 2 * FloorLog2PlusOne(length);
             IntroSort(ref keys, 0, length - 1, depthLimit);
@@ -50,7 +48,7 @@ namespace DotNetCross.Sorting
 
                 if (depthLimit == 0)
                 {
-                    IComparableImpl.HeapSort(ref keys, lo, hi);
+                    HeapSort(ref keys, lo, hi);
                     return;
                 }
                 depthLimit--;

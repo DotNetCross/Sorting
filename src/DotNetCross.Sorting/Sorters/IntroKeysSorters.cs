@@ -6,23 +6,6 @@ using SDC = System.SpanSortHelpersKeys_DirectComparer;
 
 namespace DotNetCross.Sorting
 {
-    internal sealed partial class IntroKeysSortersComparable<TKey>
-        : IKeysSorter<TKey>
-        where TKey : IComparable<TKey>
-    {
-        public void Sort(ref TKey keys, int length)
-        {
-            IntroSort(ref keys, length);
-        }
-
-        public void Sort(ref TKey keys, int length, Comparison<TKey> comparison)
-        {
-            // TODO: Check if comparison is Comparer<TKey>.Default.Compare
-
-            ComparisonImpl.IntroSort(ref keys, length, comparison);
-        }
-    }
-
     internal static partial class IntroKeysSorters
     {
         static readonly object[] EmptyObjects = new object[0];
@@ -36,7 +19,7 @@ namespace DotNetCross.Sorting
                 if (IComparableTraits<TKey>.IsComparable)
                 {
                     // coreclr uses RuntimeTypeHandle.Allocate
-                    var ctor = typeof(IntroKeysSortersComparable<>)
+                    var ctor = typeof(KeysSorter_Comparable<>)
                         .MakeGenericType(new Type[] { typeof(TKey) })
                         .GetTypeInfo().DeclaredConstructors.Where(ci => !ci.IsStatic).Single();
 
@@ -51,12 +34,13 @@ namespace DotNetCross.Sorting
 
         internal sealed class NonComparable<TKey> : IKeysSorter<TKey>
         {
-            public void Sort(ref TKey keys, int length)
+            public void IntroSort(ref TKey keys, int length)
             {
+                // TODO: Cache Comparer<TKey>.Default as Comparison<TKey> since faster
                 TComparerImpl.IntroSort(ref keys, length, Comparer<TKey>.Default);
             }
 
-            public void Sort(ref TKey keys, int length, Comparison<TKey> comparison)
+            public void IntroSort(ref TKey keys, int length, Comparison<TKey> comparison)
             {
                 ComparisonImpl.IntroSort(ref keys, length, comparison);
             }
@@ -124,7 +108,7 @@ namespace DotNetCross.Sorting
             where TKey : IComparable<TKey>
             where TComparer : IComparer<TKey>
         {
-            internal static readonly IntroKeysSortersComparable<TKey> NonComparerInstance = new IntroKeysSortersComparable<TKey>();
+            internal static readonly KeysSorter_Comparable<TKey> NonComparerInstance = new KeysSorter_Comparable<TKey>();
 
             public void Sort(ref TKey keys, int length,
                 TComparer comparer)
