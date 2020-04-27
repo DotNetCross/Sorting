@@ -76,10 +76,10 @@ jobs:
       env: 
         DOTNET_CLI_TELEMETRY_OPTOUT: 1
       if: startsWith(matrix.dotnet, '3.1') # Should set a framework variable instead
-      run: dotnet test --framework netcoreapp3.1 --configuration ${{ matrix.configuration }} ./tests/DotNetCross.Sorting.Tests/DotNetCross.Sorting.Tests.csproj
+      run: dotnet test --framework netcoreapp3.1 --configuration ${{ matrix.configuration }} --nologo ./tests/DotNetCross.Sorting.Tests/DotNetCross.Sorting.Tests.csproj
 
     - name: Test with dotnet 5.0
       env: 
         DOTNET_CLI_TELEMETRY_OPTOUT: 1
       if: startsWith(matrix.dotnet, '5.0')
-      run: dotnet test --framework netcoreapp5.0 --configuration ${{ matrix.configuration }} ./tests/DotNetCross.Sorting.Tests/DotNetCross.Sorting.Tests.csproj
+      run: dotnet test --framework netcoreapp5.0 --configuration ${{ matrix.configuration }} --nologo ./tests/DotNetCross.Sorting.Tests/DotNetCross.Sorting.Tests.csproj

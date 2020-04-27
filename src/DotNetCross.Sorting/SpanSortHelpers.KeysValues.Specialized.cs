@@ -22,7 +22,14 @@ namespace System
         internal static bool TrySortSpecialized<TKey, TValue>(
             ref TKey keys, ref TValue values, int length)
         {
-            // TODO: Change to do specific value tests below, since otherwise not fast... maybe
+            //if (typeof(TKey) == typeof(string))
+            //{
+            //    ref var specificKeys = ref Unsafe.As<TKey, string>(ref keys);
+            //    IntroSort(ref specificKeys, ref values, length, StringDirectComparer.CreateForCurrentCulture());
+            //    return true;
+            //}
+            // TODO: For now we do not optimize if value not same type as key 
+            //       since this changes output a tiny bit.
             if (typeof(TKey) != typeof(TValue))
             {
                 return false;
@@ -135,13 +142,6 @@ namespace System
                 //}
                 return true;
             }
-            // TODO: Specialize for string if necessary. What about the == null checks?
-            //else if (typeof(TKey) == typeof(string))
-            //{
-            //    ref var specificKeys = ref Unsafe.As<TKey, string>(ref keys);
-            //    IntroSort(ref specificKeys, ref values, length, StringDirectComparer.CreateForCurrentCulture());
-            //    return true;
-            //}
             else
             {
                 return false;

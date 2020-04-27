@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using SC = DotNetCross.Sorting.ComparisonImpl;
-using SIC = DotNetCross.Sorting.IComparableImpl;
+//using SIC = DotNetCross.Sorting.IComparableImpl;
 using STC = DotNetCross.Sorting.TComparerImpl;
 using SDC = System.SpanSortHelpersKeysValues_DirectComparer;
 
@@ -22,9 +22,9 @@ namespace DotNetCross.Sorting
                 if (IComparableTraits<TKey>.IsComparable)
                 {
                     // coreclr uses RuntimeTypeHandle.Allocate
-                    var ctor = typeof(Comparable<,>)
+                    var ctor = typeof(KeysValuesSorter_Comparable<,>)
                         .MakeGenericType(new Type[] { typeof(TKey), typeof(TValue) })
-                        .GetTypeInfo().DeclaredConstructors.Single();
+                        .GetTypeInfo().DeclaredConstructors.Where(ci => !ci.IsStatic).Single();
 
                     return (IKeysValuesSorter<TKey, TValue>)ctor.Invoke(EmptyObjects);
                 }
@@ -38,33 +38,17 @@ namespace DotNetCross.Sorting
         internal sealed class NonComparable<TKey, TValue>
             : IKeysValuesSorter<TKey, TValue>
         {
-            public void Sort(ref TKey keys, ref TValue values, int length)
+            public void IntroSort(ref TKey keys, ref TValue values, int length)
             {
                 STC.IntroSort(ref keys, ref values, length, Comparer<TKey>.Default);
             }
 
-            public void Sort(ref TKey keys, ref TValue values, int length, Comparison<TKey> comparison)
+            public void IntroSort(ref TKey keys, ref TValue values, int length, Comparison<TKey> comparison)
             {
                 SC.IntroSort(ref keys, ref values, length, comparison);
             }
         }
 
-        internal sealed class Comparable<TKey, TValue>
-            : IKeysValuesSorter<TKey, TValue>
-            where TKey : IComparable<TKey>
-        {
-            public void Sort(ref TKey keys, ref TValue values, int length)
-            {
-                SIC.IntroSort(ref keys, ref values, length);
-            }
-
-            public void Sort(ref TKey keys, ref TValue values, int length, Comparison<TKey> comparison)
-            {
-                // TODO: Check if comparison is Comparer<TKey>.Default.Compare
-
-                SC.IntroSort(ref keys, ref values, length, comparison);
-            }
-        }
 
         internal static class Default<TKey, TValue, TComparer>
             where TComparer : IComparer<TKey>
@@ -78,7 +62,7 @@ namespace DotNetCross.Sorting
                     // coreclr uses RuntimeTypeHandle.Allocate
                     var ctor = typeof(Comparable<,,>)
                         .MakeGenericType(new Type[] { typeof(TKey), typeof(TValue), typeof(TComparer) })
-                        .GetTypeInfo().DeclaredConstructors.Single();
+                        .GetTypeInfo().DeclaredConstructors.Where(ci => !ci.IsStatic).Single();
 
                     return (IKeysValuesSorter<TKey, TValue, TComparer>)ctor.Invoke(EmptyObjects);
                 }
@@ -128,6 +112,9 @@ namespace DotNetCross.Sorting
             where TKey : IComparable<TKey>
             where TComparer : IComparer<TKey>
         {
+            internal static readonly KeysValuesSorter_Comparable<TKey, TValue> NonComparerInstance = 
+                new KeysValuesSorter_Comparable<TKey, TValue>();
+
             public void Sort(ref TKey keys, ref TValue values, int length,
                 TComparer comparer)
             {
@@ -146,7 +133,7 @@ namespace DotNetCross.Sorting
                     {
                         // NOTE: For Bogus Comparable the exception message will be different, when using Comparer<TKey>.Default
                         //       Since the exception message is thrown internally without knowledge of the comparer
-                        SIC.IntroSort(ref keys, ref values, length);
+                        NonComparerInstance.IntroSort(ref keys, ref values, length);
                     }
                 }
                 else

@@ -41,21 +41,35 @@ namespace DotNetCross.Sorting
             Swap(ref keysMiddle, ref keysRight);
 
             int left = lo;
+            int right = hi - 1;
             while (Unsafe.IsAddressLessThan(ref keysLeft, ref keysRight))
             {
-                // PERF: For internal direct comparers the range checks are not needed
-                //       since we know they cannot be bogus i.e. pass the pivot without being false.
-                do { ++left; keysLeft = ref Unsafe.Add(ref keysLeft, 1); }
-                while (comparer.LessThan(keysLeft, pivot));
+                if (pivot == null)
+                {
+                    do { ++left; keysLeft = ref Unsafe.Add(ref keysLeft, 1); }
+                    while (left < right && keysLeft == null);
 
-                do { keysRight = ref Unsafe.Add(ref keysRight, -1); }
-                while (comparer.LessThan(pivot, keysRight));
+                    do { --right; keysRight = ref Unsafe.Add(ref keysRight, -1); }
+                    while (right > lo && keysRight != null);
+                }
+                else
+                {
+                    // PERF: For internal direct comparers the range checks are not needed
+                    //       since we know they cannot be bogus i.e. pass the pivot without being false.
+                    do { ++left; keysLeft = ref Unsafe.Add(ref keysLeft, 1); }
+                    while (comparer.LessThan(keysLeft, pivot));
 
+                    do { keysRight = ref Unsafe.Add(ref keysRight, -1); }
+                    while (comparer.LessThan(pivot, keysRight));
+                }
                 if (Unsafe.AreSame(ref keysLeft, ref keysRight) ||
                     Unsafe.IsAddressGreaterThan(ref keysLeft, ref keysRight))// (left >= right)
                     break;
 
-                Swap(ref keysLeft, ref keysRight);
+                // PERF: Swap manually inlined here for better code-gen
+                var t = keysLeft;
+                keysLeft = keysRight;
+                keysRight = t;
             }
             // Put pivot in the right location.
             keysRight = ref Unsafe.Add(ref keys, hi - 1);

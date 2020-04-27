@@ -13,7 +13,7 @@ using System.Runtime.InteropServices;
 
 using S = System.SpanSortHelpersKeysValues;
 using SC = DotNetCross.Sorting.ComparisonImpl;
-using SIC = DotNetCross.Sorting.IComparableImpl;
+//using SIC = DotNetCross.Sorting.IComparableImpl;
 using STC = DotNetCross.Sorting.TComparerImpl;
 using SDC = System.SpanSortHelpersKeysValues_DirectComparer;
 using DotNetCross.Sorting;
@@ -38,7 +38,7 @@ namespace System
                 ref MemoryMarshal.GetReference(values),
                 length))
             {
-                IntroKeysValuesSorters.Default<TKey, TValue>.Instance.Sort(
+                IntroKeysValuesSorters.Default<TKey, TValue>.Instance.IntroSort(
                     ref MemoryMarshal.GetReference(keys),
                     ref MemoryMarshal.GetReference(values),
                     length);
@@ -72,7 +72,7 @@ namespace System
             if (length < 2)
                 return;
 
-            IntroKeysValuesSorters.Default<TKey, TValue>.Instance.Sort(
+            IntroKeysValuesSorters.Default<TKey, TValue>.Instance.IntroSort(
                 ref MemoryMarshal.GetReference(keys),
                 ref MemoryMarshal.GetReference(values),
                 length, comparison);
