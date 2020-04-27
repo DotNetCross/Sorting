@@ -5,12 +5,11 @@ using static DotNetCross.Sorting.Swapper;
 
 namespace DotNetCross.Sorting
 {
-    internal static partial class IComparableImpl
+    internal sealed partial class KeysValuesSorter_Comparable<TKey, TValue>
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void Sort2<TKey, TValue>(
+        internal static void Sort2(
             ref TKey keys, ref TValue values, int i, int j)
-            where TKey : IComparable<TKey>
         {
             Debug.Assert(i != j);
 
@@ -19,9 +18,8 @@ namespace DotNetCross.Sorting
             Sort2(ref a, ref b, ref values, i, j);
         }
 
-        internal static void Sort2<TKey, TValue>(
+        internal static void Sort2(
             ref TKey a, ref TKey b, ref TValue values, int i, int j)
-            where TKey : IComparable<TKey>
         {
             if (a != null && a.CompareTo(b) > 0)
             {

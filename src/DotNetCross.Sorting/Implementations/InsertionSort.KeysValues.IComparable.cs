@@ -4,12 +4,11 @@ using System.Runtime.CompilerServices;
 
 namespace DotNetCross.Sorting
 {
-    internal static partial class IComparableImpl
+    internal sealed partial class KeysValuesSorter_Comparable<TKey, TValue>
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void InsertionSort<TKey, TValue>(
+        internal void InsertionSort(
             ref TKey keys, ref TValue values, int lo, int hi)
-            where TKey : IComparable<TKey>
         {
             Debug.Assert(lo >= 0);
             Debug.Assert(hi >= lo);
