@@ -10,24 +10,6 @@ using DotNetCross.Sorting.Sequences;
 
 namespace DotNetCross.Sorting.Benchmarks
 {
-    public static class SpanFillers
-    {
-        public const int RandomSeed = 213718398;
-        public const double ShuffleFraction = 0.1;
-        public const int ShuffleSeed = 931712983;
-
-        public static readonly ISpanFiller[] RandomOnly = new[] { new RandomSpanFiller(RandomSeed) };
-
-        public static ISpanFiller[] Default = new ISpanFiller[]{
-                new RandomSpanFiller(RandomSeed),
-                new PartialRandomShuffleSpanFiller(new IncrementingSpanFiller(), ShuffleFraction, ShuffleSeed),
-                new MedianOfThreeKillerSpanFiller(),
-                new IncrementingSpanFiller(),
-                new DecrementingSpanFiller(),
-                new ConstantSpanFiller(42),
-            };
-    }
-
     public class Int32SortBench : SortBench<int>
     {
         public Int32SortBench()
@@ -69,7 +51,7 @@ namespace DotNetCross.Sorting.Benchmarks
     {
         public StringSortBench()
             : base(maxLength: 100000, new[] { 2, 3, 10, 100, 1000, 10000 },
-                   SpanFillers.RandomOnly, i => i.ToString("D9"))
+                   SpanFillers.Default, i => i.ToString("D9"))
         { }
     }
     public class ComparableStructInt32SortBench : SortBench<ComparableStructInt32>
@@ -83,7 +65,7 @@ namespace DotNetCross.Sorting.Benchmarks
     {
         public ComparableClassInt32SortBench()
             : base(maxLength: 400000, new[] { 2, 3, 10, 100, 10000, 100000 },
-                   SpanFillers.RandomOnly, i => new ComparableClassInt32(i))
+                   SpanFillers.Default, i => new ComparableClassInt32(i))
         { }
     }
 
@@ -232,9 +214,12 @@ namespace DotNetCross.Sorting.Benchmarks
                 // TKey benchs
                 //BenchmarkRunner.Run<Int32SortBench>();
                 //BenchmarkRunner.Run<SingleSortBench>();
-                BenchmarkRunner.Run<ComparableStructInt32SortBench>();
-                BenchmarkRunner.Run<ComparableClassInt32SortBench>();
-                BenchmarkRunner.Run<StringSortBench>();
+                //BenchmarkRunner.Run<ComparableStructInt32SortBench>();
+                //BenchmarkRunner.Run<ComparableClassInt32SortBench>();
+                //BenchmarkRunner.Run<StringSortBench>();
+                BenchmarkRunner.Run<StringInt32SortBench>();
+                BenchmarkRunner.Run<ComparableClassInt32Int32SortBench>();
+                BenchmarkRunner.Run<ComparableStructInt32Int32SortBench>();
                 return;
                 // TKey,TValue benchs
                 BenchmarkRunner.Run<Int32Int32SortBench>();
