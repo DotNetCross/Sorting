@@ -251,7 +251,7 @@ namespace DotNetCross.Sorting.Benchmarks
                 //BenchmarkRunner.Run<CompareAsm>();
                 //BenchmarkRunner.Run<CompareToLessThanBench>();
             }
-            else if (true)
+            else if (false)
             {
                 //var sut = new ComparableClassInt32SortBench();
                 var sut = new StringSortBench();
@@ -272,6 +272,28 @@ namespace DotNetCross.Sorting.Benchmarks
                     sut.DNX_Span_();
                     sut.IterationSetup();
                     sut.Array_();
+                }
+            }
+            else if (true)
+            {
+                var sut = new ComparableClassInt32Int32SortBench();
+                sut.Filler = new RandomSpanFiller(SpanFillers.RandomSeed);
+                sut.Length = 10000; // 1000000;
+                sut.GlobalSetup();
+                sut.IterationSetup();
+                sut.DNX_Span_();
+                sut.IterationSetup();
+                sut.CLR_Span_();
+
+                //Console.WriteLine("Enter key...");
+                //Console.ReadKey();
+
+                for (int i = 0; i < 200; i++)
+                {
+                    sut.IterationSetup();
+                    sut.DNX_Span_();
+                    sut.IterationSetup();
+                    sut.CLR_Span_();
                 }
             }
             else

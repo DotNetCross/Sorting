@@ -41,29 +41,22 @@ namespace DotNetCross.Sorting
             int right = hi - 1;
             while (left < right)
             {
-                // TODO: Would be good to be able to update local ref here
-
                 if (pivot == null)
                 {
-                    //while (left < (hi - 1) && Unsafe.Add(ref keys, ++left) == null) ;
                     do { ++left; keysLeft = ref Unsafe.Add(ref keysLeft, 1); }
                     while (left < right && keysLeft == null);
 
-                    //while (right > lo && Unsafe.Add(ref keys, --right) != null) ;
                     do { --right; keysRight = ref Unsafe.Add(ref keysRight, -1); }
                     while (right > lo && keysRight != null);
                 }
                 else
                 {
-                    //while (left < (hi - 1) && pivot.CompareTo(Unsafe.Add(ref keys, ++left)) > 0) ;
-                    //while (left < right && pivot.CompareTo(Unsafe.Add(ref keys, ++left)) > 0) ;
                     do { ++left; keysLeft = ref Unsafe.Add(ref keysLeft, 1); }
                     while (left < right && pivot.CompareTo(keysLeft) > 0);
                     // Check if bad comparable/comparer
                     if (left == right && pivot.CompareTo(keysLeft) > 0)
                         ThrowHelper.ThrowArgumentException_BadComparable(typeof(TKey));
 
-                    //while (right > lo && pivot.CompareTo(Unsafe.Add(ref keys, --right)) < 0) ;
                     do { --right; keysRight = ref Unsafe.Add(ref keysRight, -1); }
                     while (right > lo && pivot.CompareTo(keysRight) < 0);
                     // Check if bad comparable/comparer
