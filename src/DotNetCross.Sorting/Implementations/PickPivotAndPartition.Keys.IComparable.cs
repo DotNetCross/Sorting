@@ -7,6 +7,8 @@ namespace DotNetCross.Sorting
 {
     internal partial class KeysSorter_Comparable<TKey>
     {
+        // https://github.com/dotnet/runtime/pull/35297/files
+        // https://github.com/stephentoub/runtime/blob/master/src/libraries/System.Private.CoreLib/src/System/Collections/Generic/ArraySortHelper.cs
         internal int PickPivotAndPartition(
             ref TKey keys, int length)
         {
@@ -45,13 +47,13 @@ namespace DotNetCross.Sorting
                 {
                     do { ++left; keysLeft = ref Unsafe.Add(ref keysLeft, 1); }
                     while (left < right && pivot.CompareTo(keysLeft) > 0);
-                    // Check if bad comparable/comparer
+                    // Check if bad comparable/comparer // TODO: Remove check as in https://github.com/dotnet/runtime/pull/35297
                     if (left == right && pivot.CompareTo(keysLeft) > 0)
                         ThrowHelper.ThrowArgumentException_BadComparable(typeof(TKey));
 
                     do { --right; keysRight = ref Unsafe.Add(ref keysRight, -1); }
                     while (right > 0 && pivot.CompareTo(keysRight) < 0);
-                    // Check if bad comparable/comparer
+                    // Check if bad comparable/comparer // TODO: Remove check as in https://github.com/dotnet/runtime/pull/35297
                     if (right == 0 && pivot.CompareTo(keysRight) < 0)
                         ThrowHelper.ThrowArgumentException_BadComparable(typeof(TKey));
                 }
