@@ -52,11 +52,12 @@ namespace DotNetCross.Sorting
                 int p = PickPivotAndPartition(ref keys, partitionSize);
                 // Note we've already partitioned around the pivot and do not have to move the pivot again.
                 var rightPartitionStart = p + 1;
-                var rightPartitionLength = length - rightPartitionStart;
+                var rightPartitionLength = partitionSize - rightPartitionStart;
                 ref var keysRightPartition = ref Unsafe.Add(ref keys, rightPartitionStart);
                 IntroSort(ref keysRightPartition, rightPartitionLength, depthLimit);
+
+                Debug.Assert((p + rightPartitionLength + 1) == partitionSize);
                 partitionSize = p;
-                Debug.Assert(partitionSize + rightPartitionLength + 1 == length);
             }
         }
     }
