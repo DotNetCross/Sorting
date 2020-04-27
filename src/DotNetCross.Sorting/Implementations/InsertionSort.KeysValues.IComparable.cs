@@ -8,18 +8,15 @@ namespace DotNetCross.Sorting
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void InsertionSort(
-            ref TKey keys, ref TValue values, int lo, int hi)
+            ref TKey keys, ref TValue values, int length)
         {
-            Debug.Assert(lo >= 0);
-            Debug.Assert(hi >= lo);
-
-            for (int i = lo; i < hi; ++i)
+            for (int i = 0; i < length - 1; ++i)
             {
                 int j = i;
                 //t = keys[i + 1];
                 var t = Unsafe.Add(ref keys, j + 1);
                 // TODO: Would be good to be able to update local ref here
-                if (j >= lo && (t == null || t.CompareTo(Unsafe.Add(ref keys, j)) < 0))
+                if (j >= 0 && (t == null || t.CompareTo(Unsafe.Add(ref keys, j)) < 0))
                 {
                     var v = Unsafe.Add(ref values, j + 1);
                     do
@@ -28,7 +25,7 @@ namespace DotNetCross.Sorting
                         Unsafe.Add(ref values, j + 1) = Unsafe.Add(ref values, j);
                         --j;
                     }
-                    while (j >= lo && (t == null || t.CompareTo(Unsafe.Add(ref keys, j)) < 0));
+                    while (j >= 0 && (t == null || t.CompareTo(Unsafe.Add(ref keys, j)) < 0));
                     //while (j >= lo && (t == null || t.CompareTo(keys[j]) < 0))
 
                     Unsafe.Add(ref keys, j + 1) = t;

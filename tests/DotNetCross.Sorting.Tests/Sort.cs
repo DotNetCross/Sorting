@@ -73,6 +73,19 @@ namespace System.SpanTests
         //        .Sort(comparer));
         //}
 
+        [Fact]
+        [Trait(SortTrait, SortTraitValue)]
+        public static void Sort_BogusComparer_Decrementing_()
+        {
+            var values = Enumerable.Range(0, 35).Select(i => new BogusComparable(i)).ToArray();
+            Array.Reverse(values);
+            var original = new Span<BogusComparable>(values);
+            var actual = original.ToArray().AsSpan();
+            var expected = original.ToArray();
+            try { actual.IntroSort(Comparer<BogusComparable>.Default.Compare); } catch (Exception e) { }
+            try { Array.Sort(expected, Comparer<BogusComparable>.Default.Compare); } catch (Exception e) { }
+            Assert.Equal(expected, actual.ToArray());
+        }
 
         [Fact]
         [Trait(SortTrait, SortTraitValue)]
@@ -858,10 +871,15 @@ namespace System.SpanTests
             var copy = (TKey[])keys.Array.Clone();
 
             TestSort(keys);
+            Array.Copy(copy, keys.Array, copy.Length);
             TestSort(keys, Comparer<TKey>.Default);
+            Array.Copy(copy, keys.Array, copy.Length);
             TestSort(keys, Comparer<TKey>.Default.Compare);
+            Array.Copy(copy, keys.Array, copy.Length);
             TestSort(keys, new CustomComparer<TKey>());
+            Array.Copy(copy, keys.Array, copy.Length);
             TestSort(keys, (IComparer<TKey>)null);
+            Array.Copy(copy, keys.Array, copy.Length);
             TestSort(keys, new BogusComparer<TKey>());
         }
         static void TestSort<TKey>(ArraySegment<TKey> keysToSort)

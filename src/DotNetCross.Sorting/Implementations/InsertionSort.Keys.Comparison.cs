@@ -8,13 +8,10 @@ namespace DotNetCross.Sorting
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static void InsertionSort<TKey>(
-             ref TKey keys, int lo, int hi,
+             ref TKey keys, int length,
              Comparison<TKey> comparison)
         {
-            Debug.Assert(lo >= 0);
-            Debug.Assert(hi >= lo);
-
-            for (int i = lo; i < hi; ++i)
+            for (int i = 0; i < length - 1; ++i)
             {
                 int j = i;
                 ref var keysAtJ = ref Unsafe.Add(ref keys, j);
@@ -28,7 +25,7 @@ namespace DotNetCross.Sorting
                         keysAfterJ = ref keysAtJ;
                         keysAtJ = ref Unsafe.Subtract(ref keysAtJ, 1);
                     }
-                    while (--j >= lo && comparison(t, keysAtJ) < 0);
+                    while (--j >= 0 && comparison(t, keysAtJ) < 0);
                     keysAfterJ = t;
                 }
             }
