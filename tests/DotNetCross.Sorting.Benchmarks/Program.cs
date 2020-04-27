@@ -276,7 +276,8 @@ namespace DotNetCross.Sorting.Benchmarks
             }
             else if (true)
             {
-                var sut = new ComparableClassInt32Int32SortBench();
+                //var sut = new ComparableClassInt32Int32SortBench();
+                var sut = new StringInt32SortBench();
                 sut.Filler = new RandomSpanFiller(SpanFillers.RandomSeed);
                 sut.Length = 10000; // 1000000;
                 sut.GlobalSetup();

@@ -33,25 +33,50 @@ namespace DotNetCross.Sorting
 
             int left = lo;
             int right = hi - 1;
+            ref TKey keysLeft = ref Unsafe.Add(ref keys, left);
+            ref TKey keysRight = ref Unsafe.Add(ref keys, right);
             // We already partitioned lo and hi and put the pivot in hi - 1.  
             // And we pre-increment & decrement below.
-            Swap(ref keysAtMiddle, ref Unsafe.Add(ref keys, right));
+            Swap(ref keysAtMiddle, ref keysRight);
             Swap(ref values, middle, right);
 
             while (left < right)
             {
-                // TODO: Would be good to be able to update local ref here
+                if (pivot == null)
+                {
+                    do { ++left; keysLeft = ref Unsafe.Add(ref keysLeft, 1); }
+                    while (left < right && keysLeft == null);
 
-                // PERF: For internal direct comparers the range checks are not needed
-                //       since we know they cannot be bogus i.e. pass the pivot without being false.
-                while (comparer.LessThan(Unsafe.Add(ref keys, ++left), pivot)) ;
-                while (comparer.LessThan(pivot, Unsafe.Add(ref keys, --right))) ;
+                    do { --right; keysRight = ref Unsafe.Add(ref keysRight, -1); }
+                    while (right > lo && keysRight != null);
+                }
+                else
+                {
+                    // PERF: For internal direct comparers the range checks are not needed
+                    //       since we know they cannot be bogus i.e. pass the pivot without being false.
+                    do { ++left; keysLeft = ref Unsafe.Add(ref keysLeft, 1); }
+                    while (comparer.LessThan(keysLeft, pivot));
 
+                    do { --right; keysRight = ref Unsafe.Add(ref keysRight, -1); }
+                    while (comparer.LessThan(pivot, keysRight));
+                }
+
+                //if (Unsafe.AreSame(ref keysLeft, ref keysRight) ||
+                //    Unsafe.IsAddressGreaterThan(ref keysLeft, ref keysRight))
+                //    break;
                 if (left >= right)
                     break;
 
-                Swap(ref keys, left, right);
-                Swap(ref values, left, right);
+                // PERF: Swap manually inlined here for better code-gen
+                var t = keysLeft;
+                keysLeft = keysRight;
+                keysRight = t;
+                // PERF: Swap manually inlined here for better code-gen
+                ref var valuesLeft = ref Unsafe.Add(ref values, left);
+                ref var valuesRight = ref Unsafe.Add(ref values, right);
+                var v = valuesLeft;
+                valuesLeft = valuesRight;
+                valuesRight = v;
             }
             // Put pivot in the right location.
             right = hi - 1;
