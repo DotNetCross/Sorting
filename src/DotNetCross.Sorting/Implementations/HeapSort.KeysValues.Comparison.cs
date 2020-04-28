@@ -8,24 +8,23 @@ namespace DotNetCross.Sorting
     internal static partial class ComparisonImpl
     {
         internal static void HeapSort<TKey, TValue>(
-            ref TKey keys, ref TValue values, int lo, int hi,
+            ref TKey keys, ref TValue values, int length,
             Comparison<TKey> comparison)
 
         {
             Debug.Assert(comparison != null);
-            Debug.Assert(lo >= 0);
-            Debug.Assert(hi > lo);
+            Debug.Assert(length >= 0);
 
-            int n = hi - lo + 1;
-            for (int i = n / 2; i >= 1; --i)
+            int n = length;
+            for (int i = n >> 1; i >= 1; --i)
             {
-                DownHeap(ref keys, ref values, i, n, lo, comparison);
+                DownHeap(ref keys, ref values, i, n, 0, comparison);
             }
             for (int i = n; i > 1; --i)
             {
-                Swap(ref keys, lo, lo + i - 1);
-                Swap(ref values, lo, lo + i - 1);
-                DownHeap(ref keys, ref values, 1, i - 1, lo, comparison);
+                Swap(ref keys, 0, i - 1);
+                Swap(ref values, 0, i - 1);
+                DownHeap(ref keys, ref values, 1, i - 1, 0, comparison);
             }
         }
 
@@ -46,7 +45,7 @@ namespace DotNetCross.Sorting
             TKey d = Unsafe.Add(ref keysAtLoMinus1, i);
             TValue dValue = Unsafe.Add(ref valuesAtLoMinus1, i);
 
-            var nHalf = n / 2;
+            var nHalf = n >> 1;
             while (i <= nHalf)
             {
                 int child = i << 1;

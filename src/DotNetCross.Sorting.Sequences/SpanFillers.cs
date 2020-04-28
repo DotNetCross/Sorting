@@ -106,7 +106,7 @@ namespace DotNetCross.Sorting.Sequences
                 span[length - 1] = toValue(length);
                 --length;
             }
-            var m = length / 2;
+            var m = length >> 1;
             for (int i = 0; i < m; ++i)
             {
                 // first half of array (even indices)

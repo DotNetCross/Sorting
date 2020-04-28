@@ -10,7 +10,15 @@ namespace DotNetCross.Sorting.Tests
             for (int i = 2; i < 256 * 1024; i++)
             {
                 Assert.Equal(FloorLog2(i), FloorLog2PlusOne(i));
+                Assert.Equal(FloorLog2PlusOne(i), Common.FloorLog2PlusOne(i));
+                Assert.Equal(FloorLog2(i), Common.FloorLog2PlusOne(i));
             }
+        }
+
+        [Fact]
+        public void Test_()
+        {
+            Assert.Equal(6, Common.FloorLog2PlusOne(35));
         }
 
         // coreclr version
