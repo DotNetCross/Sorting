@@ -208,7 +208,7 @@ namespace DotNetCross.Sorting.Benchmarks
             Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.RealTime;
             Thread.CurrentThread.Priority = ThreadPriority.Highest;
 
-            if (true && !Debugger.IsAttached)
+            if (false && !Debugger.IsAttached)
             {
                 //BenchmarkRunner.Run<SortDictionary>();
                 // TKey benchs
@@ -251,7 +251,9 @@ namespace DotNetCross.Sorting.Benchmarks
                 // Micro benchmarks
                 //BenchmarkRunner.Run<IntPtrHelperBenchmark>();
                 //BenchmarkRunner.Run<CompareAsm>();
-                BenchmarkRunner.Run<CompareToLessThanBench>();
+                BenchmarkRunner.Run<ComparableInt32ClassCompareToLessThanBench>();
+                //var b = new ComparableInt32ClassCompareToLessThanBench();
+                //b.ComparerOpenDelegate();
             }
             else if (false)
             {
@@ -299,11 +301,6 @@ namespace DotNetCross.Sorting.Benchmarks
                     sut.IterationSetup();
                     sut.CLR_Span_Comparison();
                 }
-            }
-            else
-            {
-                var sut = new CompareToLessThanBench();
-                sut.OpenDelegate();
             }
         }
     }
