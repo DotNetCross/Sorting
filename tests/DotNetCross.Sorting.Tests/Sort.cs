@@ -1,4 +1,4 @@
-#define OUTER_LOOP
+//#define OUTER_LOOP
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
@@ -1046,13 +1046,24 @@ namespace System.SpanTests
         static void TestSortOverloads<TKey, TValue>(ArraySegment<TKey> keys, ArraySegment<TValue> values)
             where TKey : IComparable<TKey>
         {
-            var copy = (TKey[])keys.Array.Clone();
+            var keysCopy = (TKey[])keys.Array.Clone();
+            var valuesCopy = (TValue[])values.Array.Clone();
 
             TestSort(keys, values);
+            Array.Copy(keysCopy, keys.Array, keysCopy.Length);
+            Array.Copy(valuesCopy, values.Array, valuesCopy.Length);
             TestSort(keys, values, Comparer<TKey>.Default);
+            Array.Copy(keysCopy, keys.Array, keysCopy.Length);
+            Array.Copy(valuesCopy, values.Array, valuesCopy.Length);
             TestSort(keys, values, Comparer<TKey>.Default.Compare);
+            Array.Copy(keysCopy, keys.Array, keysCopy.Length);
+            Array.Copy(valuesCopy, values.Array, valuesCopy.Length);
             TestSort(keys, values, new CustomComparer<TKey>());
+            Array.Copy(keysCopy, keys.Array, keysCopy.Length);
+            Array.Copy(valuesCopy, values.Array, valuesCopy.Length);
             TestSort(keys, values, (IComparer<TKey>)null);
+            Array.Copy(keysCopy, keys.Array, keysCopy.Length);
+            Array.Copy(valuesCopy, values.Array, valuesCopy.Length);
             TestSort(keys, values, new BogusComparer<TKey>());
         }
         static void TestSort<TKey, TValue>(
