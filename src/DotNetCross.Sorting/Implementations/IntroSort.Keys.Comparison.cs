@@ -41,7 +41,6 @@ namespace DotNetCross.Sorting
                         ref TKey loRef = ref keys;
                         ref TKey miRef = ref Unsafe.Add(ref keys, 1);
                         ref TKey hiRef = ref Unsafe.Add(ref keys, 2);
-                        //ref TKey miRef = ref Unsafe.SubtractByteOffset(ref hiRef, new IntPtr(Unsafe.SizeOf()));
                         Sort3(ref loRef, ref miRef, ref hiRef, comparison);
                         return;
                     }
