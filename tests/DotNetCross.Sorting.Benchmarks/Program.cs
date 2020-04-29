@@ -245,11 +245,13 @@ namespace DotNetCross.Sorting.Benchmarks
                 BenchmarkRunner.Run<StringInt32SortDisassemblerBench>();
                 BenchmarkRunner.Run<ComparableClassInt32Int32SortDisassemblerBench>();
                 BenchmarkRunner.Run<ComparableStructInt32Int32SortDisassemblerBench>();
-
+            }
+            else if (true)
+            { 
                 // Micro benchmarks
                 //BenchmarkRunner.Run<IntPtrHelperBenchmark>();
                 //BenchmarkRunner.Run<CompareAsm>();
-                //BenchmarkRunner.Run<CompareToLessThanBench>();
+                BenchmarkRunner.Run<CompareToLessThanBench>();
             }
             else if (false)
             {

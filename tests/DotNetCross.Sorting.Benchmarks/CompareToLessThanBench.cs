@@ -25,13 +25,15 @@ namespace DotNetCross.Sorting.Benchmarks
         // Create two comparers 
         ComparableLessThanComparer<ComparableClassInt32> m_comparerInt32 = new ComparableLessThanComparer<ComparableClassInt32>();
 
-        Func<object, object, int> m_stringComparerOpen = ComparableOpenDelegate<string>();
-        Func<object, object, int> m_comparableInt32ComparerOpen = ComparableOpenDelegate<ComparableClassInt32>();
+        readonly Func<object, object, int> m_stringComparerOpen = ComparableOpenDelegate<string>();
+        readonly Func<object, object, int> m_comparableInt32ComparerOpen = ComparableOpenDelegate<ComparableClassInt32>();
+        readonly Func<ComparableClassInt32, int> m_comparableInt32ComparerClosed;
 
         public CompareToLessThanBench()
         {
             ComparerCall(new ComparableClassInt32(1), new ComparableClassInt32(2), m_comparerInt32);
             ComparerCall("1287192", "127912", m_comparer);
+            m_comparableInt32ComparerClosed = X.CompareTo;
         }
 
         public ComparableClassInt32 X = new ComparableClassInt32(12812912);
@@ -48,6 +50,11 @@ namespace DotNetCross.Sorting.Benchmarks
         {
             //return m_comparer.LessThan(X, Y);
             return ComparerCall(X, Y, m_comparerInt32);
+        }
+        [Benchmark]
+        public bool ClosedDelegate()
+        {
+            return m_comparableInt32ComparerClosed.Invoke(Y) < 0;
         }
         [Benchmark]
         public bool OpenDelegate() // Too slow
