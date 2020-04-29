@@ -8,7 +8,7 @@ using DotNetCross.Sorting.Sequences;
 
 namespace DotNetCross.Sorting.Benchmarks
 {
-    [DisassemblyDiagnoser(printAsm: true, printSource: true, recursiveDepth: 4)]
+    [DisassemblyDiagnoser(printSource: true, maxDepth: 4)]
     [ShortRunJob]// SimpleJob(RunStrategy.Monitoring, launchCount: 1, warmupCount: 1, targetCount: 3, invocationCount: 3)]
     //[Config(typeof(SortDisassemblerBenchConfig))]
     public class SortDisassemblerBench<TKey>

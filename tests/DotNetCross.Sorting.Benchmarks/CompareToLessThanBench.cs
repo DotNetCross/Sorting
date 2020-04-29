@@ -7,7 +7,7 @@ namespace DotNetCross.Sorting.Benchmarks
 {
     // Trying to benchmark the canonical generic issue and finding a work around
     // delegate simply not fast enough, as expected, a direct function pointer might have been...
-    [DisassemblyDiagnoser(printAsm: true, printSource: true)]
+    [DisassemblyDiagnoser(printSource: true)]
     [RyuJitX64Job]
     public class CompareToLessThanBench
     {

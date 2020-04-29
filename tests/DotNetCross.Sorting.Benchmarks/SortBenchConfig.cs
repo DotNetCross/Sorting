@@ -22,8 +22,8 @@ namespace DotNetCross.Sorting.Benchmarks
             };
             foreach (var envMode in envModes)
             {
-                Add(new Job(envMode, Job.Dry, runMode)
-                    .With(InProcessToolchain.Instance)
+                AddJob(new Job(envMode, Job.Dry, runMode)
+                    .WithToolchain(BenchmarkDotNet.Toolchains.InProcess.NoEmit.InProcessNoEmitToolchain.Instance)
                     );
             }
             //Add(new SpeedupColumn());
