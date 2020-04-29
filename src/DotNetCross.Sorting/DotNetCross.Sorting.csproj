@@ -17,7 +17,7 @@
       <_Parameter1>DotNetCross.Sorting.Tests</_Parameter1>
     </AssemblyAttribute>
     <PackageReference Include="System.Memory" Version="4.5.1" />
-    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.5.2" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.7.1" />
   </ItemGroup>
 
 </Project>
