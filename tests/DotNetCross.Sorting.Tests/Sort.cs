@@ -1,4 +1,4 @@
-//#define OUTER_LOOP
+#define OUTER_LOOP
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
@@ -82,11 +82,6 @@ namespace System.SpanTests
             var original = new Span<BogusComparable>(values);
             var actual = original.ToArray().AsSpan();
             var expected = original.ToArray();
-            //var actualPivot = -1;
-            //var expectedPivot = -1;
-            //try { actualPivot = ComparisonImpl.PickPivotAndPartition(ref actual[0], actual.Length, Comparer<BogusComparable>.Default.Compare); } catch (Exception e) { }
-            //try { expectedPivot = ComparisonImpl.PickPivotAndPartitionOld(ref expected[0], 0, expected.Length - 1, Comparer<BogusComparable>.Default.Compare); } catch (Exception e) { }
-            //Assert.Equal(expectedPivot, actualPivot);
             try { actual.IntroSort(Comparer<BogusComparable>.Default.Compare); } catch (Exception e) { }
             try { Array.Sort(expected, Comparer<BogusComparable>.Default.Compare); } catch (Exception e) { }
             Assert.Equal(expected, actual.ToArray());

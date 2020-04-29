@@ -8,23 +8,22 @@ namespace DotNetCross.Sorting
     internal static partial class TDirectComparerImpl
     {
         internal static void HeapSort<TKey, TComparer>(
-            ref TKey keys, int lo, int hi,
+            ref TKey keys, int length,
             TComparer comparer)
             where TComparer : IDirectComparer<TKey>
         {
             Debug.Assert(comparer != null);
-            Debug.Assert(lo >= 0);
-            Debug.Assert(hi > lo);
+            Debug.Assert(length >= 0);
 
-            int n = hi - lo + 1;
-            for (int i = n / 2; i >= 1; --i)
+            int n = length;
+            for (int i = n >> 1; i >= 1; --i)
             {
-                DownHeap(ref keys, i, n, lo, comparer);
+                DownHeap(ref keys, i, n, 0, comparer);
             }
             for (int i = n; i > 1; --i)
             {
-                Swap(ref keys, lo, lo + i - 1);
-                DownHeap(ref keys, 1, i - 1, lo, comparer);
+                Swap(ref keys, 0, i - 1);
+                DownHeap(ref keys, 1, i - 1, 0, comparer);
             }
         }
 
@@ -40,7 +39,7 @@ namespace DotNetCross.Sorting
             ref TKey keysAtLo = ref Unsafe.Add(ref keys, lo);
             ref TKey keysAtLoMinus1 = ref Unsafe.Add(ref keysAtLo, -1); // No Subtract??
             TKey d = Unsafe.Add(ref keysAtLoMinus1, i);
-            var nHalf = n / 2;
+            var nHalf = n >> 1;
             while (i <= nHalf)
             {
                 int child = i << 1;

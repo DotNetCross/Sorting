@@ -117,7 +117,7 @@ namespace DotNetCross.Sorting
         //}
 
         //private static int PickPivotAndPartitionIntPtrIndeces<TKey, TComparer>(
-        //    ref TKey keys, ref int values, int lo, int hi,
+        //    ref TKey keys, ref int values, int length,
         //    in TComparer comparer)
         //    where TComparer : IDirectComparer<TKey>
         //{
@@ -185,7 +185,7 @@ namespace DotNetCross.Sorting
         //}
 
         //private static int PickPivotAndPartitionIntPtrByteOffsets<TKey, TComparer>(
-        //    ref TKey keys, ref int values, int lo, int hi,
+        //    ref TKey keys, ref int values, int length,
         //    in TComparer comparer)
         //    where TComparer : IDirectComparer<TKey>
         //{

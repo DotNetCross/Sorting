@@ -250,7 +250,7 @@
 
 //        private static void IntroSort<TKey, TValue, TComparer>(
 //            ref TKey keys, ref TValue values,
-//            int lo, int hi, int depthLimit,
+//            int length, int depthLimit,
 //            TComparer comparer)
 //            where TComparer : IDirectComparer<TKey>
 //        {
@@ -300,7 +300,7 @@
 //        }
 
 //        private static int PickPivotAndPartition<TKey, TValue, TComparer>(
-//            ref TKey keys, ref TValue values, int lo, int hi,
+//            ref TKey keys, ref TValue values, int length,
 //            TComparer comparer)
 //            where TComparer : IDirectComparer<TKey>
 //        {
@@ -363,7 +363,7 @@
 //        }
 
 //        private static void HeapSort<TKey, TValue, TComparer>(
-//            ref TKey keys, ref TValue values, int lo, int hi,
+//            ref TKey keys, ref TValue values, int length,
 //            TComparer comparer)
 //            where TComparer : IDirectComparer<TKey>
 //        {
@@ -372,7 +372,7 @@
 //            Debug.Assert(hi > lo);
 
 //            int n = hi - lo + 1;
-//            for (int i = n / 2; i >= 1; --i)
+//            for (int i = n >> 1; i >= 1; --i)
 //            {
 //                DownHeap(ref keys, ref values, i, n, lo, comparer);
 //            }
@@ -404,7 +404,7 @@
 //            TKey d = Unsafe.Add(ref keysAtLoMinus1, i);
 //            TValue dValue = typeof(TValue) != typeof(Void) ? Unsafe.Add(ref valuesAtLoMinus1, i) : default;
 
-//            var nHalf = n / 2;
+//            var nHalf = n >> 1;
 //            while (i <= nHalf)
 //            {
 //                int child = i << 1;
@@ -439,7 +439,7 @@
 
 //        [MethodImpl(MethodImplOptions.AggressiveInlining)]
 //        private static void InsertionSort<TKey, TValue, TComparer>(
-//            ref TKey keys, ref TValue values, int lo, int hi,
+//            ref TKey keys, ref TValue values, int length,
 //            TComparer comparer)
 //            where TComparer : IDirectComparer<TKey>
 //        {
