@@ -6,7 +6,7 @@ using BenchmarkDotNet.Running;
 
 namespace DotNetCross.Sorting.Benchmarks
 {
-    [DisassemblyDiagnoser(printAsm: true, printSource: true, recursiveDepth: 3)]
+    [DisassemblyDiagnoser(printSource: true, maxDepth: 3)]
     [SimpleJob(launchCount: 1, warmupCount: 2, targetCount: 11)]
     //[RyuJitX64Job()]
     public class CompareAsm

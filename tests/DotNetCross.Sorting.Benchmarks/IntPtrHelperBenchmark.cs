@@ -5,7 +5,7 @@ using BenchmarkDotNet.Running;
 
 namespace DotNetCross.Sorting.Benchmarks
 {
-    [DisassemblyDiagnoser(recursiveDepth: 2)]
+    [DisassemblyDiagnoser(maxDepth: 2)]
     [SimpleJob(RunStrategy.Monitoring, launchCount: 1, warmupCount: 2, targetCount: 11)]
     public class IntPtrHelperBenchmark
     {

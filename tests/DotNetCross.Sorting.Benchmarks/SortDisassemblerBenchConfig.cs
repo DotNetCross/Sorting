@@ -19,10 +19,10 @@ namespace DotNetCross.Sorting.Benchmarks
             };
             foreach (var envMode in envModes)
             {
-                Add(new Job(envMode, Job.Dry, runMode));
+                AddJob(new Job(envMode, Job.Dry, runMode));
             }
-            Add(DisassemblyDiagnoser.Create(
-                new DisassemblyDiagnoserConfig(printAsm: true, printSource: true, recursiveDepth: 5)));
+            AddDiagnoser(new DisassemblyDiagnoser(
+                new DisassemblyDiagnoserConfig(printSource: true, maxDepth: 5)));
            
             //Add(DisassemblyDiagnoser.Create(
             //    new DisassemblyDiagnoserConfig(printAsm: true, printPrologAndEpilog: true, printSource: true, recursiveDepth: 3)));
