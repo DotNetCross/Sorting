@@ -5,18 +5,21 @@ using static DotNetCross.Sorting.Common;
 
 namespace DotNetCross.Sorting
 {
-    internal static partial class ComparisonImpl
+    internal partial class KeysSorter_Comparison<TKey>
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void IntroSort<TKey>(
+        public void IntroSort(
             ref TKey keys, int length,
             Comparison<TKey> comparison)
         {
+            // TODO: Check if comparison is Comparer<TKey>.Default.Compare
+            //       and if reference type or not
+
             var depthLimit = 2 * FloorLog2PlusOne(length);
             IntroSort(ref keys, length, depthLimit, comparison);
         }
 
-        private static void IntroSort<TKey>(
+        private static void IntroSort(
             ref TKey keys,
             int length, int depthLimit,
             Comparison<TKey> comparison)
@@ -38,7 +41,7 @@ namespace DotNetCross.Sorting
                         ref TKey loRef = ref keys;
                         ref TKey miRef = ref Unsafe.Add(ref keys, 1);
                         ref TKey hiRef = ref Unsafe.Add(ref keys, 2);
-                        //ref TKey miRef = ref Unsafe.SubtractByteOffset(ref hiRef, new IntPtr(Unsafe.SizeOf<TKey>()));
+                        //ref TKey miRef = ref Unsafe.SubtractByteOffset(ref hiRef, new IntPtr(Unsafe.SizeOf()));
                         Sort3(ref loRef, ref miRef, ref hiRef, comparison);
                         return;
                     }

@@ -5,10 +5,10 @@ using static DotNetCross.Sorting.Swapper;
 
 namespace DotNetCross.Sorting
 {
-    internal static partial class ComparisonImpl
+    internal partial class KeysSorter_Comparison<TKey>
     {
         // https://github.com/dotnet/runtime/pull/35297/files
-        internal static int PickPivotAndPartition<TKey>(
+        internal static int PickPivotAndPartition(
             ref TKey keys, int length,
             Comparison<TKey> comparison)
         {
