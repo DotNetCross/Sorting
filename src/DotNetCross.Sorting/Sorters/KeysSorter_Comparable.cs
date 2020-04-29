@@ -6,12 +6,14 @@ namespace DotNetCross.Sorting
         : IKeysSorter<TKey>
         where TKey : IComparable<TKey>
     {
+        internal static readonly KeysSorter_Comparison<TKey> ComparisonInstance = new KeysSorter_Comparison<TKey>();
+
+        // TODO: Remove here, make new interfaces etc.
         public void IntroSort(ref TKey keys, int length, Comparison<TKey> comparison)
         {
             // TODO: Check if comparison is Comparer<TKey>.Default.Compare
             //       and if reference type or not
-            // TODO: Make member
-            ComparisonImpl.IntroSort(ref keys, length, comparison);
+            ComparisonInstance.IntroSort(ref keys, length, comparison);
         }
     }
 }

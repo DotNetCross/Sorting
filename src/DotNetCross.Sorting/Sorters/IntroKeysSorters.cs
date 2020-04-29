@@ -34,6 +34,8 @@ namespace DotNetCross.Sorting
 
         internal sealed class NonComparable<TKey> : IKeysSorter<TKey>
         {
+            internal static readonly KeysSorter_Comparison<TKey> ComparisonInstance = new KeysSorter_Comparison<TKey>();
+
             public void IntroSort(ref TKey keys, int length)
             {
                 // TODO: Cache Comparer<TKey>.Default as Comparison<TKey> since faster
@@ -42,7 +44,7 @@ namespace DotNetCross.Sorting
 
             public void IntroSort(ref TKey keys, int length, Comparison<TKey> comparison)
             {
-                ComparisonImpl.IntroSort(ref keys, length, comparison);
+                ComparisonInstance.IntroSort(ref keys, length, comparison);
             }
         }
 

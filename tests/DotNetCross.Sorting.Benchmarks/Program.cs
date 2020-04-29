@@ -217,9 +217,9 @@ namespace DotNetCross.Sorting.Benchmarks
                 BenchmarkRunner.Run<ComparableStructInt32SortBench>();
                 BenchmarkRunner.Run<ComparableClassInt32SortBench>();
                 BenchmarkRunner.Run<StringSortBench>();
-                BenchmarkRunner.Run<StringInt32SortBench>();
-                BenchmarkRunner.Run<ComparableClassInt32Int32SortBench>();
-                BenchmarkRunner.Run<ComparableStructInt32Int32SortBench>();
+                //BenchmarkRunner.Run<StringInt32SortBench>();
+                //BenchmarkRunner.Run<ComparableClassInt32Int32SortBench>();
+                //BenchmarkRunner.Run<ComparableStructInt32Int32SortBench>();
                 return;
                 // TKey,TValue benchs
                 BenchmarkRunner.Run<Int32Int32SortBench>();
@@ -276,8 +276,9 @@ namespace DotNetCross.Sorting.Benchmarks
             }
             else if (true)
             {
+                var sut = new ComparableClassInt32SortBench();
                 //var sut = new ComparableClassInt32Int32SortBench();
-                var sut = new StringInt32SortBench();
+                //var sut = new StringInt32SortBench();
                 sut.Filler = new RandomSpanFiller(SpanFillers.RandomSeed);
                 sut.Length = 10000; // 1000000;
                 sut.GlobalSetup();
@@ -292,9 +293,9 @@ namespace DotNetCross.Sorting.Benchmarks
                 for (int i = 0; i < 200; i++)
                 {
                     sut.IterationSetup();
-                    sut.DNX_Span_();
+                    sut.DNX_Span_Comparison();
                     sut.IterationSetup();
-                    sut.CLR_Span_();
+                    sut.CLR_Span_Comparison();
                 }
             }
             else

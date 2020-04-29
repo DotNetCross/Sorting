@@ -5,10 +5,10 @@ using static DotNetCross.Sorting.Swapper;
 
 namespace DotNetCross.Sorting
 {
-    internal static partial class ComparisonImpl
+    internal partial class KeysSorter_Comparison<TKey>
     {
         // https://github.com/dotnet/runtime/pull/35297/files
-        internal static int PickPivotAndPartition<TKey>(
+        internal static int PickPivotAndPartition(
             ref TKey keys, int length,
             Comparison<TKey> comparison)
         {
@@ -25,39 +25,60 @@ namespace DotNetCross.Sorting
 
             TKey pivot = keysMiddle;
 
-            int left = 0;
-            int nextToLast = length - 2;
-            int right = nextToLast;
+            ref var keysNextToLast = ref Unsafe.Add(ref keysRight, -1);
+            keysRight = ref keysNextToLast;
             // We already partitioned lo and hi and put the pivot in hi - 1.  
             // And we pre-increment & decrement below.
-            Swap(ref keysMiddle, ref Unsafe.Add(ref keys, right));
+            Swap(ref keysMiddle, ref keysRight);
 
-            while (left < right)
+
+            // Walk the left and right pointers, swapping elements as necessary, until they cross.
+            while (Unsafe.IsAddressLessThan(ref keysLeft, ref keysRight))
             {
-                // TODO: Would be good to be able to update local ref here
+                //if (pivot == null)
+                //{
+                //    while (Unsafe.IsAddressLessThan(ref keysLeft, ref keysNextToLast) && 
+                //           (keysLeft = ref Unsafe.Add(ref keysLeft, 1)) == null) ;
+                //    while (Unsafe.IsAddressGreaterThan(ref keysRight, ref keys) && 
+                //           (keysRight = ref Unsafe.Add(ref keysRight, -1)) == null) ;
+                //}
+                //else
+                {
+                    while (Unsafe.IsAddressLessThan(ref keysLeft, ref keysNextToLast) && 
+                           comparison(keysLeft = ref Unsafe.Add(ref keysLeft, 1), pivot) < 0) ;
+                    if (Unsafe.AreSame(ref keysLeft, ref keysNextToLast) && comparison(keysLeft, pivot) < 0)
+                        ThrowHelper.ThrowArgumentException_BadComparer(comparison);
 
-                while (left < nextToLast && comparison(Unsafe.Add(ref keys, ++left), pivot) < 0) ;
-                // Check if bad comparable/comparison
-                if (left == nextToLast && comparison(Unsafe.Add(ref keys, left), pivot) < 0)
-                    ThrowHelper.ThrowArgumentException_BadComparer(comparison);
+                    while (Unsafe.IsAddressGreaterThan(ref keysRight, ref keys) && 
+                           comparison(pivot, keysRight = ref Unsafe.Add(ref keysRight, -1)) < 0) ;
+                    if (Unsafe.AreSame(ref keysRight, ref keys) && comparison(pivot, keysRight) < 0)
+                        ThrowHelper.ThrowArgumentException_BadComparer(comparison);
+                }
 
-                while (right > 0 && comparison(pivot, Unsafe.Add(ref keys, --right)) < 0) ;
-                // Check if bad comparable/comparison
-                if (right == 0 && comparison(pivot, Unsafe.Add(ref keys, right)) < 0)
-                    ThrowHelper.ThrowArgumentException_BadComparer(comparison);
-
-                if (left >= right)
+                if (!Unsafe.IsAddressLessThan(ref keysLeft, ref keysRight))
+                {
                     break;
+                }
 
-                Swap(ref keys, left, right);
+                // PERF: Swap manually inlined here for better code-gen
+                var t = keysLeft;
+                keysLeft = keysRight;
+                keysRight = t;
             }
-            // Put pivot in the right location.
-            right = nextToLast;
-            if (left != right)
+
+            // Put the pivot in the correct location.
+            if (!Unsafe.AreSame(ref keysLeft, ref keysNextToLast))
             {
-                Swap(ref keys, left, right);
+                Swap(ref keysLeft, ref keysNextToLast);
             }
-            return left;
+
+            unsafe
+            {
+                if (sizeof(IntPtr) == 4)
+                { return (int)Unsafe.ByteOffset(ref keys, ref keysLeft) / Unsafe.SizeOf<TKey>(); }
+                else
+                { return (int)((long)Unsafe.ByteOffset(ref keys, ref keysLeft) / Unsafe.SizeOf<TKey>()); }
+            }
         }
     }
 }

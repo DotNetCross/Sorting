@@ -92,7 +92,7 @@ namespace DotNetCross.Sorting.Benchmarks
                 new Span<TKey>(_work, i, Length).Sort(new StructComparableComparer<TKey>());
             }
         }
-        //[Benchmark]
+        [Benchmark]
         public void CLR_Span_Comparison()
         {
             for (int i = 0; i <= _maxLength - Length; i += Length)
@@ -136,7 +136,7 @@ namespace DotNetCross.Sorting.Benchmarks
                 new Span<TKey>(_work, i, Length).IntroSort(new StructComparableComparer<TKey>());
             }
         }
-        //[Benchmark]
+        [Benchmark]
         public void DNX_Span_Comparison()
         {
             for (int i = 0; i <= _maxLength - Length; i += Length)
