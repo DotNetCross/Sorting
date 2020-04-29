@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Diagnosers;
+using BenchmarkDotNet.Engines;
 //using TComparable = DotNetCross.Sorting.Benchmarks.ComparableClass;
 
 namespace DotNetCross.Sorting.Benchmarks
@@ -19,7 +20,8 @@ namespace DotNetCross.Sorting.Benchmarks
     // Trying to benchmark the canonical generic issue and finding a work around
     // delegate simply not fast enough, as expected, a direct function pointer might have been...
     //[DisassemblyDiagnoser(printSource: true, maxDepth: 2)]
-    [LongRunJob]
+    //[ShortRunJob]
+    [SimpleJob(RunStrategy.Throughput, warmupCount: 5, targetCount: 15, id: "CompareJob")]
     public abstract class CompareToLessThanBench<TComparable> 
         where TComparable : class, IComparable<TComparable>
     {
