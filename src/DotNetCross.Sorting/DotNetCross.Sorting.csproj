@@ -15,7 +15,7 @@
 
     <!-- nuget related properties -->
     <Authors>nietras</Authors>
-    <Description></Description>
+    <Description>Fast sorting for managed/unmanaged arrays for most .NET runtimes.</Description>
     <AssemblyVersion>0.1.0.0</AssemblyVersion>
     <FileVersion>0.1.0.0</FileVersion>
     <Version>0.1.0-preview.1</Version>
@@ -34,8 +34,10 @@
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
       <_Parameter1>DotNetCross.Sorting.Tests</_Parameter1>
     </AssemblyAttribute>
-    <PackageReference Include="System.Memory" Version="4.5.4" />
+    <PackageReference Include="System.Memory" Version="4.5.4"  />
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.7.1" />
+    <!--https://github.com/dotnet/standard/issues/601-->
+    <PackageReference Update="NETStandard.Library" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
