@@ -5,23 +5,21 @@ using static DotNetCross.Sorting.Common;
 
 namespace DotNetCross.Sorting
 {
-    internal static partial class TComparerImpl
+    internal partial class KeysSorter_TComparer<TKey, TComparer>
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void IntroSort<TKey, TComparer>(
+        public void IntroSort(
             ref TKey keys, int length,
             TComparer comparer)
-            where TComparer : IComparer<TKey>
         {
             var depthLimit = 2 * FloorLog2PlusOne(length);
             IntroSort(ref keys, length, depthLimit, comparer);
         }
 
-        private static void IntroSort<TKey, TComparer>(
+        private static void IntroSort(
             ref TKey keys,
             int length, int depthLimit,
             TComparer comparer)
-            where TComparer : IComparer<TKey>
         {
             Debug.Assert(comparer != null);
             int partitionSize = length;

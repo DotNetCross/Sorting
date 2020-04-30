@@ -18,7 +18,7 @@ namespace DotNetCross.Sorting.Benchmarks
         { }
 
         [Benchmark]
-        public void DNX_Span_CustomStructComparer()
+        public void DNX_CustomStructComparer()
         {
             for (int i = 0; i <= _maxLength - Length; i += Length)
             {
@@ -276,9 +276,9 @@ namespace DotNetCross.Sorting.Benchmarks
                 sut.Length = 10000; // 1000000;
                 sut.GlobalSetup();
                 sut.IterationSetup();
-                sut.DNX_Span_();
+                sut.DNX_();
                 sut.IterationSetup();
-                sut.Array_();
+                sut.CLR_();
 
                 //Console.WriteLine("Enter key...");
                 //Console.ReadKey();
@@ -286,9 +286,9 @@ namespace DotNetCross.Sorting.Benchmarks
                 for (int i = 0; i < 200; i++)
                 {
                     sut.IterationSetup();
-                    sut.DNX_Span_();
+                    sut.DNX_();
                     sut.IterationSetup();
-                    sut.Array_();
+                    sut.CLR_();
                 }
             }
             else if (d == Do.Loop2)
@@ -300,9 +300,9 @@ namespace DotNetCross.Sorting.Benchmarks
                 sut.Length = 10000; // 1000000;
                 sut.GlobalSetup();
                 sut.IterationSetup();
-                sut.DNX_Span_();
+                sut.DNX_Comparison();
                 sut.IterationSetup();
-                sut.CLR_Span_();
+                sut.CLR_Comparison();
 
                 //Console.WriteLine("Enter key...");
                 //Console.ReadKey();
@@ -310,9 +310,9 @@ namespace DotNetCross.Sorting.Benchmarks
                 for (int i = 0; i < 200; i++)
                 {
                     sut.IterationSetup();
-                    sut.DNX_Span_Comparison();
+                    sut.DNX_Comparison();
                     sut.IterationSetup();
-                    sut.CLR_Span_Comparison();
+                    sut.CLR_Comparison();
                 }
             }
         }

@@ -35,11 +35,12 @@ namespace DotNetCross.Sorting
         internal sealed class NonComparable<TKey> : IKeysSorter<TKey>
         {
             internal static readonly KeysSorter_Comparison<TKey> ComparisonInstance = new KeysSorter_Comparison<TKey>();
+            internal static readonly KeysSorter_TComparer<TKey, Comparer<TKey>> ComparerInstance = new KeysSorter_TComparer<TKey, Comparer<TKey>>();
 
             public void IntroSort(ref TKey keys, int length)
             {
-                // TODO: Cache Comparer<TKey>.Default as Comparison<TKey> since faster
-                TComparerImpl.IntroSort(ref keys, length, Comparer<TKey>.Default);
+                // TODO: Cache Comparer<TKey>.Default.Compare as Comparison<TKey> since faster
+                ComparerInstance.IntroSort(ref keys, length, Comparer<TKey>.Default);
             }
 
             public void IntroSort(ref TKey keys, int length, Comparison<TKey> comparison)
@@ -75,7 +76,10 @@ namespace DotNetCross.Sorting
         internal sealed class NonComparable<TKey, TComparer> : IKeysSorter<TKey, TComparer>
             where TComparer : IComparer<TKey>
         {
-            public void Sort(ref TKey keys, int length, TComparer comparer)
+            internal static readonly KeysSorter_TComparer<TKey, TComparer> ComparerInstance = new KeysSorter_TComparer<TKey, TComparer>();
+            internal static readonly KeysSorter_TComparer<TKey, Comparer<TKey>> DefaultComparerInstance = new KeysSorter_TComparer<TKey, Comparer<TKey>>();
+
+            public void IntroSort(ref TKey keys, int length, TComparer comparer)
             {
                 // Add a try block here to detect IComparers (or their
                 // underlying IComparables, etc) that are bogus.
@@ -85,11 +89,11 @@ namespace DotNetCross.Sorting
                 //{
                 if (typeof(TComparer) == typeof(IComparer<TKey>) && comparer == null)
                 {
-                    TComparerImpl.IntroSort(ref keys, length, Comparer<TKey>.Default);
+                    DefaultComparerInstance.IntroSort(ref keys, length, Comparer<TKey>.Default);
                 }
                 else
                 {
-                    TComparerImpl.IntroSort(ref keys, length, comparer);
+                    ComparerInstance.IntroSort(ref keys, length, comparer);
                 }
                 //}
                 //catch (IndexOutOfRangeException e)
@@ -111,8 +115,9 @@ namespace DotNetCross.Sorting
             where TComparer : IComparer<TKey>
         {
             internal static readonly KeysSorter_Comparable<TKey> NonComparerInstance = new KeysSorter_Comparable<TKey>();
+            internal static readonly NonComparable<TKey, TComparer> NonComparableInstance = new NonComparable<TKey, TComparer>();
 
-            public void Sort(ref TKey keys, int length,
+            public void IntroSort(ref TKey keys, int length,
                 TComparer comparer)
             {
                 // Add a try block here to detect IComparers (or their
@@ -136,7 +141,7 @@ namespace DotNetCross.Sorting
                 }
                 else
                 {
-                    TComparerImpl.IntroSort(ref keys, length, comparer);
+                    NonComparableInstance.IntroSort(ref keys, length, comparer);
                 }
                 //}
                 //catch (IndexOutOfRangeException e)

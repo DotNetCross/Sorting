@@ -1356,6 +1356,8 @@ namespace System.SpanTests
             public int Compare(TKey x, TKey y) => 1; // Always greater
         }
 
+        // TODO: Add non-comparable type and testing
+
         public struct ComparableStructInt32 
             : IComparable<ComparableStructInt32>
             , IEquatable<ComparableStructInt32>
