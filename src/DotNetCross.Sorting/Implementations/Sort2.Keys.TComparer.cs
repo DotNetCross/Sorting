@@ -4,13 +4,12 @@ using System.Runtime.CompilerServices;
 
 namespace DotNetCross.Sorting
 {
-    internal static partial class TComparerImpl
+    internal partial class KeysSorter_TComparer<TKey, TComparer>
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void Sort2<TKey, TComparer>(
+        internal static void Sort2(
         ref TKey keys, int i, int j,
         TComparer comparer)
-        where TComparer : IComparer<TKey>
         {
             Debug.Assert(i != j);
 
@@ -20,9 +19,8 @@ namespace DotNetCross.Sorting
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void Sort2<TKey, TComparer>(
+        internal static void Sort2(
             ref TKey a, ref TKey b, TComparer comparer)
-            where TComparer : IComparer<TKey>
         {
             // This is one of the only places GreaterThan is needed
             // but we need to preserve this due to bogus comparers or similar

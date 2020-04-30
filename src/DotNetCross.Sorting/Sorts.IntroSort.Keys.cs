@@ -38,7 +38,7 @@ namespace DotNetCross.Sorting
                 if (length < 2)
                     return;
 
-                IntroKeysSorters.Default<TKey, TComparer>.Instance.Sort(
+                IntroKeysSorters.Default<TKey, TComparer>.Instance.IntroSort(
                     ref MemoryMarshal.GetReference(keys),
                     length, comparer);
             }

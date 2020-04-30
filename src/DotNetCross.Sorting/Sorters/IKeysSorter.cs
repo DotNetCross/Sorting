@@ -9,9 +9,15 @@ namespace DotNetCross.Sorting
         void IntroSort(ref TKey keys, int length, Comparison<TKey> comparison);
     }
 
+    // TODO
+    //internal interface IComparisonKeysSorter<TKey>
+    //{
+    //    void IntroSort(ref TKey keys, int length, Comparison<TKey> comparison);
+    //}
+
     internal interface IKeysSorter<TKey, TComparer>
         where TComparer : IComparer<TKey>
     {
-        void Sort(ref TKey keys, int length, TComparer comparer);
+        void IntroSort(ref TKey keys, int length, TComparer comparer);
     }
 }
