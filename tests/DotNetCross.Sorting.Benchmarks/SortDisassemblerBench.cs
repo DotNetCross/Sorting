@@ -57,18 +57,18 @@ namespace DotNetCross.Sorting.Benchmarks
 
 #if !NETCOREAPP3_1
         [Benchmark]
-        public void CLR_Span_()
+        public void CLR_()
         {
             new Span<TKey>(_work).Sort();
         }
 
         [Benchmark]
-        public void CLR_Span_StructComparableComparer()
+        public void CLR_StructComparableComparer()
         {
             new Span<TKey>(_work).Sort(new StructComparableComparer<TKey>());
         }
         [Benchmark]
-        public void CLR_Span_Comparison()
+        public void CLR_Comparison()
         {
             var span = new Span<TKey>(_work);
             span.Sort(ComparableComparison<TKey>.Instance);
@@ -76,27 +76,27 @@ namespace DotNetCross.Sorting.Benchmarks
 #endif
 
         [Benchmark]
-        public void DNX_Span_()
+        public void DNX_()
         {
             new Span<TKey>(_work).IntroSort();
         }
         [Benchmark]
-        public void DNX_Span_NullComparer()
+        public void DNX_NullComparer()
         {
             new Span<TKey>(_work).IntroSort((IComparer<TKey>)null);
         }
         [Benchmark]
-        public void DNX_Span_ClassComparableComparer()
+        public void DNX_ClassComparableComparer()
         {
             new Span<TKey>(_work).IntroSort(ClassComparableComparer<TKey>.Instance);
         }
         [Benchmark]
-        public void DNX_Span_StructComparableComparer()
+        public void DNX_StructComparableComparer()
         {
             new Span<TKey>(_work).IntroSort(new StructComparableComparer<TKey>());
         }
         [Benchmark]
-        public void DNX_Span_Comparison()
+        public void DNX_Comparison()
         {
             new Span<TKey>(_work).IntroSort(ComparableComparison<TKey>.Instance);
         }
