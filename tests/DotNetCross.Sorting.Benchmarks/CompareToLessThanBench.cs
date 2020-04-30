@@ -4,7 +4,6 @@ using System.Runtime.CompilerServices;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Diagnosers;
 using BenchmarkDotNet.Engines;
-//using TComparable = DotNetCross.Sorting.Benchmarks.ComparableClass;
 
 namespace DotNetCross.Sorting.Benchmarks
 {
@@ -20,7 +19,6 @@ namespace DotNetCross.Sorting.Benchmarks
     // Trying to benchmark the canonical generic issue and finding a work around
     // delegate simply not fast enough, as expected, a direct function pointer might have been...
     //[DisassemblyDiagnoser(printSource: true, maxDepth: 2)]
-    //[ShortRunJob]
     [SimpleJob(RunStrategy.Throughput, warmupCount: 5, targetCount: 15, id: "CompareJob")]
     public abstract class CompareToLessThanBench<TComparable> 
         where TComparable : class, IComparable<TComparable>
@@ -72,8 +70,6 @@ namespace DotNetCross.Sorting.Benchmarks
 
         public CompareToLessThanBench()
         {
-            //ComparerCall(new TComparable(1), new TComparable(2), m_comparer);
-            //ComparerCall("1287192", "127912", m_comparer);
             //m_comparableComparerClosed = X.CompareTo;
 
             // Default creation can be seen at (for CoreCLR):
@@ -94,8 +90,8 @@ namespace DotNetCross.Sorting.Benchmarks
             m_openDelegateObjectComparer = new OpenDelegateObjectComparer(m_comparableComparerOpen);
         }
 
-        public TComparable X; // = new TComparable(12812912);
-        public TComparable Y; // = new TComparable(12812913);
+        public TComparable X;
+        public TComparable Y;
 
         [Benchmark]
         public bool DirectCall()
@@ -105,8 +101,7 @@ namespace DotNetCross.Sorting.Benchmarks
         [Benchmark]
         public bool DirectCallWhereT()
         {
-            //return X.CompareTo(Y) < 0;
-            return ComparableDirectCall(X, Y);
+            return ComparableDirectCallWhereT(X, Y);
         }
         [Benchmark]
         public bool InterfaceCall()
@@ -150,9 +145,8 @@ namespace DotNetCross.Sorting.Benchmarks
         {
             return m_comparerComparableComparerOpen(m_defaultComparer, X, Y) < 0;
         }
-        // TODO: ComparerOpenDelegate (object preferable)
 
-        internal bool ComparableDirectCall<T>(T x, T y) where T : IComparable<T>
+        internal bool ComparableDirectCallWhereT<T>(T x, T y) where T : IComparable<T>
         {
             return x.CompareTo(y) < 0;
         }
@@ -164,14 +158,6 @@ namespace DotNetCross.Sorting.Benchmarks
             where TComparer : ILessThanComparer<T>
         {
             return comparer.LessThan(x, y);
-        }
-
-        public class SomeComparable : IComparable<SomeComparable>
-        {
-            public int CompareTo(SomeComparable other)
-            {
-                throw new NotImplementedException();
-            }
         }
 
         static Func<object, object, int> ComparableOpenDelegate<T>()
