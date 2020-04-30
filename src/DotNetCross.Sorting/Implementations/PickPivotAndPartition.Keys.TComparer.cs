@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using static DotNetCross.Sorting.Swapper;
@@ -26,54 +25,59 @@ namespace DotNetCross.Sorting
 
             TKey pivot = keysMiddle;
 
+            ref var keysNextToLast = ref Unsafe.Add(ref keysRight, -1);
+            keysRight = ref keysNextToLast;
             // We already partitioned lo and hi and put the pivot in hi - 1.  
             // And we pre-increment & decrement below.
-            keysRight = ref Unsafe.Add(ref keysRight, -1);
             Swap(ref keysMiddle, ref keysRight);
 
-            ref var keysPartitionBegin = ref keysLeft;
-            ref var keysPartitionEnd = ref keysRight;
-
-            int left = 0;
-            //int right = hi - 1;
+            // Walk the left and right pointers, swapping elements as necessary, until they cross.
             while (Unsafe.IsAddressLessThan(ref keysLeft, ref keysRight))
             {
-                do { ++left; keysLeft = ref Unsafe.Add(ref keysLeft, 1); }
-                while (!Unsafe.AreSame(ref keysLeft, ref keysPartitionEnd) && comparer.Compare(keysLeft, pivot) < 0);
-                // Check if bad comparable/comparer
-                if (Unsafe.AreSame(ref keysLeft, ref keysPartitionEnd) && comparer.Compare(keysLeft, pivot) < 0)
-                    ThrowHelper.ThrowArgumentException_BadComparer(comparer);
+                //if (pivot == null)
+                //{
+                //    while (Unsafe.IsAddressLessThan(ref keysLeft, ref keysNextToLast) && 
+                //           (keysLeft = ref Unsafe.Add(ref keysLeft, 1)) == null) ;
+                //    while (Unsafe.IsAddressGreaterThan(ref keysRight, ref keys) && 
+                //           (keysRight = ref Unsafe.Add(ref keysRight, -1)) == null) ;
+                //}
+                //else
+                {
+                    while (Unsafe.IsAddressLessThan(ref keysLeft, ref keysNextToLast) &&
+                           comparer.Compare(keysLeft = ref Unsafe.Add(ref keysLeft, 1), pivot) < 0) ;
+                    if (Unsafe.AreSame(ref keysLeft, ref keysNextToLast) && comparer.Compare(keysLeft, pivot) < 0)
+                        ThrowHelper.ThrowArgumentException_BadComparer(comparer);
 
-                do { keysRight = ref Unsafe.Add(ref keysRight, -1); }
-                while (!Unsafe.AreSame(ref keysRight, ref keysPartitionBegin) && comparer.Compare(pivot, keysRight) < 0);
-                // Check if bad comparable/comparer
-                if (Unsafe.AreSame(ref keysRight, ref keysPartitionBegin) && comparer.Compare(pivot, keysRight) < 0)
-                    ThrowHelper.ThrowArgumentException_BadComparer(comparer);
+                    while (Unsafe.IsAddressGreaterThan(ref keysRight, ref keys) &&
+                           comparer.Compare(pivot, keysRight = ref Unsafe.Add(ref keysRight, -1)) < 0) ;
+                    if (Unsafe.AreSame(ref keysRight, ref keys) && comparer.Compare(pivot, keysRight) < 0)
+                        ThrowHelper.ThrowArgumentException_BadComparer(comparer);
+                }
 
-                //while (left < (hi - 1) && comparer.Compare(Unsafe.Add(ref keys, ++left), pivot) < 0) ;
-                //// Check if bad comparable/comparer
-                //if (left == (hi - 1) && comparer.Compare(Unsafe.Add(ref keys, left), pivot) < 0)
-                //    ThrowHelper.ThrowArgumentException_BadComparer(comparer);
-
-                //while (right > lo && comparer.Compare(pivot, Unsafe.Add(ref keys, --right)) < 0) ;
-                //// Check if bad comparable/comparer
-                //if (right == lo && comparer.Compare(pivot, Unsafe.Add(ref keys, right)) < 0)
-                //    ThrowHelper.ThrowArgumentException_BadComparer(comparer);
-
-                if (Unsafe.AreSame(ref keysLeft, ref keysRight) ||
-                    Unsafe.IsAddressGreaterThan(ref keysLeft, ref keysRight))// (left >= right)
+                if (!Unsafe.IsAddressLessThan(ref keysLeft, ref keysRight))
+                {
                     break;
+                }
 
-                Swap(ref keysLeft, ref keysRight);
+                // PERF: Swap manually inlined here for better code-gen
+                var t = keysLeft;
+                keysLeft = keysRight;
+                keysRight = t;
             }
-            // Put pivot in the right location.
-            keysRight = ref keysPartitionEnd;
-            if (!Unsafe.AreSame(ref keysLeft, ref keysRight))
+
+            // Put the pivot in the correct location.
+            if (!Unsafe.AreSame(ref keysLeft, ref keysNextToLast))
             {
-                Swap(ref keysLeft, ref keysRight);
+                Swap(ref keysLeft, ref keysNextToLast);
             }
 
-            return left;
+            unsafe
+            {
+                if (sizeof(IntPtr) == 4)
+                { return (int)Unsafe.ByteOffset(ref keys, ref keysLeft) / Unsafe.SizeOf<TKey>(); }
+                else
+                { return (int)((long)Unsafe.ByteOffset(ref keys, ref keysLeft) / Unsafe.SizeOf<TKey>()); }
+            }
         }
     }
 }

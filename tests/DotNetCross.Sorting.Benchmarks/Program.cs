@@ -298,11 +298,12 @@ namespace DotNetCross.Sorting.Benchmarks
                 //var sut = new StringInt32SortBench();
                 sut.Filler = new RandomSpanFiller(SpanFillers.RandomSeed);
                 sut.Length = 10000; // 1000000;
+
                 sut.GlobalSetup();
                 sut.IterationSetup();
-                sut.DNX_Comparison();
+                sut.DNX_StructComparableComparer();
                 sut.IterationSetup();
-                sut.CLR_Comparison();
+                sut.CLR_StructComparableComparer();
 
                 //Console.WriteLine("Enter key...");
                 //Console.ReadKey();
@@ -310,9 +311,9 @@ namespace DotNetCross.Sorting.Benchmarks
                 for (int i = 0; i < 200; i++)
                 {
                     sut.IterationSetup();
-                    sut.DNX_Comparison();
+                    sut.DNX_StructComparableComparer();
                     sut.IterationSetup();
-                    sut.CLR_Comparison();
+                    sut.CLR_StructComparableComparer();
                 }
             }
         }
