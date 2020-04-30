@@ -212,7 +212,7 @@ namespace DotNetCross.Sorting.Benchmarks
 
             // TODO: Refactor to switch/case and methods perhaps, less flexible though
             // TODO: Add argument parsing for this perhaps
-            var d = Debugger.IsAttached ? Do.Loop1 : Do.Focus;
+            var d = Debugger.IsAttached ? Do.Loop1 : Do.Full;
             if (d == Do.Focus)
             {
                 BenchmarkRunner.Run<Int32SortBench>();
