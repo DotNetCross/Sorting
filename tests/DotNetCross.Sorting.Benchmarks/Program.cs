@@ -216,10 +216,10 @@ namespace DotNetCross.Sorting.Benchmarks
             if (d == Do.Focus)
             {
                 BenchmarkRunner.Run<Int32SortBench>();
-                //BenchmarkRunner.Run<SingleSortBench>();
-                //BenchmarkRunner.Run<ComparableStructInt32SortBench>();
+                BenchmarkRunner.Run<SingleSortBench>();
+                BenchmarkRunner.Run<ComparableStructInt32SortBench>();
                 BenchmarkRunner.Run<ComparableClassInt32SortBench>();
-                //BenchmarkRunner.Run<StringSortBench>();
+                BenchmarkRunner.Run<StringSortBench>();
                 //BenchmarkRunner.Run<StringInt32SortBench>();
                 //BenchmarkRunner.Run<ComparableClassInt32Int32SortBench>();
                 //BenchmarkRunner.Run<ComparableStructInt32Int32SortBench>();
@@ -244,20 +244,21 @@ namespace DotNetCross.Sorting.Benchmarks
                 BenchmarkRunner.Run<StringInt32SortBench>();
                 BenchmarkRunner.Run<ComparableClassInt32Int32SortBench>();
                 BenchmarkRunner.Run<ComparableStructInt32Int32SortBench>();
+                // Disassemblers work poorly due to generic code
                 // TKey disassemblers
-                BenchmarkRunner.Run<Int32SortDisassemblerBench>();
-                BenchmarkRunner.Run<SingleSortDisassemblerBench>();
-                BenchmarkRunner.Run<ComparableStructInt32SortDisassemblerBench>();
-                BenchmarkRunner.Run<ComparableClassInt32SortDisassemblerBench>();
-                BenchmarkRunner.Run<StringSortDisassemblerBench>();
+                //BenchmarkRunner.Run<Int32SortDisassemblerBench>();
+                //BenchmarkRunner.Run<SingleSortDisassemblerBench>();
+                //BenchmarkRunner.Run<ComparableStructInt32SortDisassemblerBench>();
+                //BenchmarkRunner.Run<ComparableClassInt32SortDisassemblerBench>();
+                //BenchmarkRunner.Run<StringSortDisassemblerBench>();
                 // TKey,TValue disassemblers
-                BenchmarkRunner.Run<Int32Int32SortDisassemblerBench>();
-                BenchmarkRunner.Run<Int32SingleSortDisassemblerBench>();
-                BenchmarkRunner.Run<SingleInt32SortDisassemblerBench>();
-                BenchmarkRunner.Run<Int32StringSortDisassemblerBench>();
-                BenchmarkRunner.Run<StringInt32SortDisassemblerBench>();
-                BenchmarkRunner.Run<ComparableClassInt32Int32SortDisassemblerBench>();
-                BenchmarkRunner.Run<ComparableStructInt32Int32SortDisassemblerBench>();
+                //BenchmarkRunner.Run<Int32Int32SortDisassemblerBench>();
+                //BenchmarkRunner.Run<Int32SingleSortDisassemblerBench>();
+                //BenchmarkRunner.Run<SingleInt32SortDisassemblerBench>();
+                //BenchmarkRunner.Run<Int32StringSortDisassemblerBench>();
+                //BenchmarkRunner.Run<StringInt32SortDisassemblerBench>();
+                //BenchmarkRunner.Run<ComparableClassInt32Int32SortDisassemblerBench>();
+                //BenchmarkRunner.Run<ComparableStructInt32Int32SortDisassemblerBench>();
             }
             else if (d == Do.Micro)
             { 
