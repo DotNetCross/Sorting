@@ -203,24 +203,38 @@ namespace DotNetCross.Sorting.Benchmarks
 
     class Program
     {
+        enum Do { Focus, Full, Micro, Loop1, Loop2 }
+
         static void Main(string[] args)
         {
             Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.RealTime;
             Thread.CurrentThread.Priority = ThreadPriority.Highest;
 
-            if (false && !Debugger.IsAttached)
+            // TODO: Refactor to switch/case and methods perhaps, less flexible though
+            // TODO: Add argument parsing for this perhaps
+            var d = Debugger.IsAttached ? Do.Loop1 : Do.Focus;
+            if (d == Do.Focus)
             {
+                BenchmarkRunner.Run<Int32SortBench>();
+                //BenchmarkRunner.Run<SingleSortBench>();
+                //BenchmarkRunner.Run<ComparableStructInt32SortBench>();
+                BenchmarkRunner.Run<ComparableClassInt32SortBench>();
+                //BenchmarkRunner.Run<StringSortBench>();
+                //BenchmarkRunner.Run<StringInt32SortBench>();
+                //BenchmarkRunner.Run<ComparableClassInt32Int32SortBench>();
+                //BenchmarkRunner.Run<ComparableStructInt32Int32SortBench>();
+
+                // Custom benchs as seen elsewhere
                 //BenchmarkRunner.Run<SortDictionary>();
+            }
+            else if( d == Do.Full)
+            {
                 // TKey benchs
                 BenchmarkRunner.Run<Int32SortBench>();
                 BenchmarkRunner.Run<SingleSortBench>();
                 BenchmarkRunner.Run<ComparableStructInt32SortBench>();
                 BenchmarkRunner.Run<ComparableClassInt32SortBench>();
                 BenchmarkRunner.Run<StringSortBench>();
-                //BenchmarkRunner.Run<StringInt32SortBench>();
-                //BenchmarkRunner.Run<ComparableClassInt32Int32SortBench>();
-                //BenchmarkRunner.Run<ComparableStructInt32Int32SortBench>();
-                return;
                 // TKey,TValue benchs
                 BenchmarkRunner.Run<Int32Int32SortBench>();
                 BenchmarkRunner.Run<Int32SingleSortBench>();
@@ -230,7 +244,6 @@ namespace DotNetCross.Sorting.Benchmarks
                 BenchmarkRunner.Run<StringInt32SortBench>();
                 BenchmarkRunner.Run<ComparableClassInt32Int32SortBench>();
                 BenchmarkRunner.Run<ComparableStructInt32Int32SortBench>();
-
                 // TKey disassemblers
                 BenchmarkRunner.Run<Int32SortDisassemblerBench>();
                 BenchmarkRunner.Run<SingleSortDisassemblerBench>();
@@ -246,7 +259,7 @@ namespace DotNetCross.Sorting.Benchmarks
                 BenchmarkRunner.Run<ComparableClassInt32Int32SortDisassemblerBench>();
                 BenchmarkRunner.Run<ComparableStructInt32Int32SortDisassemblerBench>();
             }
-            else if (true)
+            else if (d == Do.Micro)
             { 
                 // Micro benchmarks
                 //BenchmarkRunner.Run<IntPtrHelperBenchmark>();
@@ -255,7 +268,7 @@ namespace DotNetCross.Sorting.Benchmarks
                 //var b = new ComparableInt32ClassCompareToLessThanBench();
                 //b.ComparerOpenDelegate();
             }
-            else if (false)
+            else if (d == Do.Loop1)
             {
                 //var sut = new ComparableClassInt32SortBench();
                 var sut = new StringSortBench();
@@ -278,7 +291,7 @@ namespace DotNetCross.Sorting.Benchmarks
                     sut.Array_();
                 }
             }
-            else if (true)
+            else if (d == Do.Loop2)
             {
                 var sut = new ComparableClassInt32SortBench();
                 //var sut = new ComparableClassInt32Int32SortBench();
