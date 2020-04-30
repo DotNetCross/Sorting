@@ -278,7 +278,7 @@ namespace DotNetCross.Sorting.Benchmarks
                 sut.IterationSetup();
                 sut.DNX_();
                 sut.IterationSetup();
-                sut.Array_();
+                sut.CLR_();
 
                 //Console.WriteLine("Enter key...");
                 //Console.ReadKey();
@@ -288,7 +288,7 @@ namespace DotNetCross.Sorting.Benchmarks
                     sut.IterationSetup();
                     sut.DNX_();
                     sut.IterationSetup();
-                    sut.Array_();
+                    sut.CLR_();
                 }
             }
             else if (d == Do.Loop2)
@@ -300,9 +300,9 @@ namespace DotNetCross.Sorting.Benchmarks
                 sut.Length = 10000; // 1000000;
                 sut.GlobalSetup();
                 sut.IterationSetup();
-                sut.DNX_();
+                sut.DNX_Comparison();
                 sut.IterationSetup();
-                sut.CLR_();
+                sut.CLR_Comparison();
 
                 //Console.WriteLine("Enter key...");
                 //Console.ReadKey();

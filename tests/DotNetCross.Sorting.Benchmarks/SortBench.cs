@@ -51,7 +51,7 @@ namespace DotNetCross.Sorting.Benchmarks
         }
 
         [Benchmark(Baseline = true)]
-        public void Array_()
+        public void CLR_Array_()
         {
             for (int i = 0; i <= _maxLength - Length; i += Length)
             {
@@ -59,7 +59,7 @@ namespace DotNetCross.Sorting.Benchmarks
             }
         }
         //[Benchmark]
-        public void Array_NullComparer()
+        public void CLR_Array_NullComparer()
         {
             for (int i = 0; i <= _maxLength - Length; i += Length)
             {
@@ -67,7 +67,7 @@ namespace DotNetCross.Sorting.Benchmarks
             }
         }
         //[Benchmark]
-        public void Array_ClassComparableComparer()
+        public void CLR_Array_ClassComparableComparer()
         {
             for (int i = 0; i <= _maxLength - Length; i += Length)
             {

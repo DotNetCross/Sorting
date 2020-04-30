@@ -94,7 +94,22 @@ namespace DotNetCross.Sorting.Benchmarks
                 new Span<TKey>(_work, i, Length).Sort(new Span<TValue>(_workValues, i, Length));
             }
         }
-
+        //[Benchmark]
+        public void CLR_ClassComparableComparer()
+        {
+            for (int i = 0; i <= _maxLength - Length; i += Length)
+            {
+                new Span<TKey>(_work, i, Length).Sort(new Span<TValue>(_workValues, i, Length), ClassComparableComparer<TKey>.Instance);
+            }
+        }
+        //[Benchmark]
+        public void CLR_StructComparableComparer()
+        {
+            for (int i = 0; i <= _maxLength - Length; i += Length)
+            {
+                new Span<TKey>(_work, i, Length).Sort(new Span<TValue>(_workValues, i, Length), new StructComparableComparer<TKey>());
+            }
+        }
         //[Benchmark]
         public void CLR_Comparison()
         {
