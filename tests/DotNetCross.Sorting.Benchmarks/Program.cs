@@ -106,7 +106,7 @@ namespace DotNetCross.Sorting.Benchmarks
         {
             for (int i = 0; i <= _maxLength - Length; i += Length)
             {
-                ref object keys = ref Unsafe.AsRef<object>(_work[i]);
+                ref var keys = ref _work[i];
                 TDirectComparerImpl.IntroSort(ref keys, Length, 
                     new OpenDelegateObjectDirectComparer(m_comparableComparerOpen));
             }
