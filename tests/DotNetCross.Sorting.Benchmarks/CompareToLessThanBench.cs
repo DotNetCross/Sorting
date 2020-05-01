@@ -18,6 +18,7 @@ namespace DotNetCross.Sorting.Benchmarks
 
     // Trying to benchmark the canonical generic issue and finding a work around
     // delegate simply not fast enough, as expected, a direct function pointer might have been...
+    [MemoryDiagnoser]
     //[DisassemblyDiagnoser(printSource: true, maxDepth: 2)]
     [SimpleJob(RunStrategy.Throughput, warmupCount: 5, targetCount: 15, id: "CompareJob")]
     public abstract class CompareToLessThanBench<TComparable> 
@@ -63,7 +64,7 @@ namespace DotNetCross.Sorting.Benchmarks
         readonly Func<object, object, int> m_comparableComparerOpen = ComparableOpenDelegate<TComparable>();
         //readonly Func<TComparable, int> m_comparableComparerClosed;
         readonly IComparer<TComparable> m_defaultComparer;
-        readonly Func<TComparable, TComparable, int> m_comparerComparableComparerClosed =
+        readonly Comparison<TComparable> m_comparerComparableComparerClosed =
             Comparer<TComparable>.Default.Compare;
         readonly Func<object, object, object, int> m_comparerComparableComparerOpen =
             ComparerOpenDelegate<TComparable>();
@@ -125,7 +126,7 @@ namespace DotNetCross.Sorting.Benchmarks
             return m_comparableComparerOpen.Invoke(X, Y) < 0;
         }
         [Benchmark]
-        public bool InstanceOpenDelegateObjectComparer()
+        public bool ComparableOpenDelegateObjectComparer()
         {
             return m_openDelegateObjectComparer.LessThan(X, Y);
         }
@@ -160,7 +161,7 @@ namespace DotNetCross.Sorting.Benchmarks
             return comparer.LessThan(x, y);
         }
 
-        static Func<object, object, int> ComparableOpenDelegate<T>()
+        public static Func<object, object, int> ComparableOpenDelegate<T>()
             where T : class, IComparable<T>
         {
             var paramType = typeof(T);
@@ -175,7 +176,7 @@ namespace DotNetCross.Sorting.Benchmarks
             //return (x, y) => openTypedDelegate((T)x, (T)y);
         }
 
-        static Func<object, object, object, int> ComparerOpenDelegate<T>()
+        public static Func<object, object, object, int> ComparerOpenDelegate<T>()
             where T : class, IComparable<T>
         {
             var paramType = typeof(T);

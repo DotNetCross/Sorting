@@ -63,10 +63,102 @@ namespace DotNetCross.Sorting.Benchmarks
     }
     public class ComparableClassInt32SortBench : SortBench<ComparableClassInt32>
     {
+        readonly Func<object, object, int> m_comparableComparerOpen = CompareToLessThanBench<ComparableClassInt32>
+            .ComparableOpenDelegate<ComparableClassInt32>();
+
         public ComparableClassInt32SortBench()
             : base(maxLength: 400000, new[] { 2, 3, 10, 100, 10000, 100000 },
                    SpanFillers.Default, i => new ComparableClassInt32(i))
         { }
+
+        [Benchmark]
+        public void DNX_DirectComparer()
+        {
+            for (int i = 0; i <= _maxLength - Length; i += Length)
+            {
+                ref var keys = ref _work[i];
+                TDirectComparerImpl.IntroSort(ref keys, Length, new DirectComparer());
+            }
+        }
+
+        [Benchmark]
+        public void DNX_InterfaceDirectComparer()
+        {
+            for (int i = 0; i <= _maxLength - Length; i += Length)
+            {
+                ref var keys = ref _work[i];
+                TDirectComparerImpl.IntroSort(ref keys, Length, new InterfaceDirectComparer<ComparableClassInt32>());
+            }
+        }
+
+        [Benchmark]
+        public void DNX_GenericDirectComparer()
+        {
+            for (int i = 0; i <= _maxLength - Length; i += Length)
+            {
+                ref var keys = ref _work[i];
+                TDirectComparerImpl.IntroSort(ref keys, Length, new GenericDirectComparer<ComparableClassInt32>());
+            }
+        }
+
+        [Benchmark]
+        public void DNX_OpenDelegateObjectDirectComparer()
+        {
+            for (int i = 0; i <= _maxLength - Length; i += Length)
+            {
+                ref object keys = ref Unsafe.AsRef<object>(_work[i]);
+                TDirectComparerImpl.IntroSort(ref keys, Length, 
+                    new OpenDelegateObjectDirectComparer(m_comparableComparerOpen));
+            }
+        }
+
+        readonly struct DirectComparer : IDirectComparer<ComparableClassInt32>
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool GreaterThan(ComparableClassInt32 x, ComparableClassInt32 y) => x.CompareTo(y) > 0;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool LessThan(ComparableClassInt32 x, ComparableClassInt32 y) => x.CompareTo(y) < 0;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool LessThanEqual(ComparableClassInt32 x, ComparableClassInt32 y) => x.CompareTo(y) <= 0;
+        }
+
+        readonly struct InterfaceDirectComparer<T> : IDirectComparer<IComparable<T>>
+            where T : class, IComparable<T>
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool GreaterThan(IComparable<T> x, IComparable<T> y) => x.CompareTo(Unsafe.As<T>(y)) > 0;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool LessThan(IComparable<T> x, IComparable<T> y) => x.CompareTo(Unsafe.As<T>(y)) < 0;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool LessThanEqual(IComparable<T> x, IComparable<T> y) => x.CompareTo(Unsafe.As<T>(y)) <= 0;
+        }
+
+        readonly struct GenericDirectComparer<T> : IDirectComparer<T>
+            where T : IComparable<T>
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool GreaterThan(T x, T y) => x.CompareTo(y) > 0;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool LessThan(T x, T y) => x.CompareTo(y) < 0;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool LessThanEqual(T x, T y) => x.CompareTo(y) <= 0;
+        }
+
+        readonly struct OpenDelegateObjectDirectComparer : IDirectComparer<object>
+        {
+            readonly Func<object, object, int> m_compare;
+
+            public OpenDelegateObjectDirectComparer(Func<object, object, int> compare) =>
+                m_compare = compare;
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool GreaterThan(object x, object y) => m_compare(x, y) > 0;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool LessThan(object x, object y) => m_compare(x, y) < 0;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool LessThanEqual(object x, object y) => m_compare(x, y) <= 0;
+        }
+
     }
 
     public class Int32Int32SortBench : SortBench<int, int>
@@ -212,14 +304,15 @@ namespace DotNetCross.Sorting.Benchmarks
 
             // TODO: Refactor to switch/case and methods perhaps, less flexible though
             // TODO: Add argument parsing for this perhaps
-            var d = Debugger.IsAttached ? Do.Loop1 : Do.Full;
+            var d = Debugger.IsAttached ? Do.Loop1 : Do.Focus;
             if (d == Do.Focus)
             {
-                BenchmarkRunner.Run<Int32SortBench>();
-                BenchmarkRunner.Run<SingleSortBench>();
-                BenchmarkRunner.Run<ComparableStructInt32SortBench>();
+                //BenchmarkRunner.Run<Int32SortBench>();
+                //BenchmarkRunner.Run<SingleSortBench>();
+                //BenchmarkRunner.Run<ComparableStructInt32SortBench>();
+                //BenchmarkRunner.Run<ComparableInt32ClassCompareToLessThanBench>();
                 BenchmarkRunner.Run<ComparableClassInt32SortBench>();
-                BenchmarkRunner.Run<StringSortBench>();
+                //BenchmarkRunner.Run<StringSortBench>();
                 //BenchmarkRunner.Run<StringInt32SortBench>();
                 //BenchmarkRunner.Run<ComparableClassInt32Int32SortBench>();
                 //BenchmarkRunner.Run<ComparableStructInt32Int32SortBench>();
