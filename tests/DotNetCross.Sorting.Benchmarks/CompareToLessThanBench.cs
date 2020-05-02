@@ -36,9 +36,21 @@ namespace DotNetCross.Sorting.Benchmarks
         }
         internal readonly struct OpenDelegateObjectComparer : ILessThanComparer<object>
         {
-            readonly Func<object, object, int> m_compare;
+            readonly Comparison<object> m_compare;
 
-            public OpenDelegateObjectComparer(Func<object, object, int> compare)
+            public OpenDelegateObjectComparer(Comparison<object> compare)
+            {
+                m_compare = compare;
+            }
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool LessThan(object x, object y) => m_compare(x, y) < 0;
+        }
+
+        internal readonly struct OpenDelegateObjectComparerWithChecks : ILessThanComparer<object>
+        {
+            readonly Comparison<object> m_compare;
+
+            public OpenDelegateObjectComparerWithChecks(Comparison<object> compare)
             {
                 m_compare = compare;
             }
@@ -60,8 +72,10 @@ namespace DotNetCross.Sorting.Benchmarks
             new ComparableLessThanComparer<TComparable>();
 
         readonly OpenDelegateObjectComparer m_openDelegateObjectComparer;
+        readonly OpenDelegateObjectComparerWithChecks m_openDelegateObjectComparerWithChecks;
 
-        readonly Func<object, object, int> m_comparableComparerOpen = ComparableOpenDelegate<TComparable>();
+        readonly Comparison<object> m_comparableComparerOpen = DelegateDoctor
+            .GetComparableCompareToAsOpenObjectDelegate<TComparable>();
         //readonly Func<TComparable, int> m_comparableComparerClosed;
         readonly IComparer<TComparable> m_defaultComparer;
         readonly Comparison<TComparable> m_comparerComparableComparerClosed =
@@ -89,6 +103,7 @@ namespace DotNetCross.Sorting.Benchmarks
             // https://github.com/dotnet/runtime/blob/master/src/libraries/System.Private.CoreLib/src/System/Collections/Generic/Comparer.cs
             m_defaultComparer = Comparer<TComparable>.Default;
             m_openDelegateObjectComparer = new OpenDelegateObjectComparer(m_comparableComparerOpen);
+            m_openDelegateObjectComparerWithChecks = new OpenDelegateObjectComparerWithChecks(m_comparableComparerOpen);
         }
 
         public TComparable X;
@@ -121,7 +136,7 @@ namespace DotNetCross.Sorting.Benchmarks
         //    return m_comparableComparerClosed.Invoke(Y) < 0;
         //}
         [Benchmark]
-        public bool InstanceOpenDelegate() // Too slow compared to direct
+        public bool InstanceOpenDelegate()
         {
             return m_comparableComparerOpen.Invoke(X, Y) < 0;
         }
@@ -129,6 +144,11 @@ namespace DotNetCross.Sorting.Benchmarks
         public bool ComparableOpenDelegateObjectComparer()
         {
             return m_openDelegateObjectComparer.LessThan(X, Y);
+        }
+        [Benchmark]
+        public bool ComparableOpenDelegateObjectComparerWithChecks()
+        {
+            return m_openDelegateObjectComparerWithChecks.LessThan(X, Y);
         }
 
         [Benchmark(Baseline = true)]
@@ -161,20 +181,6 @@ namespace DotNetCross.Sorting.Benchmarks
             return comparer.LessThan(x, y);
         }
 
-        public static Func<object, object, int> ComparableOpenDelegate<T>()
-            where T : class, IComparable<T>
-        {
-            var paramType = typeof(T);
-            var comparableType = typeof(T);
-            const string methodName = nameof(IComparable<T>.CompareTo);
-            var methodInfo = comparableType.GetMethod(methodName, new Type[] { paramType });
-
-            Func<T, T, int> openTypedDelegate = (Func<T, T, int>)
-                Delegate.CreateDelegate(typeof(Func<T, T, int>), methodInfo);
-
-            return Unsafe.As<Func<object, object, int>>(openTypedDelegate);
-            //return (x, y) => openTypedDelegate((T)x, (T)y);
-        }
 
         public static Func<object, object, object, int> ComparerOpenDelegate<T>()
             where T : class, IComparable<T>

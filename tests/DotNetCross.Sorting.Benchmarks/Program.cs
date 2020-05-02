@@ -63,8 +63,8 @@ namespace DotNetCross.Sorting.Benchmarks
     }
     public class ComparableClassInt32SortBench : SortBench<ComparableClassInt32>
     {
-        readonly Func<object, object, int> m_comparableComparerOpen = CompareToLessThanBench<ComparableClassInt32>
-            .ComparableOpenDelegate<ComparableClassInt32>();
+        readonly Comparison<object> m_comparableComparerOpen = DelegateDoctor
+            .GetComparableCompareToAsOpenObjectDelegate<ComparableClassInt32>();
 
         public ComparableClassInt32SortBench()
             : base(maxLength: 400000, new[] { 2, 3, 10, 100, 10000, 100000 },
@@ -169,9 +169,9 @@ namespace DotNetCross.Sorting.Benchmarks
 
         readonly struct OpenDelegateObjectDirectComparer : IDirectComparer<object>
         {
-            readonly Func<object, object, int> m_compare;
+            readonly Comparison<object> m_compare;
 
-            public OpenDelegateObjectDirectComparer(Func<object, object, int> compare) =>
+            public OpenDelegateObjectDirectComparer(Comparison<object> compare) =>
                 m_compare = compare;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -327,7 +327,7 @@ namespace DotNetCross.Sorting.Benchmarks
 
             // TODO: Refactor to switch/case and methods perhaps, less flexible though
             // TODO: Add argument parsing for this perhaps
-            var d = Debugger.IsAttached ? Do.Loop1 : Do.Focus;
+            var d = Debugger.IsAttached ? Do.Loop1 : Do.Micro;
             if (d == Do.Focus)
             {
                 //BenchmarkRunner.Run<Int32SortBench>();
