@@ -14,6 +14,12 @@ namespace DotNetCross.Sorting.Benchmarks
             X = new ComparableClassInt32(12812912);
             Y = new ComparableClassInt32(12812913);
         }
+
+        [Benchmark]
+        public bool DirectCall()
+        {
+            return X.CompareTo(Y) < 0;
+        }
     }
 
     // Trying to benchmark the canonical generic issue and finding a work around
@@ -110,22 +116,22 @@ namespace DotNetCross.Sorting.Benchmarks
         public TComparable Y;
 
         [Benchmark]
-        public bool DirectCall()
+        public bool GenericDirectCall()
         {
             return X.CompareTo(Y) < 0;
         }
         [Benchmark]
-        public bool DirectCallWhereT()
+        public bool GenericDirectCallWhereT()
         {
             return ComparableDirectCallWhereT(X, Y);
         }
         [Benchmark]
-        public bool InterfaceCall()
+        public bool GenericInterfaceCall()
         {
             return ComparableInterfaceCall(X, Y);
         }
         [Benchmark]
-        public bool ValueType()
+        public bool GenericValueType()
         {
             //return m_comparer.LessThan(X, Y);
             return ComparerCall(X, Y, m_valueTypeComparer);
@@ -136,17 +142,17 @@ namespace DotNetCross.Sorting.Benchmarks
         //    return m_comparableComparerClosed.Invoke(Y) < 0;
         //}
         [Benchmark]
-        public bool InstanceOpenDelegate()
+        public bool GenericInstanceOpenDelegate()
         {
             return m_comparableComparerOpen.Invoke(X, Y) < 0;
         }
         [Benchmark]
-        public bool ComparableOpenDelegateObjectComparer()
+        public bool GenericComparableOpenDelegateObjectComparer()
         {
             return m_openDelegateObjectComparer.LessThan(X, Y);
         }
         [Benchmark]
-        public bool ComparableOpenDelegateObjectComparerWithChecks()
+        public bool GenericComparableOpenDelegateObjectComparerWithChecks()
         {
             return m_openDelegateObjectComparerWithChecks.LessThan(X, Y);
         }
@@ -166,6 +172,12 @@ namespace DotNetCross.Sorting.Benchmarks
         {
             return m_comparerComparableComparerOpen(m_defaultComparer, X, Y) < 0;
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static TResult DISASSEMBLE<TDelegate, T1, T2, TResult>(TDelegate compare, T1 x, T2 y)
+            where TDelegate : class, System.Delegate
+            => Unsafe.As<Func<T1, T2, TResult>>(compare)(x, y); 
+
 
         internal bool ComparableDirectCallWhereT<T>(T x, T y) where T : IComparable<T>
         {

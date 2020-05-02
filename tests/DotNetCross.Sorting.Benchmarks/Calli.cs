@@ -30,4 +30,7 @@ namespace DotNetCross.Sorting.Benchmarks
     // https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.signaturehelper?redirectedfrom=MSDN&view=netcore-3.1
 
     // https://github.com/ltrzesniewski/InlineIL.Fody/blob/master/src/InlineIL.Tests.UnverifiableAssemblyToProcess/StandAloneMethodSigTestCases.cs
+
+    // Series on calls in C#
+    // https://blog.adamfurmanek.pl/2016/05/21/virtual-and-non-virtual-calls-in-c/
 }

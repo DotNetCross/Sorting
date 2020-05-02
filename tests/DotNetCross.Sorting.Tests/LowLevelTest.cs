@@ -29,21 +29,29 @@ namespace DotNetCross.Sorting.Tests
                 Value.CompareTo(other.Value);
         }
 
+        // Marshal.GetDelegateForFunctionPointer does not work for generic delegates
+        delegate int ComparisonComp(Comp x, Comp y);
+
         [Fact]
         public unsafe void DelegateToPointer()
         {
             var compare = DelegateDoctor.GetComparableCompareToAsOpenObjectDelegate<Comp>();
+            
+            Assert.Equal(-1, compare(new Comp(-1), new Comp(1)));
+            Assert.Equal(0, compare(new Comp(1), new Comp(1)));
+            Assert.Equal(1, compare(new Comp(1), new Comp(-1)));
+
             var methodInfo = compare.Method;
             var runtimeHandle = methodInfo.MethodHandle;
             var functionPointer = runtimeHandle.GetFunctionPointer();
 
             Assert.NotEqual(IntPtr.Zero, functionPointer);
 
-            //var asStruct = new ComparisonAsStruct() { Delegate = Unsafe.As<Comparison<object>>(compare) };
-            //IntPtr delegatePointer = IntPtr.Zero;
-            //void* pointerToDelegatePointer = &delegatePointer;
-            //Marshal.StructureToPtr(asStruct, new IntPtr(pointerToDelegatePointer), false);
-            //Assert.NotEqual(IntPtr.Zero, delegatePointer);
+            var compareFromPtr = Marshal.GetDelegateForFunctionPointer<ComparisonComp>(functionPointer);
+            // Below fails yielding incorrect results for some reason
+            //Assert.Equal(-1, compareFromPtr(new Comp(-1), new Comp(1)));
+            //Assert.Equal(0, compareFromPtr(new Comp(1), new Comp(1)));
+            //Assert.Equal(1, compareFromPtr(new Comp(1), new Comp(-1)));
         }
     }
 }
