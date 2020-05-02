@@ -63,11 +63,13 @@ namespace DotNetCross.Sorting.Benchmarks
     }
     public class ComparableClassInt32SortBench : SortBench<ComparableClassInt32>
     {
-        readonly Comparison<object> m_comparableComparerOpen = DelegateDoctor
+        readonly Comparison<object> m_comparableComparisonOpen = DelegateDoctor
             .GetComparableCompareToAsOpenObjectDelegate<ComparableClassInt32>();
+        readonly Comparison<object> m_icomparableComparisonOpen = DelegateDoctor
+            .GetIComparableCompareToAsOpenObjectDelegate<ComparableClassInt32>();
 
         public ComparableClassInt32SortBench()
-            : base(maxLength: 400000, new[] { 2, 3, 10, 100, 10000, 100000 },
+            : base(maxLength: 400000, new[] { 10000 }, //2, 3, 10, 100, 10000, 100000 },
                    SpanFillers.Default, i => new ComparableClassInt32(i))
         { }
 
@@ -88,6 +90,24 @@ namespace DotNetCross.Sorting.Benchmarks
             {
                 ref var keys = ref _work[i];
                 TDirectComparerImpl.IntroSort(ref keys, Length, new InterfaceDirectComparer<ComparableClassInt32>());
+            }
+        }
+
+        [Benchmark]
+        public void DNX_Comparison_TComparable_OpenDelegate()
+        {
+            for (int i = 0; i <= _maxLength - Length; i += Length)
+            {
+                new Span<ComparableClassInt32>(_work, i, Length).IntroSort(m_comparableComparisonOpen);
+            }
+        }
+
+        [Benchmark]
+        public void DNX_Comparison_IComparable_OpenDelegate()
+        {
+            for (int i = 0; i <= _maxLength - Length; i += Length)
+            {
+                new Span<ComparableClassInt32>(_work, i, Length).IntroSort(m_icomparableComparisonOpen);
             }
         }
 
@@ -114,13 +134,24 @@ namespace DotNetCross.Sorting.Benchmarks
         }
 
         [Benchmark]
+        public void DNX_OpenDelegateDirectComparer()
+        {
+            for (int i = 0; i <= _maxLength - Length; i += Length)
+            {
+                ref var keys = ref _work[i];
+                TDirectComparerImpl.IntroSort(ref keys, Length,
+                    new OpenDelegateDirectComparer(m_comparableComparisonOpen));
+            }
+        }
+
+        [Benchmark]
         public void DNX_OpenDelegateObjectDirectComparer()
         {
             for (int i = 0; i <= _maxLength - Length; i += Length)
             {
                 ref var keys = ref _work[i];
                 TDirectComparerImpl.IntroSort(ref keys, Length, 
-                    new OpenDelegateObjectDirectComparer(m_comparableComparerOpen));
+                    new OpenDelegateObjectDirectComparer(m_comparableComparisonOpen));
             }
         }
 
@@ -180,6 +211,21 @@ namespace DotNetCross.Sorting.Benchmarks
             public bool LessThan(object x, object y) => m_compare(x, y) < 0;
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool LessThanEqual(object x, object y) => m_compare(x, y) <= 0;
+        }
+
+        readonly struct OpenDelegateDirectComparer : IDirectComparer<ComparableClassInt32>
+        {
+            readonly Comparison<object> m_compare;
+
+            public OpenDelegateDirectComparer(Comparison<object> compare) =>
+                m_compare = compare;
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool GreaterThan(ComparableClassInt32 x, ComparableClassInt32 y) => m_compare(x, y) > 0;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool LessThan(ComparableClassInt32 x, ComparableClassInt32 y) => m_compare(x, y) < 0;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool LessThanEqual(ComparableClassInt32 x, ComparableClassInt32 y) => m_compare(x, y) <= 0;
         }
 
     }
@@ -327,7 +373,7 @@ namespace DotNetCross.Sorting.Benchmarks
 
             // TODO: Refactor to switch/case and methods perhaps, less flexible though
             // TODO: Add argument parsing for this perhaps
-            var d = Debugger.IsAttached ? Do.Loop1 : Do.Micro;
+            var d = Debugger.IsAttached ? Do.Loop1 : Do.Focus;
             if (d == Do.Focus)
             {
                 //BenchmarkRunner.Run<Int32SortBench>();
