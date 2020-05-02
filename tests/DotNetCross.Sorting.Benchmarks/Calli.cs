@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 
 namespace DotNetCross.Sorting.Benchmarks
 {
+    // https://github.com/dotnet/csharplang/blob/master/proposals/function-pointers.md
+
     // Asked Tanner Gooding:
     // https://github.com/dotnet/runtime/issues/23062#issuecomment-622456190
 
@@ -33,4 +35,82 @@ namespace DotNetCross.Sorting.Benchmarks
 
     // Series on calls in C#
     // https://blog.adamfurmanek.pl/2016/05/21/virtual-and-non-virtual-calls-in-c/
+
+    // Examples
+    // https://github.com/migueldeicaza/mono-wasm-mono/blob/master/mono/tests/metadata-verifier/assembly-with-calli.il
+    // .method public static int32 SimpleMethod(int32 foo) cil managed
+    // {
+    //     ldc.i4.0
+    //     ret
+    // }
+    // .method public static void MethodWithCalli() cil managed
+    // {
+    //     ldftn int32 class Program::SimpleMethod(int32)
+    //     ldc.i4.1
+    //     calli unmanaged cdecl int32(int32)
+    //     pop
+    //     ret
+    // }
+
+
+    // Proposed Unsafe naming schema.
+
+    //public static TResult Calli_[CALLCONV]_Delegate_[Func|Action]_[Open]<T1, T2, TResult>(IntPtr functionPtr, T1 arg1, T2 arg2)
+    //{ }
+
+    //public static TResult Calli_Managed_Func_Open<T1, T2, TResult>(IntPtr functionPtr, T1 arg1, T2 arg2)
+    //{ }
+
+    // [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    // public static TResult DISASSEMBLE<TDelegate, T1, T2, TResult>(TDelegate compare, T1 x, T2 y)
+    //     where TDelegate : class, System.Delegate
+    //     => Unsafe.As<Func<T1, T2, TResult>>(compare)(x, y);
+    //
+    // .method public hidebysig static !!TResult
+    //         DISASSEMBLE<class ([System.Runtime] System.Delegate) TDelegate,T1,T2,TResult>(!!TDelegate compare,
+    //                                                                                      !!T1 x,
+    //                                                                                      !!T2 y) cil managed aggressiveinlining
+    // {
+    //   // Code size       19 (0x13)
+    //   .maxstack  8
+    //   IL_0000:  ldarg.0
+    //   IL_0001:  box        !!TDelegate
+    //   IL_0006:  call       !!0 [System.Runtime.CompilerServices.Unsafe] System.Runtime.CompilerServices.Unsafe::As<class [System.Runtime] System.Func`3<!!1,!!2,!!3>>(object)
+    //   IL_000b:  ldarg.1
+    //   IL_000c:  ldarg.2
+    //   IL_000d:  callvirt instance !2 class [System.Runtime] System.Func`3<!!T1,!!T2,!!TResult>::Invoke(!0,
+    //                                                                                                     !1)
+    //   IL_0012:  ret
+    // } // end of method CompareToLessThanBench`1::DISASSEMBLE
+
+
+    // ```antlr
+    // pointer_type
+    //     : ...
+    //     | funcptr_type
+    //     ;
+    // 
+    // funcptr_type
+    //     : 'delegate' '*' calling_convention? '<' (funcptr_parameter_modifier? type ',')* funcptr_return_modifier? return_type '>'
+    //     ;
+    // 
+    // calling_convention
+    //     : 'cdecl'
+    //     | 'managed'
+    //     | 'stdcall'
+    //     | 'thiscall'
+    //     | 'unmanaged'
+    //     ;
+    // 
+    // funcptr_parameter_modifier
+    //     : 'ref'
+    //     | 'out'
+    //     | 'in'
+    //     ;
+    // 
+    // funcptr_return_modifier
+    //     : 'ref'
+    //     | 'ref readonly'
+    //     ;
+    // ```
 }
