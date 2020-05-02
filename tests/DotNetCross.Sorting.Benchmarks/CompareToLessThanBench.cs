@@ -27,6 +27,7 @@ namespace DotNetCross.Sorting.Benchmarks
     [MemoryDiagnoser]
     //[DisassemblyDiagnoser(printSource: true, maxDepth: 2)]
     [SimpleJob(RunStrategy.Throughput, warmupCount: 5, targetCount: 15, id: "CompareJob")]
+    [IterationTime(50)]
     public abstract class CompareToLessThanBench<TComparable> 
         where TComparable : class, IComparable<TComparable>
     {
