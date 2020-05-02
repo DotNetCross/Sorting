@@ -14,6 +14,8 @@ namespace DotNetCross.Sorting
             var paramType = typeof(T);
             var comparableType = typeof(T);
             const string methodName = nameof(IComparable<T>.CompareTo);
+            // TODO: There may be multiple methods with the given name... and type, we have to
+            //       match the interface
             var methodInfo = comparableType.GetRuntimeMethod(methodName, new Type[] { paramType });
 
             var comparison = (Comparison<T>)methodInfo.CreateDelegate(typeof(Comparison<T>));

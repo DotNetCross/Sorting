@@ -83,6 +83,11 @@ namespace DotNetCross.Sorting.Benchmarks
     //   IL_0012:  ret
     // } // end of method CompareToLessThanBench`1::DISASSEMBLE
 
+    // IL_00ad:  ldloca.s pivot
+    // IL_00af:  ldloc.0
+    // IL_00b0:  ldobj      !TKey
+    // IL_00b5:  constrained. !TKey
+    // IL_00bb:  callvirt instance int32 class [System.Runtime] System.IComparable`1<!TKey>::CompareTo(!0)
 
     // ```antlr
     // pointer_type

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -31,6 +32,46 @@ namespace DotNetCross.Sorting.Tests
 
         // Marshal.GetDelegateForFunctionPointer does not work for generic delegates
         delegate int ComparisonComp(Comp x, Comp y);
+
+        [Fact]
+        public unsafe void ClassMethodToPointer()
+        {
+            IntPtr functionPointer = GetFunctionPointerComp();
+
+            Assert.NotEqual(IntPtr.Zero, functionPointer);
+        }
+
+        private static unsafe IntPtr GetFunctionPointerComp()
+        {
+            var paramType = typeof(Comp);
+            var comparableType = typeof(Comp);
+            const string methodName = nameof(IComparable<Comp>.CompareTo);
+            var methodInfo = comparableType.GetRuntimeMethod(methodName, new Type[] { paramType });
+
+            var runtimeHandle = methodInfo.MethodHandle;
+            var functionPointer = runtimeHandle.GetFunctionPointer();
+            return functionPointer;
+        }
+
+        [Fact]
+        public unsafe void InterfaceMethodToPointer()
+        {
+            IntPtr functionPointer = GetFunctionPointerCompAsIComparable();
+
+            Assert.NotEqual(IntPtr.Zero, functionPointer);
+        }
+
+        private static unsafe IntPtr GetFunctionPointerCompAsIComparable()
+        {
+            var paramType = typeof(Comp);
+            var comparableType = typeof(IComparable<Comp>);
+            const string methodName = nameof(IComparable<Comp>.CompareTo);
+            var methodInfo = comparableType.GetRuntimeMethod(methodName, new Type[] { paramType });
+
+            var runtimeHandle = methodInfo.MethodHandle;
+            var functionPointer = runtimeHandle.GetFunctionPointer();
+            return functionPointer;
+        }
 
         [Fact]
         public unsafe void DelegateToPointer()
