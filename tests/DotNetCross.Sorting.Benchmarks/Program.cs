@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Diagnostics.Windows.Configs;
 using BenchmarkDotNet.Running;
 using DotNetCross.Sorting.Sequences;
 
@@ -61,6 +62,7 @@ namespace DotNetCross.Sorting.Benchmarks
                    SpanFillers.Default, i => new ComparableStructInt32(i))
         { }
     }
+    [InliningDiagnoser(true, true)]
     public class ComparableClassInt32SortBench : SortBench<ComparableClassInt32>
     {
         readonly Comparison<object> m_comparableComparisonOpen = DelegateDoctor
@@ -155,6 +157,16 @@ namespace DotNetCross.Sorting.Benchmarks
             }
         }
 
+        [Benchmark]
+        public void DNX_OpenDelegateObjectComparer()
+        {
+            for (int i = 0; i <= _maxLength - Length; i += Length)
+            {
+                new Span<ComparableClassInt32>(_work, i, Length)
+                    .IntroSort(new OpenDelegateObjectComparer(m_comparableComparisonOpen));
+            }
+        }
+
         readonly struct DirectComparer : IDirectComparer<ComparableClassInt32>
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -213,6 +225,19 @@ namespace DotNetCross.Sorting.Benchmarks
             public bool LessThanEqual(object x, object y) => m_compare(x, y) <= 0;
         }
 
+        // Methods with delegate calls cannot be inlined unfortunately! So have to give up.
+        // https://github.com/dotnet/runtime/issues/10048
+        readonly struct OpenDelegateObjectComparer : IComparer<object>
+        {
+            readonly Comparison<object> m_compare;
+
+            public OpenDelegateObjectComparer(Comparison<object> compare) =>
+                m_compare = compare;
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public int Compare(object x, object y) => m_compare(x, y);
+        }
+
         readonly struct OpenDelegateDirectComparer : IDirectComparer<ComparableClassInt32>
         {
             readonly Comparison<object> m_compare;
@@ -228,6 +253,23 @@ namespace DotNetCross.Sorting.Benchmarks
             public bool LessThanEqual(ComparableClassInt32 x, ComparableClassInt32 y) => m_compare(x, y) <= 0;
         }
 
+    }
+
+    public class Sample<T, TComparer>
+        where TComparer : IComparer<T>
+    {
+        public int Do(Span<T> s, T value, TComparer comparer)
+        {
+            int count = 0;
+            foreach (var v in s)
+            {
+                if (comparer.Compare(v, value) < 0)
+                {
+                    ++count;
+                }
+            }
+            return count;
+        }
     }
 
     public class Int32Int32SortBench : SortBench<int, int>
@@ -464,9 +506,9 @@ namespace DotNetCross.Sorting.Benchmarks
 
                 sut.GlobalSetup();
                 sut.IterationSetup();
-                sut.DNX_();
+                sut.DNX_Comparison_IComparable_OpenDelegate();
                 sut.IterationSetup();
-                sut.DNX_OpenDelegateObjectDirectComparer();
+                sut.DNX_OpenDelegateObjectComparer();
 
                 //Console.WriteLine("Enter key...");
                 //Console.ReadKey();
@@ -474,9 +516,9 @@ namespace DotNetCross.Sorting.Benchmarks
                 for (int i = 0; i < 200; i++)
                 {
                     sut.IterationSetup();
-                    sut.DNX_();
+                    sut.DNX_Comparison_IComparable_OpenDelegate();
                     sut.IterationSetup();
-                    sut.DNX_OpenDelegateObjectDirectComparer();
+                    sut.DNX_OpenDelegateObjectComparer();
                 }
             }
         }
