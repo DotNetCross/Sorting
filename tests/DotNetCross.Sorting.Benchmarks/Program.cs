@@ -226,7 +226,8 @@ namespace DotNetCross.Sorting.Benchmarks
         }
 
         // Methods with delegate calls cannot be inlined unfortunately! So have to give up.
-        // https://github.com/dotnet/runtime/issues/10048
+        // https://github.com/dotnet/runtime/issues/35791 (issue filed by nietras)
+        // https://github.com/dotnet/runtime/issues/10048 (missed this before filing above)
         readonly struct OpenDelegateObjectComparer : IComparer<object>
         {
             readonly Comparison<object> m_compare;
