@@ -16,7 +16,7 @@ namespace DotNetCross.Sorting
 
             private static IKeysSorter<TKey> CreateSorter()
             {
-                if (IComparableTraits<TKey>.IsComparable)
+                if (TypeTraits<TKey>.IsComparable)
                 {
                     // coreclr uses RuntimeTypeHandle.Allocate
                     var ctor = typeof(KeysSorter_Comparable<>)
@@ -32,7 +32,7 @@ namespace DotNetCross.Sorting
             }
         }
 
-        internal sealed class NonComparable<TKey> : IKeysSorter<TKey>
+        internal sealed class NonComparable<TKey> : IKeysSorter<TKey>, IComparisonKeysSorter<TKey>
         {
             internal static readonly KeysSorter_Comparison<TKey> ComparisonInstance = new KeysSorter_Comparison<TKey>();
             internal static readonly KeysSorter_TComparer<TKey, Comparer<TKey>> ComparerInstance = new KeysSorter_TComparer<TKey, Comparer<TKey>>();
@@ -57,7 +57,7 @@ namespace DotNetCross.Sorting
 
             private static IComparerKeysSorter<TKey, TComparer> CreateSorter()
             {
-                if (IComparableTraits<TKey>.IsComparable)
+                if (TypeTraits<TKey>.IsComparable)
                 {
                     // coreclr uses RuntimeTypeHandle.Allocate
                     var ctor = typeof(Comparable<,>)
@@ -104,10 +104,7 @@ namespace DotNetCross.Sorting
             public void IntroSort(ref TKey keys, int length,
                 TComparer comparer)
             {
-                if (comparer == null ||
-                    // Cache this in generic traits helper class perhaps
-                    (!typeof(TComparer).GetTypeInfo().IsValueType &&
-                     object.ReferenceEquals(comparer, Comparer<TKey>.Default)))
+                if (TypeTraits<TKey>.IsComparerNullOrDefault(comparer))
                 {
                     if (!SDC.TrySortSpecialized(ref keys, length))
                     {
@@ -121,6 +118,7 @@ namespace DotNetCross.Sorting
                     NonComparableInstance.IntroSort(ref keys, length, comparer);
                 }
             }
+
         }
     }
 }
