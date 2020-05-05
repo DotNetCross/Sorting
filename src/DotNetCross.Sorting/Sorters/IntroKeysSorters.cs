@@ -81,31 +81,15 @@ namespace DotNetCross.Sorting
 
             public void IntroSort(ref TKey keys, int length, TComparer comparer)
             {
-                // Add a try block here to detect IComparers (or their
-                // underlying IComparables, etc) that are bogus.
-                //
-                // TODO: Do we need the try/catch?
-                //try
-                //{
                 if (typeof(TComparer) == typeof(IComparer<TKey>) && comparer == null)
                 {
+                    // Cache default Comparer as Comparison delegate since faster
                     DefaultComparerInstance.IntroSort(ref keys, length, Comparer<TKey>.Default);
                 }
                 else
                 {
                     ComparerInstance.IntroSort(ref keys, length, comparer);
                 }
-                //}
-                //catch (IndexOutOfRangeException e)
-                //{
-                //    throw e;
-                //    //IntrospectiveSortUtilities.ThrowOrIgnoreBadComparer(comparer);
-                //}
-                //catch (Exception e)
-                //{
-                //    throw e;
-                //    //throw new InvalidOperationException(SR.InvalidOperation_IComparerFailed, e);
-                //}
             }
         }
 
@@ -120,12 +104,6 @@ namespace DotNetCross.Sorting
             public void IntroSort(ref TKey keys, int length,
                 TComparer comparer)
             {
-                // Add a try block here to detect IComparers (or their
-                // underlying IComparables, etc) that are bogus.
-                //
-                // TODO: Do we need the try/catch?
-                //try
-                //{
                 if (comparer == null ||
                     // Cache this in generic traits helper class perhaps
                     (!typeof(TComparer).GetTypeInfo().IsValueType &&
@@ -135,7 +113,6 @@ namespace DotNetCross.Sorting
                     {
                         // NOTE: For Bogus Comparable the exception message will be different, when using Comparer<TKey>.Default
                         //       Since the exception message is thrown internally without knowledge of the comparer
-                        //IComparableImpl.IntroSort(ref keys, length);
                         NonComparerInstance.IntroSort(ref keys, length);
                     }
                 }
@@ -143,17 +120,6 @@ namespace DotNetCross.Sorting
                 {
                     NonComparableInstance.IntroSort(ref keys, length, comparer);
                 }
-                //}
-                //catch (IndexOutOfRangeException e)
-                //{
-                //    throw e;
-                //    //IntrospectiveSortUtilities.ThrowOrIgnoreBadComparer(comparer);
-                //}
-                //catch (Exception e)
-                //{
-                //    throw e;
-                //    //throw new InvalidOperationException(SR.InvalidOperation_IComparerFailed, e);
-                //}
             }
         }
     }
