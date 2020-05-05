@@ -10,11 +10,11 @@ namespace DotNetCross.Sorting
     {
         static readonly object[] EmptyObjects = new object[0];
 
-        internal static class Default<TKey>
+        internal static class ForStraight<TKey>
         {
             internal static readonly IKeysSorter<TKey> Instance = CreateSorter();
 
-            private static IKeysSorter<TKey> CreateSorter()
+            static IKeysSorter<TKey> CreateSorter()
             {
                 if (TypeTraits<TKey>.IsComparable)
                 {
@@ -27,98 +27,45 @@ namespace DotNetCross.Sorting
                 }
                 else
                 {
-                    return new NonComparable<TKey>();
+                    // TODO: Replace with delegate as saved instance, then we can lose this type
+                    //       There will still be an indirection cost
+                    return new KeysSorter_NonComparable<TKey>();
                 }
             }
         }
 
-        internal sealed class NonComparable<TKey> : IKeysSorter<TKey>, IComparisonKeysSorter<TKey>
-        {
-            internal static readonly KeysSorter_Comparison<TKey> ComparisonInstance = new KeysSorter_Comparison<TKey>();
-            internal static readonly KeysSorter_TComparer<TKey, Comparer<TKey>> ComparerInstance = new KeysSorter_TComparer<TKey, Comparer<TKey>>();
-
-            public void IntroSort(ref TKey keys, int length)
-            {
-                // TODO: Cache Comparer<TKey>.Default.Compare as Comparison<TKey> since faster
-                ComparerInstance.IntroSort(ref keys, length, Comparer<TKey>.Default);
-            }
-
-            public void IntroSort(ref TKey keys, int length, Comparison<TKey> comparison)
-            {
-                ComparisonInstance.IntroSort(ref keys, length, comparison);
-            }
-        }
-
-
-        internal static class Default<TKey, TComparer>
+        internal static class ForComparer<TKey, TComparer>
             where TComparer : IComparer<TKey>
         {
             internal static readonly IComparerKeysSorter<TKey, TComparer> Instance = CreateSorter();
 
-            private static IComparerKeysSorter<TKey, TComparer> CreateSorter()
+            static IComparerKeysSorter<TKey, TComparer> CreateSorter()
             {
-                if (TypeTraits<TKey>.IsComparable)
-                {
-                    // coreclr uses RuntimeTypeHandle.Allocate
-                    var ctor = typeof(Comparable<,>)
-                        .MakeGenericType(new Type[] { typeof(TKey), typeof(TComparer) })
-                        .GetTypeInfo().DeclaredConstructors.Where(ci => !ci.IsStatic).Single();
-
-                    return (IComparerKeysSorter<TKey, TComparer>)ctor.Invoke(EmptyObjects);
-                }
-                else
-                {
-                    return new NonComparable<TKey, TComparer>();
-                }
+                return new KeysSorter_TComparer<TKey, TComparer>();
             }
         }
 
-        internal sealed class NonComparable<TKey, TComparer> : IComparerKeysSorter<TKey, TComparer>
-            where TComparer : IComparer<TKey>
+        internal static class ForComparison<TKey>
         {
-            internal static readonly KeysSorter_TComparer<TKey, TComparer> ComparerInstance = new KeysSorter_TComparer<TKey, TComparer>();
-            internal static readonly KeysSorter_TComparer<TKey, Comparer<TKey>> DefaultComparerInstance = new KeysSorter_TComparer<TKey, Comparer<TKey>>();
+            internal static readonly IComparisonKeysSorter<TKey> Instance = CreateSorter();
 
-            public void IntroSort(ref TKey keys, int length, TComparer comparer)
+            static IComparisonKeysSorter<TKey> CreateSorter()
             {
-                if (typeof(TComparer) == typeof(IComparer<TKey>) && comparer == null)
-                {
-                    // Cache default Comparer as Comparison delegate since faster
-                    DefaultComparerInstance.IntroSort(ref keys, length, Comparer<TKey>.Default);
-                }
-                else
-                {
-                    ComparerInstance.IntroSort(ref keys, length, comparer);
-                }
+                // TODO: Check if Comparison is default perhaps
+                return new KeysSorter_Comparison<TKey>();
             }
         }
 
-        internal sealed class Comparable<TKey, TComparer>
-            : IComparerKeysSorter<TKey, TComparer>
-            where TKey : IComparable<TKey>
-            where TComparer : IComparer<TKey>
+        internal sealed class KeysSorter_NonComparable<TKey> : IKeysSorter<TKey>
         {
-            internal static readonly KeysSorter_Comparable<TKey> NonComparerInstance = new KeysSorter_Comparable<TKey>();
-            internal static readonly NonComparable<TKey, TComparer> NonComparableInstance = new NonComparable<TKey, TComparer>();
+            // TODO: Perhaps cache on TypeTraits
+            internal static readonly Comparison<TKey> Comparison = Comparer<TKey>.Default.Compare;
 
-            public void IntroSort(ref TKey keys, int length,
-                TComparer comparer)
+            public void IntroSort(ref TKey keys, int length)
             {
-                if (TypeTraits<TKey>.IsComparerNullOrDefault(comparer))
-                {
-                    if (!SDC.TrySortSpecialized(ref keys, length))
-                    {
-                        // NOTE: For Bogus Comparable the exception message will be different, when using Comparer<TKey>.Default
-                        //       Since the exception message is thrown internally without knowledge of the comparer
-                        NonComparerInstance.IntroSort(ref keys, length);
-                    }
-                }
-                else
-                {
-                    NonComparableInstance.IntroSort(ref keys, length, comparer);
-                }
+                // PERF: Using Comparison<TKey> since faster than interface call
+                ForComparison<TKey>.Instance.IntroSort(ref keys, length, Comparison);
             }
-
         }
     }
 }

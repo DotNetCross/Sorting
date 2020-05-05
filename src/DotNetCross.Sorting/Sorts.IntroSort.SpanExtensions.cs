@@ -36,7 +36,7 @@ namespace DotNetCross.Sorting
                 ref MemoryMarshal.GetReference(keys),
                 length))
             {
-                IntroKeysSorters.Default<T>.Instance.IntroSort(
+                IntroKeysSorters.ForStraight<T>.Instance.IntroSort(
                     ref MemoryMarshal.GetReference(keys),
                     length);
             }
@@ -54,9 +54,16 @@ namespace DotNetCross.Sorting
             if (length < 2)
                 return;
 
-            IntroKeysSorters.Default<T, TComparer>.Instance.IntroSort(
-                ref MemoryMarshal.GetReference(keys),
-                length, comparer);
+            if (TypeTraits<T>.IsComparerNullOrDefault(comparer))
+            {
+                IntroSort(keys);
+            }
+            else
+            {
+                IntroKeysSorters.ForComparer<T, TComparer>.Instance.IntroSort(
+                    ref MemoryMarshal.GetReference(keys),
+                    length, comparer);
+            }
         }
 
         /// <summary>
@@ -73,7 +80,7 @@ namespace DotNetCross.Sorting
             if (length < 2)
                 return;
 
-            IntroKeysSorters.Default<T>.Instance.IntroSort(
+            IntroKeysSorters.ForComparison<T>.Instance.IntroSort(
                 ref MemoryMarshal.GetReference(keys),
                 length, comparison);
         }
