@@ -34,7 +34,7 @@
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
       <_Parameter1>DotNetCross.Sorting.Tests</_Parameter1>
     </AssemblyAttribute>
-    <PackageReference Include="System.Memory" Version="4.5.4"  />
+    <PackageReference Include="System.Memory" Version="4.5.4" />
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.7.1" />
     <!--https://github.com/dotnet/standard/issues/601-->
     <PackageReference Update="NETStandard.Library" PrivateAssets="all" />
