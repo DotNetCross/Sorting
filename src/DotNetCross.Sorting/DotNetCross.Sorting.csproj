@@ -15,7 +15,7 @@
 
     <!-- nuget related properties -->
     <Authors>nietras</Authors>
-    <Description>Fast sorting for managed/unmanaged arrays for most .NET runtimes.</Description>
+    <Description>Fast generic sorting for managed/unmanaged arrays for most .NET runtimes.</Description>
     <AssemblyVersion>0.1.0.0</AssemblyVersion>
     <FileVersion>0.1.0.0</FileVersion>
     <Version>0.1.0-preview.1</Version>
