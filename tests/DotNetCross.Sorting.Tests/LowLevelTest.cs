@@ -88,7 +88,7 @@ namespace DotNetCross.Sorting.Tests
 
             Assert.NotEqual(IntPtr.Zero, functionPointer);
 
-            var compareFromPtr = Marshal.GetDelegateForFunctionPointer<ComparisonComp>(functionPointer);
+            //var compareFromPtr = Marshal.GetDelegateForFunctionPointer<ComparisonComp>(functionPointer);
             // Below fails yielding incorrect results for some reason
             //Assert.Equal(-1, compareFromPtr(new Comp(-1), new Comp(1)));
             //Assert.Equal(0, compareFromPtr(new Comp(1), new Comp(1)));

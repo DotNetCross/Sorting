@@ -82,8 +82,8 @@ namespace System.SpanTests
             var original = new Span<BogusComparable>(values);
             var actual = original.ToArray().AsSpan();
             var expected = original.ToArray();
-            try { actual.IntroSort(Comparer<BogusComparable>.Default.Compare); } catch (Exception e) { }
-            try { Array.Sort(expected, Comparer<BogusComparable>.Default.Compare); } catch (Exception e) { }
+            try { actual.IntroSort(Comparer<BogusComparable>.Default.Compare); } catch (Exception ) { }
+            try { Array.Sort(expected, Comparer<BogusComparable>.Default.Compare); } catch (Exception ) { }
             Assert.Equal(expected, actual.ToArray());
         }
 
