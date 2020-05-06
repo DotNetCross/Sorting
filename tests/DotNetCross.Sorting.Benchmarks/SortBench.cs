@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Order;
 using DotNetCross.Sorting.Sequences;
 
 namespace DotNetCross.Sorting.Benchmarks
 {
+    [Orderer(SummaryOrderPolicy.Method, MethodOrderPolicy.Alphabetical)]
     [Config(typeof(SortBenchConfig))]
     [MemoryDiagnoser]
     public class SortBench<TKey>

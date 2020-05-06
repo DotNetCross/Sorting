@@ -1,21 +1,11 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
-
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-
-//#if !netstandard
-//using Internal.Runtime.CompilerServices;
-//#endif
+﻿using System.Runtime.CompilerServices;
 
 using DotNetCross.Sorting;
-using static DotNetCross.Sorting.Swapper;
 using static DotNetCross.Sorting.TDirectComparerImpl;
 
 namespace System
 {
-    internal static partial class SpanSortHelpersKeys_DirectComparer
+    internal static class KeysSorter_Specialized
     {
         // https://github.com/dotnet/coreclr/blob/master/src/classlibnative/bcltype/arrayhelpers.cpp
 
@@ -118,6 +108,5 @@ namespace System
                 return false;
             }
         }
-
     }
 }

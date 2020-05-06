@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 // Consolidated code
 //using SHK = System.SpanSortHelpersKeysAndOrValues;
 //using SHKV = System.SpanSortHelpersKeysAndOrValues;
 // Specialized for either only keys or keys and values and for comparable or not
-using SHK = DotNetCross.Sorting.Sorts.Keys;
+using SDC = System.KeysSorter_Specialized;
 using SHKV = System.SpanSortHelpersKeysValues;
 
 namespace DotNetCross.Sorting
@@ -18,14 +19,27 @@ namespace DotNetCross.Sorting
         /// using the <see cref="IComparableImpl" /> implementation of each 
         /// element of the <see cref= "Span{T}" />
         /// </summary>
-        /// <param name="span">The <see cref="Span{T}"/> to sort.</param>
+        /// <param name="keys">The <see cref="Span{T}"/> to sort.</param>
         /// <exception cref = "InvalidOperationException"> 
         /// One or more elements do not implement the <see cref="IComparableImpl" /> interface.
         /// </exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void IntroSort<T>(this Span<T> span)
+        public static void IntroSort<T>(this Span<T> keys)
         {
-            SHK.IntroSort(span);
+            int length = keys.Length;
+            if (length < 2)
+                return;
+
+            // PERF: Try specialized here for optimal performance
+            // Code-gen is weird unless used in loop outside
+            if (!SDC.TrySortSpecialized(
+                ref MemoryMarshal.GetReference(keys),
+                length))
+            {
+                IntroKeysSorters.ForStraight<T>.Instance(
+                    ref MemoryMarshal.GetReference(keys),
+                    length);
+            }
         }
 
         /// <summary>
@@ -33,10 +47,23 @@ namespace DotNetCross.Sorting
         /// using the <typeparamref name="TComparer" />.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void IntroSort<T, TComparer>(this Span<T> span, TComparer comparer)
+        public static void IntroSort<T, TComparer>(this Span<T> keys, TComparer comparer)
            where TComparer : IComparer<T>
         {
-            SHK.IntroSort(span, comparer);
+            if (TypeTraits<T>.IsComparerNullOrDefault(comparer))
+            {
+                IntroSort(keys);
+            }
+            else
+            {
+                int length = keys.Length;
+                if (length < 2)
+                    return;
+
+                IntroKeysSorters.ForComparer<T, TComparer>.Instance(
+                    ref MemoryMarshal.GetReference(keys),
+                    length, comparer);
+            }
         }
 
         /// <summary>
@@ -44,12 +71,18 @@ namespace DotNetCross.Sorting
         /// using the <see cref="Comparison{T}" />.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void IntroSort<T>(this Span<T> span, Comparison<T> comparison)
+        public static void IntroSort<T>(this Span<T> keys, Comparison<T> comparison)
         {
             if (comparison == null)
                 ThrowHelper.ThrowArgumentNullException(ExceptionArgument.comparison);
 
-            SHK.IntroSort(span, comparison);
+            int length = keys.Length;
+            if (length < 2)
+                return;
+
+            IntroKeysSorters.ForComparison<T>.Instance(
+                ref MemoryMarshal.GetReference(keys),
+                length, comparison);
         }
 
         /// <summary>

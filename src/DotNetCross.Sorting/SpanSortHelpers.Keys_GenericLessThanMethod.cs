@@ -467,7 +467,7 @@ namespace System
 
             private static ISpanSortHelper<TKey> CreateSortHelper()
             {
-                if (IComparableTraits<TKey>.IsComparable)
+                if (TypeTraits<TKey>.IsComparable)
                 {
                     if (typeof(TKey).GetTypeInfo().IsValueType)
                     {
@@ -557,7 +557,7 @@ namespace System
 
             private static ISpanSortHelper<TKey, TComparer> CreateSortHelper()
             {
-                if (IComparableTraits<TKey>.IsComparable)
+                if (TypeTraits<TKey>.IsComparable)
                 {
                     if (typeof(TKey).GetTypeInfo().IsValueType)
                     {

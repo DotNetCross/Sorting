@@ -1,0 +1,1 @@
+ dotnet run -f netcoreapp5.0 -c Release --project .\tests\DotNetCross.Sorting.Benchmarks\DotNetCross.Sorting.Benchmarks.csproj

@@ -19,7 +19,7 @@ namespace DotNetCross.Sorting
 
             private static IKeysValuesSorter<TKey, TValue> CreateSorter()
             {
-                if (IComparableTraits<TKey>.IsComparable)
+                if (TypeTraits<TKey>.IsComparable)
                 {
                     // coreclr uses RuntimeTypeHandle.Allocate
                     var ctor = typeof(KeysValuesSorter_Comparable<,>)
@@ -57,7 +57,7 @@ namespace DotNetCross.Sorting
 
             private static IKeysValuesSorter<TKey, TValue, TComparer> CreateSorter()
             {
-                if (IComparableTraits<TKey>.IsComparable)
+                if (TypeTraits<TKey>.IsComparable)
                 {
                     // coreclr uses RuntimeTypeHandle.Allocate
                     var ctor = typeof(Comparable<,,>)
@@ -126,7 +126,7 @@ namespace DotNetCross.Sorting
                 //{
                 if (comparer == null ||
                     // Cache this in generic traits helper class perhaps
-                    (!ValueTraits<TComparer>.IsValueType &&
+                    (!TypeTraits<TComparer>.IsValueType &&
                      ReferenceEquals(comparer, Comparer<TKey>.Default))) // Or "=="?
                 {
                     if (!SDC.TrySortSpecialized(ref keys, ref values, length))
