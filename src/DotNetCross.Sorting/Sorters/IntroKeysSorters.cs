@@ -28,10 +28,11 @@ namespace DotNetCross.Sorting
                 }
                 else
                 {
-                    // TODO: Replace with delegate as saved instance, then we can lose this type
-                    //       There will still be an indirection cost
-                    var sorter = new KeysSorter_NonComparable<TKey>();
-                    return sorter.IntroSort;
+                    Comparison<TKey> Comparison = Comparer<TKey>.Default.Compare;
+                    // PERF: Using Comparison<TKey> since faster than interface call
+                    // PERF: There is a double indirection cost here for small sorts
+                    return (ref TKey keys, int length) => 
+                        ForComparison<TKey>.Instance(ref keys, length, Comparison);
                 }
             }
         }
@@ -59,18 +60,6 @@ namespace DotNetCross.Sorting
                 // TODO: Check if Comparison is default perhaps
                 var sorter = new KeysSorter_Comparison<TKey>();
                 return sorter.IntroSort;
-            }
-        }
-
-        internal sealed class KeysSorter_NonComparable<TKey> : IKeysSorter<TKey>
-        {
-            // TODO: Perhaps cache on TypeTraits
-            internal static readonly Comparison<TKey> Comparison = Comparer<TKey>.Default.Compare;
-
-            public void IntroSort(ref TKey keys, int length)
-            {
-                // PERF: Using Comparison<TKey> since faster than interface call
-                ForComparison<TKey>.Instance(ref keys, length, Comparison);
             }
         }
     }
