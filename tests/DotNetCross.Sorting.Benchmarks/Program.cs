@@ -73,7 +73,8 @@ namespace DotNetCross.Sorting.Benchmarks
             for (int i = 0; i <= _maxLength - Length; i += Length)
             {
                 ref var keys = ref _work[i];
-                TDirectComparerImpl.IntroSort(ref keys, Length, new DirectComparer());
+                KeysSorter_TDirectComparer<ComparableClassInt32, DirectComparer>
+                    .IntroSort(ref keys, Length, new DirectComparer());
             }
         }
 
@@ -83,7 +84,8 @@ namespace DotNetCross.Sorting.Benchmarks
             for (int i = 0; i <= _maxLength - Length; i += Length)
             {
                 ref var keys = ref _work[i];
-                TDirectComparerImpl.IntroSort(ref keys, Length, new InterfaceDirectComparer<ComparableClassInt32>());
+                KeysSorter_TDirectComparer.IntroSort(ref keys, Length, 
+                    new InterfaceDirectComparer<ComparableClassInt32>());
             }
         }
 
@@ -113,7 +115,7 @@ namespace DotNetCross.Sorting.Benchmarks
             for (int i = 0; i <= _maxLength - Length; i += Length)
             {
                 ref var keys = ref _work[i];
-                TDirectComparerImpl.IntroSort(ref keys, Length, m_classGenericDirectComparer);
+                KeysSorter_TDirectComparer.IntroSort(ref keys, Length, m_classGenericDirectComparer);
             }
         }
 
@@ -123,7 +125,8 @@ namespace DotNetCross.Sorting.Benchmarks
             for (int i = 0; i <= _maxLength - Length; i += Length)
             {
                 ref var keys = ref _work[i];
-                TDirectComparerImpl.IntroSort(ref keys, Length, new GenericDirectComparer<ComparableClassInt32>());
+                KeysSorter_TDirectComparer.IntroSort(ref keys, Length, 
+                    new GenericDirectComparer<ComparableClassInt32>());
             }
         }
 
@@ -133,7 +136,7 @@ namespace DotNetCross.Sorting.Benchmarks
             for (int i = 0; i <= _maxLength - Length; i += Length)
             {
                 ref var keys = ref _work[i];
-                TDirectComparerImpl.IntroSort(ref keys, Length,
+                KeysSorter_TDirectComparer.IntroSort(ref keys, Length,
                     new OpenDelegateDirectComparer(m_comparableComparisonOpen));
             }
         }
@@ -144,7 +147,7 @@ namespace DotNetCross.Sorting.Benchmarks
             for (int i = 0; i <= _maxLength - Length; i += Length)
             {
                 ref var keys = ref _work[i];
-                TDirectComparerImpl.IntroSort(ref keys, Length, 
+                KeysSorter_TDirectComparer.IntroSort(ref keys, Length, 
                     new OpenDelegateObjectDirectComparer(m_comparableComparisonOpen));
             }
         }

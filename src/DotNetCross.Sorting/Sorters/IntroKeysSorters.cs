@@ -12,9 +12,9 @@ namespace DotNetCross.Sorting
         internal static class ForStraight<TKey>
         {
             internal delegate void Sort(ref TKey keys, int length);
-            internal static readonly Sort Instance = CreateSorter();
+            internal static readonly Sort Instance = Create();
 
-            static Sort CreateSorter()
+            static Sort Create()
             {
                 if (TypeTraits<TKey>.IsComparable)
                 {
@@ -28,11 +28,11 @@ namespace DotNetCross.Sorting
                 }
                 else
                 {
-                    Comparison<TKey> Comparison = Comparer<TKey>.Default.Compare;
+                    Comparison<TKey> comparison = Comparer<TKey>.Default.Compare;
                     // PERF: Using Comparison<TKey> since faster than interface call
                     // PERF: There is a double indirection cost here for small sorts
                     return (ref TKey keys, int length) => 
-                        ForComparison<TKey>.Instance(ref keys, length, Comparison);
+                        ForComparison<TKey>.Instance(ref keys, length, comparison);
                 }
             }
         }
