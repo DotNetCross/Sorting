@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27130.2026
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30011.22
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNetCross.Sorting", "src\DotNetCross.Sorting\DotNetCross.Sorting.csproj", "{48641357-FA01-4C5C-AF39-37406A1EC2F0}"
 EndProject
@@ -10,6 +10,20 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNetCross.Sorting.Benchmarks", "tests\DotNetCross.Sorting.Benchmarks\DotNetCross.Sorting.Benchmarks.csproj", "{A833DC17-F62F-473C-9A0A-B2B231297F98}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNetCross.Sorting.Sequences", "src\DotNetCross.Sorting.Sequences\DotNetCross.Sorting.Sequences.csproj", "{AF9702D1-23F2-45DB-8DC0-BD31DD9C6BCF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "root", "root", "{71067AB5-F00F-4A7D-9AF6-40074EB7C2B8}"
+	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+		bench-dnc-50.ps1 = bench-dnc-50.ps1
+		icon.png = icon.png
+		icon.svg = icon.svg
+		icon.vsdx = icon.vsdx
+		LICENSE = LICENSE
+		NOTWORKINGDirectory.Build.props = NOTWORKINGDirectory.Build.props
+		pack.ps1 = pack.ps1
+		README.md = README.md
+		rename.ps1 = rename.ps1
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
