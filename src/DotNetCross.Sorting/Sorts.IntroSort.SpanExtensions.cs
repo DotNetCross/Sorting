@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 //using SHK = System.SpanSortHelpersKeysAndOrValues;
 //using SHKV = System.SpanSortHelpersKeysAndOrValues;
 // Specialized for either only keys or keys and values and for comparable or not
-using SDC = System.SpanSortHelpersKeys_DirectComparer;
+using SDC = System.KeysSorter_Specialized;
 using SHKV = System.SpanSortHelpersKeysValues;
 
 namespace DotNetCross.Sorting
