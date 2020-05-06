@@ -1,6 +1,6 @@
 ﻿namespace DotNetCross.Sorting
 {
-    internal sealed partial class KeysSorter_Comparison<TKey>
+    internal partial struct KeysSorter_Comparison<TKey>
         : IComparisonKeysSorter<TKey>
     { }
 }
