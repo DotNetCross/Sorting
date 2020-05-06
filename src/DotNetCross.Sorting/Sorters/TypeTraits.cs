@@ -12,8 +12,8 @@ namespace DotNetCross.Sorting
         internal static bool IsComparerNullOrDefault<TComparer>(TComparer comparer)
             where TComparer : IComparer<T>
         {
-            return comparer == null || (!IsValueType && 
-                ReferenceEquals(comparer, Comparer<T>.Default));
+            return !TypeTraits<TComparer>.IsValueType &&
+                (comparer == null || ReferenceEquals(comparer, Comparer<T>.Default));
         }
 
         static bool CheckIsComparable() => typeof(IComparable<T>).GetTypeInfo()

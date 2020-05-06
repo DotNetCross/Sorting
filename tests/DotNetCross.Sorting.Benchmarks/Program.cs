@@ -62,7 +62,7 @@ namespace DotNetCross.Sorting.Benchmarks
                    SpanFillers.Default, i => new ComparableStructInt32(i))
         { }
     }
-    [InliningDiagnoser(true, true)]
+    //[InliningDiagnoser(true, true)]
     public class ComparableClassInt32SortBench : SortBench<ComparableClassInt32>
     {
         readonly Comparison<object> m_comparableComparisonOpen = DelegateDoctor
@@ -71,7 +71,7 @@ namespace DotNetCross.Sorting.Benchmarks
             .GetIComparableCompareToAsOpenObjectDelegate<ComparableClassInt32>();
 
         public ComparableClassInt32SortBench()
-            : base(maxLength: 400000, new[] { 10000 }, //2, 3, 10, 100, 10000, 100000 },
+            : base(maxLength: 400000, new[] { 2, 3, 10, 100, 10000, 100000 },
                    SpanFillers.Default, i => new ComparableClassInt32(i))
         { }
 
@@ -422,7 +422,6 @@ namespace DotNetCross.Sorting.Benchmarks
                 BenchmarkRunner.Run<Int32SortBench>();
                 BenchmarkRunner.Run<SingleSortBench>();
                 BenchmarkRunner.Run<ComparableStructInt32SortBench>();
-                BenchmarkRunner.Run<ComparableInt32ClassCompareToLessThanBench>();
                 BenchmarkRunner.Run<ComparableClassInt32SortBench>();
                 BenchmarkRunner.Run<StringSortBench>();
                 //BenchmarkRunner.Run<StringInt32SortBench>();
