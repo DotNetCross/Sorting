@@ -14,7 +14,7 @@ namespace DotNetCross.Sorting.Benchmarks
     public class Int32SortBench : SortBench<int>
     {
         public Int32SortBench()
-            : base(maxLength: 3000000, new[] { 100, 1000, 10000, 1000000 },
+            : base(maxLength: 3000000, new[] { 2, 3, 10, 100, 1000, 10000, 1000000 },
                    SpanFillers.RandomOnly, i => i)
         { }
 
@@ -32,14 +32,6 @@ namespace DotNetCross.Sorting.Benchmarks
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public int Compare(int x, int y) => x.CompareTo(y);
         }
-
-        //int[] a = new int[3];
-        //public void SortTest()
-        //{
-        //    TComparerImpl.Sort3(ref a[0], ref a[1], ref a[2],
-        //        new CustomStructComparer());
-        //}
-
     }
     public class SingleSortBench : SortBench<float>
     {
