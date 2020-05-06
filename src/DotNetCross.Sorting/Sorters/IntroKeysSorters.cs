@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using SDC = System.SpanSortHelpersKeys_DirectComparer;
 
 namespace DotNetCross.Sorting
 {
@@ -12,9 +11,10 @@ namespace DotNetCross.Sorting
 
         internal static class ForStraight<TKey>
         {
-            internal static readonly IKeysSorter<TKey> Instance = CreateSorter();
+            internal delegate void Sort(ref TKey keys, int length);
+            internal static readonly Sort Instance = CreateSorter();
 
-            static IKeysSorter<TKey> CreateSorter()
+            static Sort CreateSorter()
             {
                 if (TypeTraits<TKey>.IsComparable)
                 {
@@ -23,13 +23,15 @@ namespace DotNetCross.Sorting
                         .MakeGenericType(new Type[] { typeof(TKey) })
                         .GetTypeInfo().DeclaredConstructors.Where(ci => !ci.IsStatic).Single();
 
-                    return (IKeysSorter<TKey>)ctor.Invoke(EmptyObjects);
+                    var sorter = (IKeysSorter<TKey>)ctor.Invoke(EmptyObjects);
+                    return sorter.IntroSort;
                 }
                 else
                 {
                     // TODO: Replace with delegate as saved instance, then we can lose this type
                     //       There will still be an indirection cost
-                    return new KeysSorter_NonComparable<TKey>();
+                    var sorter = new KeysSorter_NonComparable<TKey>();
+                    return sorter.IntroSort;
                 }
             }
         }
@@ -37,22 +39,26 @@ namespace DotNetCross.Sorting
         internal static class ForComparer<TKey, TComparer>
             where TComparer : IComparer<TKey>
         {
-            internal static readonly IComparerKeysSorter<TKey, TComparer> Instance = CreateSorter();
+            internal delegate void Sort(ref TKey keys, int length, TComparer comparer);
+            internal static readonly Sort Instance = Create();
 
-            static IComparerKeysSorter<TKey, TComparer> CreateSorter()
+            static Sort Create()
             {
-                return new KeysSorter_TComparer<TKey, TComparer>();
+                var sorter = new KeysSorter_TComparer<TKey, TComparer>();
+                return sorter.IntroSort;
             }
         }
 
         internal static class ForComparison<TKey>
         {
-            internal static readonly IComparisonKeysSorter<TKey> Instance = CreateSorter();
+            internal delegate void Sort(ref TKey keys, int length, Comparison<TKey> comparison);
+            internal static readonly Sort Instance = Create();
 
-            static IComparisonKeysSorter<TKey> CreateSorter()
+            static Sort Create()
             {
                 // TODO: Check if Comparison is default perhaps
-                return new KeysSorter_Comparison<TKey>();
+                var sorter = new KeysSorter_Comparison<TKey>();
+                return sorter.IntroSort;
             }
         }
 
@@ -64,7 +70,7 @@ namespace DotNetCross.Sorting
             public void IntroSort(ref TKey keys, int length)
             {
                 // PERF: Using Comparison<TKey> since faster than interface call
-                ForComparison<TKey>.Instance.IntroSort(ref keys, length, Comparison);
+                ForComparison<TKey>.Instance(ref keys, length, Comparison);
             }
         }
     }

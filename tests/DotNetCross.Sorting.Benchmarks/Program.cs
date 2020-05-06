@@ -419,12 +419,12 @@ namespace DotNetCross.Sorting.Benchmarks
             var d = Debugger.IsAttached ? Do.Loop1 : Do.Focus;
             if (d == Do.Focus)
             {
-                //BenchmarkRunner.Run<Int32SortBench>();
-                //BenchmarkRunner.Run<SingleSortBench>();
-                //BenchmarkRunner.Run<ComparableStructInt32SortBench>();
-                //BenchmarkRunner.Run<ComparableInt32ClassCompareToLessThanBench>();
+                BenchmarkRunner.Run<Int32SortBench>();
+                BenchmarkRunner.Run<SingleSortBench>();
+                BenchmarkRunner.Run<ComparableStructInt32SortBench>();
+                BenchmarkRunner.Run<ComparableInt32ClassCompareToLessThanBench>();
                 BenchmarkRunner.Run<ComparableClassInt32SortBench>();
-                //BenchmarkRunner.Run<StringSortBench>();
+                BenchmarkRunner.Run<StringSortBench>();
                 //BenchmarkRunner.Run<StringInt32SortBench>();
                 //BenchmarkRunner.Run<ComparableClassInt32Int32SortBench>();
                 //BenchmarkRunner.Run<ComparableStructInt32Int32SortBench>();

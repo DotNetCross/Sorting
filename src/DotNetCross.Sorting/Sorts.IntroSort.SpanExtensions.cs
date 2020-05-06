@@ -36,7 +36,7 @@ namespace DotNetCross.Sorting
                 ref MemoryMarshal.GetReference(keys),
                 length))
             {
-                IntroKeysSorters.ForStraight<T>.Instance.IntroSort(
+                IntroKeysSorters.ForStraight<T>.Instance(
                     ref MemoryMarshal.GetReference(keys),
                     length);
             }
@@ -60,7 +60,7 @@ namespace DotNetCross.Sorting
             }
             else
             {
-                IntroKeysSorters.ForComparer<T, TComparer>.Instance.IntroSort(
+                IntroKeysSorters.ForComparer<T, TComparer>.Instance(
                     ref MemoryMarshal.GetReference(keys),
                     length, comparer);
             }
@@ -80,7 +80,7 @@ namespace DotNetCross.Sorting
             if (length < 2)
                 return;
 
-            IntroKeysSorters.ForComparison<T>.Instance.IntroSort(
+            IntroKeysSorters.ForComparison<T>.Instance(
                 ref MemoryMarshal.GetReference(keys),
                 length, comparison);
         }
