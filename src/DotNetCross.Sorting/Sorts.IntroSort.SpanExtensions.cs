@@ -50,16 +50,16 @@ namespace DotNetCross.Sorting
         public static void IntroSort<T, TComparer>(this Span<T> keys, TComparer comparer)
            where TComparer : IComparer<T>
         {
-            int length = keys.Length;
-            if (length < 2)
-                return;
-
             if (TypeTraits<T>.IsComparerNullOrDefault(comparer))
             {
                 IntroSort(keys);
             }
             else
             {
+                int length = keys.Length;
+                if (length < 2)
+                    return;
+
                 IntroKeysSorters.ForComparer<T, TComparer>.Instance(
                     ref MemoryMarshal.GetReference(keys),
                     length, comparer);
