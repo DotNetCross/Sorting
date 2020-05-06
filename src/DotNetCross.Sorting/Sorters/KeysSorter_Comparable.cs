@@ -2,7 +2,7 @@
 
 namespace DotNetCross.Sorting
 {
-    internal sealed partial class KeysSorter_Comparable<TKey>
+    internal partial class KeysSorter_Comparable<TKey>
         : IKeysSorter<TKey>
         where TKey : IComparable<TKey>
     { }

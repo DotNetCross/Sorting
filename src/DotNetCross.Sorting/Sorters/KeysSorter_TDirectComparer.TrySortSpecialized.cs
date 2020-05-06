@@ -1,11 +1,9 @@
 ﻿using System.Runtime.CompilerServices;
-
 using DotNetCross.Sorting;
-using static DotNetCross.Sorting.TDirectComparerImpl;
 
 namespace System
 {
-    internal static class KeysSorter_Specialized
+    internal static class KeysSorter_TDirectComparer
     {
         // https://github.com/dotnet/coreclr/blob/master/src/classlibnative/bcltype/arrayhelpers.cpp
 
@@ -17,51 +15,59 @@ namespace System
             if (typeof(TKey) == typeof(sbyte))
             {
                 ref var specificKeys = ref Unsafe.As<TKey, sbyte>(ref keys);
-                IntroSort(ref specificKeys, length, new SByteDirectComparer());
+                KeysSorter_TDirectComparer<sbyte, SByteDirectComparer>
+                    .IntroSort(ref specificKeys, length, new SByteDirectComparer());
                 return true;
             }
             else if (typeof(TKey) == typeof(byte) ||
                      typeof(TKey) == typeof(bool)) // Use byte for bools to reduce code size
             {
                 ref var specificKeys = ref Unsafe.As<TKey, byte>(ref keys);
-                IntroSort(ref specificKeys, length, new ByteDirectComparer());
+                KeysSorter_TDirectComparer<byte, ByteDirectComparer>
+                    .IntroSort(ref specificKeys, length, new ByteDirectComparer());
                 return true;
             }
             else if (typeof(TKey) == typeof(short))
             {
                 ref var specificKeys = ref Unsafe.As<TKey, short>(ref keys);
-                IntroSort(ref specificKeys, length, new Int16DirectComparer());
+                KeysSorter_TDirectComparer<short, Int16DirectComparer>
+                    .IntroSort(ref specificKeys, length, new Int16DirectComparer());
                 return true;
             }
             else if (typeof(TKey) == typeof(ushort) ||
                      typeof(TKey) == typeof(char)) // Use ushort for chars to reduce code size)
             {
                 ref var specificKeys = ref Unsafe.As<TKey, ushort>(ref keys);
-                IntroSort(ref specificKeys, length, new UInt16DirectComparer());
+                KeysSorter_TDirectComparer<ushort, UInt16DirectComparer>
+                    .IntroSort(ref specificKeys, length, new UInt16DirectComparer());
                 return true;
             }
             else if (typeof(TKey) == typeof(int))
             {
                 ref var specificKeys = ref Unsafe.As<TKey, int>(ref keys);
-                IntroSort(ref specificKeys, length, new Int32DirectComparer());
+                KeysSorter_TDirectComparer<int, Int32DirectComparer>
+                    .IntroSort(ref specificKeys, length, new Int32DirectComparer());
                 return true;
             }
             else if (typeof(TKey) == typeof(uint))
             {
                 ref var specificKeys = ref Unsafe.As<TKey, uint>(ref keys);
-                IntroSort(ref specificKeys, length, new UInt32DirectComparer());
+                KeysSorter_TDirectComparer<uint, UInt32DirectComparer>
+                    .IntroSort(ref specificKeys, length, new UInt32DirectComparer());
                 return true;
             }
             else if (typeof(TKey) == typeof(long))
             {
                 ref var specificKeys = ref Unsafe.As<TKey, long>(ref keys);
-                IntroSort(ref specificKeys, length, new Int64DirectComparer());
+                KeysSorter_TDirectComparer<long, Int64DirectComparer>
+                    .IntroSort(ref specificKeys, length, new Int64DirectComparer());
                 return true;
             }
             else if (typeof(TKey) == typeof(ulong))
             {
                 ref var specificKeys = ref Unsafe.As<TKey, ulong>(ref keys);
-                IntroSort(ref specificKeys, length, new UInt64DirectComparer());
+                KeysSorter_TDirectComparer<ulong, UInt64DirectComparer>
+                    .IntroSort(ref specificKeys, length, new UInt64DirectComparer());
                 return true;
             }
             else if (typeof(TKey) == typeof(float))
@@ -76,7 +82,8 @@ namespace System
                 if (remaining > 1)
                 {
                     ref var afterNaNsKeys = ref Unsafe.Add(ref specificKeys, left);
-                    IntroSort(ref afterNaNsKeys, remaining, new SingleDirectComparer());
+                    KeysSorter_TDirectComparer<float, SingleDirectComparer>
+                        .IntroSort(ref afterNaNsKeys, remaining, new SingleDirectComparer());
                 }
                 return true;
             }
@@ -91,7 +98,8 @@ namespace System
                 if (remaining > 1)
                 {
                     ref var afterNaNsKeys = ref Unsafe.Add(ref specificKeys, left);
-                    IntroSort(ref afterNaNsKeys, remaining, new DoubleDirectComparer());
+                    KeysSorter_TDirectComparer<double, DoubleDirectComparer>
+                        .IntroSort(ref afterNaNsKeys, remaining, new DoubleDirectComparer());
                 }
                 return true;
             }
@@ -100,7 +108,8 @@ namespace System
             //{
             //    ref var specificKeys = ref Unsafe.As<TKey, string>(ref keys);
             //    var comparer = StringDirectComparer.CreateForCurrentCulture();
-            //    IntroSort(ref specificKeys, length, comparer);
+            //    KeysSorter_DirectComparer<string, StringDirectComparer>
+            //      .IntroSort(ref specificKeys, length, comparer);
             //    return true;
             //}
             else

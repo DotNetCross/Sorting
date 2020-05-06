@@ -5,7 +5,7 @@ using static DotNetCross.Sorting.Swapper;
 
 namespace DotNetCross.Sorting
 {
-    internal partial class KeysSorter_Comparison<TKey>
+    internal partial struct KeysSorter_Comparison<TKey>
     {
         // https://github.com/dotnet/runtime/pull/35297/files
         internal static int PickPivotAndPartition(

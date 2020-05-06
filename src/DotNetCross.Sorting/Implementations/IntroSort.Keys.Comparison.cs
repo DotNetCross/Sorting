@@ -5,7 +5,7 @@ using static DotNetCross.Sorting.Common;
 
 namespace DotNetCross.Sorting
 {
-    internal partial class KeysSorter_Comparison<TKey>
+    internal partial struct KeysSorter_Comparison<TKey>
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void IntroSort(
