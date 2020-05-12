@@ -103,7 +103,11 @@ namespace System
                 }
                 return true;
             }
-            // TODO: Specialize for string if necessary.
+            // Specializing for strings to avoid the overhead of calling
+            // `CultureInfo.CurrentCulture.CompareInfo` for every compare
+            // by "caching" this before sorting. Gives a 20-30% performance
+            // improvement for the 9 digit string test case on Windows.
+            // NOTE: Sorting based on ordinals is faster than default compare.
             else if (typeof(TKey) == typeof(string))
             {
                 ref var specificKeys = ref Unsafe.As<TKey, string>(ref keys);
