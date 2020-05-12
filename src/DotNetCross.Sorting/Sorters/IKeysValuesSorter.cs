@@ -16,6 +16,6 @@ namespace DotNetCross.Sorting
     internal interface IComparerKeysValuesSorter<TKey, TValue, TComparer>
         where TComparer : IComparer<TKey>
     {
-        void Sort(ref TKey keys, ref TValue values, int length, TComparer comparer);
+        void IntroSort(ref TKey keys, ref TValue values, int length, TComparer comparer);
     }
 }

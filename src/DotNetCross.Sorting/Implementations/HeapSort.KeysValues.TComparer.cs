@@ -5,12 +5,12 @@ using static DotNetCross.Sorting.Swapper;
 
 namespace DotNetCross.Sorting
 {
-    internal static partial class KeysValuesSorter_TComparer
+    internal partial class KeysValuesSorter_TComparer<TKey, TValue, TComparer>
     {
-        internal static void HeapSort<TKey, TValue, TComparer>(
+        internal static void HeapSort(
             ref TKey keys, ref TValue values, int length,
             TComparer comparer)
-            where TComparer : IComparer<TKey>
+            
         {
             Debug.Assert(comparer != null);
             Debug.Assert(length >= 0);
@@ -28,10 +28,10 @@ namespace DotNetCross.Sorting
             }
         }
 
-        private static void DownHeap<TKey, TValue, TComparer>(
+        private static void DownHeap(
             ref TKey keys, ref TValue values, int i, int n, int lo,
             TComparer comparer)
-            where TComparer : IComparer<TKey>
+            
         {
             Debug.Assert(comparer != null);
             Debug.Assert(lo >= 0);

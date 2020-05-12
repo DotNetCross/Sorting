@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reflection;
 //using SC = DotNetCross.Sorting.KeysValuesSorter_Comparable;
 //using SIC = DotNetCross.Sorting.IComparableImpl;
-using STC = DotNetCross.Sorting.KeysValuesSorter_TComparer;
+//using STC = DotNetCross.Sorting.KeysValuesSorter_TComparer;
 using SDC = System.SpanSortHelpersKeysValues_DirectComparer;
 
 namespace DotNetCross.Sorting
@@ -77,7 +77,7 @@ namespace DotNetCross.Sorting
             : IComparerKeysValuesSorter<TKey, TValue, TComparer>
             where TComparer : IComparer<TKey>
         {
-            public void Sort(ref TKey keys, ref TValue values, int length, TComparer comparer)
+            public void IntroSort(ref TKey keys, ref TValue values, int length, TComparer comparer)
             {
                 // Add a try block here to detect IComparers (or their
                 // underlying IComparables, etc) that are bogus.
@@ -115,7 +115,7 @@ namespace DotNetCross.Sorting
             internal static readonly KeysValuesSorter_Comparable<TKey, TValue> NonComparerInstance = 
                 new KeysValuesSorter_Comparable<TKey, TValue>();
 
-            public void Sort(ref TKey keys, ref TValue values, int length,
+            public void IntroSort(ref TKey keys, ref TValue values, int length,
                 TComparer comparer)
             {
                 // Add a try block here to detect IComparers (or their

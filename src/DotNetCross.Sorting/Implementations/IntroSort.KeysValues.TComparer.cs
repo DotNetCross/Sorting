@@ -1,27 +1,26 @@
-﻿using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using static DotNetCross.Sorting.Common;
 
 namespace DotNetCross.Sorting
 {
-    internal static partial class KeysValuesSorter_TComparer
+    internal partial class KeysValuesSorter_TComparer<TKey, TValue, TComparer>
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void IntroSort<TKey, TValue, TComparer>(
+        public void IntroSort(
             ref TKey keys, ref TValue values, int length,
             TComparer comparer)
-            where TComparer : IComparer<TKey>
+            
         {
             var depthLimit = 2 * FloorLog2PlusOne(length);
             IntroSort(ref keys, ref values, length, depthLimit, comparer);
         }
 
-        private static void IntroSort<TKey, TValue, TComparer>(
+        private static void IntroSort(
             ref TKey keys, ref TValue values,
             int length, int depthLimit,
             TComparer comparer)
-            where TComparer : IComparer<TKey>
+            
         {
             Debug.Assert(comparer != null);
             int partitionSize = length;

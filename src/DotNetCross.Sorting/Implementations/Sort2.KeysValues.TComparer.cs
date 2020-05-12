@@ -5,13 +5,13 @@ using static DotNetCross.Sorting.Swapper;
 
 namespace DotNetCross.Sorting
 {
-    internal static partial class KeysValuesSorter_TComparer
+    internal partial class KeysValuesSorter_TComparer<TKey, TValue, TComparer>
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void Sort2<TKey, TValue, TComparer>(
+        internal static void Sort2(
             ref TKey keys, ref TValue values, int i, int j,
             TComparer comparer)
-            where TComparer : IComparer<TKey>
+            
         {
             Debug.Assert(i != j);
 
@@ -21,10 +21,10 @@ namespace DotNetCross.Sorting
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void Sort2<TKey, TValue, TComparer>(
+        internal static void Sort2(
             ref TKey a, ref TKey b, TComparer comparer,
             ref TValue values, int i, int j)
-            where TComparer : IComparer<TKey>
+            
         {
             // This is one of the only places GreaterThan is needed
             // but we need to preserve this due to bogus comparers or similar

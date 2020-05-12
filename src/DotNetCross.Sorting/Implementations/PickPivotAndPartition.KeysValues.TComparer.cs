@@ -6,12 +6,12 @@ using static DotNetCross.Sorting.Swapper;
 
 namespace DotNetCross.Sorting
 {
-    internal static partial class KeysValuesSorter_TComparer
+    internal partial class KeysValuesSorter_TComparer<TKey, TValue, TComparer>
     {
-        internal static int PickPivotAndPartition<TKey, TValue, TComparer>(
+        internal static int PickPivotAndPartition(
             ref TKey keys, ref TValue values, int length,
             TComparer comparer)
-            where TComparer : IComparer<TKey>
+            
         {
             Debug.Assert(comparer != null);
             Debug.Assert(length > 2);
