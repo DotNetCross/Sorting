@@ -402,7 +402,7 @@ namespace DotNetCross.Sorting.Benchmarks
 
     class Program
     {
-        enum Do { Focus, Full, Micro, Loop1, Loop2 }
+        enum Do { Focus, Full, Micro, Keys1, Keys2, KeysValues1 }
 
         static void Main(string[] args)
         {
@@ -411,7 +411,7 @@ namespace DotNetCross.Sorting.Benchmarks
 
             // TODO: Refactor to switch/case and methods perhaps, less flexible though
             // TODO: Add argument parsing for this perhaps
-            var d = Debugger.IsAttached ? Do.Loop1 : Do.Focus;
+            var d = Debugger.IsAttached ? Do.Keys1 : Do.KeysValues1;
             if (d == Do.Focus)
             {
                 BenchmarkRunner.Run<Int32SortBench>();
@@ -468,7 +468,7 @@ namespace DotNetCross.Sorting.Benchmarks
                 //var b = new ComparableInt32ClassCompareToLessThanBench();
                 //b.ComparerOpenDelegate();
             }
-            else if (d == Do.Loop1)
+            else if (d == Do.Keys1)
             {
                 //var sut = new ComparableClassInt32SortBench();
                 var sut = new StringSortBench();
@@ -491,7 +491,7 @@ namespace DotNetCross.Sorting.Benchmarks
                     sut.CLR_();
                 }
             }
-            else if (d == Do.Loop2)
+            else if (d == Do.Keys2)
             {
                 var sut = new ComparableClassInt32SortBench();
                 //var sut = new ComparableClassInt32Int32SortBench();
@@ -514,6 +514,31 @@ namespace DotNetCross.Sorting.Benchmarks
                     sut.DNX_Comparison_IComparable_OpenDelegate();
                     sut.IterationSetup();
                     sut.DNX_OpenDelegateObjectComparer();
+                }
+            }
+            else if (d == Do.KeysValues1)
+            {
+                var sut = new SingleInt32SortBench();
+                //var sut = new ComparableClassInt32Int32SortBench();
+                //var sut = new StringInt32SortBench();
+                sut.Filler = new RandomSpanFiller(SpanFillers.RandomSeed);
+                sut.Length = 10000; // 1000000;
+
+                sut.GlobalSetup();
+                sut.IterationSetup();
+                sut.DNX_();
+                sut.IterationSetup();
+                sut.CLR_();
+
+                //Console.WriteLine("Enter key...");
+                //Console.ReadKey();
+
+                for (int i = 0; i < 20; i++)
+                {
+                    sut.IterationSetup();
+                    sut.DNX_();
+                    sut.IterationSetup();
+                    sut.CLR_();
                 }
             }
         }
