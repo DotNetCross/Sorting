@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 
 namespace DotNetCross.Sorting
 {
-    internal static partial class ComparisonImpl
+    internal static partial class KeysValuesSorter_Comparable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static ref TKey Sort3<TKey, TValue>(

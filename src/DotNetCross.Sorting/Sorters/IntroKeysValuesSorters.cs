@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using SC = DotNetCross.Sorting.ComparisonImpl;
+using SC = DotNetCross.Sorting.KeysValuesSorter_Comparable;
 //using SIC = DotNetCross.Sorting.IComparableImpl;
-using STC = DotNetCross.Sorting.TComparerImpl;
+using STC = DotNetCross.Sorting.KeysValuesSorter_TComparer;
 using SDC = System.SpanSortHelpersKeysValues_DirectComparer;
 
 namespace DotNetCross.Sorting

@@ -1,5 +1,5 @@
 ﻿using System;
-using SC = DotNetCross.Sorting.ComparisonImpl;
+using SC = DotNetCross.Sorting.KeysValuesSorter_Comparable;
 
 namespace DotNetCross.Sorting
 {

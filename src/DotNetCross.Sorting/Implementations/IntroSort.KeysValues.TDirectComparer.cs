@@ -4,7 +4,7 @@ using static DotNetCross.Sorting.Common;
 
 namespace DotNetCross.Sorting
 {
-    internal static partial class TDirectComparerImpl
+    internal static partial class KeysValuesSorter_TDirectComparer
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static void IntroSort<TKey, TValue, TComparer>(

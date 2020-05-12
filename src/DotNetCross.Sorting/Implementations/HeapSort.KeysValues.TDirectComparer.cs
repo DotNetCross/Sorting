@@ -5,7 +5,7 @@ using static DotNetCross.Sorting.Swapper;
 
 namespace DotNetCross.Sorting
 {
-    internal static partial class TDirectComparerImpl
+    internal static partial class KeysValuesSorter_TDirectComparer
     {
         internal static void HeapSort<TKey, TValue, TComparer>(
             ref TKey keys, ref TValue values, int length,

@@ -5,7 +5,7 @@ using static DotNetCross.Sorting.Swapper;
 
 namespace DotNetCross.Sorting
 {
-    internal static partial class TComparerImpl
+    internal static partial class KeysValuesSorter_TComparer
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static void Sort2<TKey, TValue, TComparer>(
