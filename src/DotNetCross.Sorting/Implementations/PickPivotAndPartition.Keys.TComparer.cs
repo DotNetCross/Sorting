@@ -39,7 +39,7 @@ namespace DotNetCross.Sorting
                 //    while (Unsafe.IsAddressLessThan(ref keysLeft, ref keysNextToLast) && 
                 //           (keysLeft = ref Unsafe.Add(ref keysLeft, 1)) == null) ;
                 //    while (Unsafe.IsAddressGreaterThan(ref keysRight, ref keys) && 
-                //           (keysRight = ref Unsafe.Add(ref keysRight, -1)) == null) ;
+                //           (keysRight = ref Unsafe.Add(ref keysRight, -1)) != null) ;
                 //}
                 //else
                 {
