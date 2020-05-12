@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using SC = DotNetCross.Sorting.KeysValuesSorter_Comparable;
+//using SC = DotNetCross.Sorting.KeysValuesSorter_Comparable;
 //using SIC = DotNetCross.Sorting.IComparableImpl;
 using STC = DotNetCross.Sorting.KeysValuesSorter_TComparer;
 using SDC = System.SpanSortHelpersKeysValues_DirectComparer;
@@ -43,19 +43,19 @@ namespace DotNetCross.Sorting
                 STC.IntroSort(ref keys, ref values, length, Comparer<TKey>.Default);
             }
 
-            public void IntroSort(ref TKey keys, ref TValue values, int length, Comparison<TKey> comparison)
-            {
-                SC.IntroSort(ref keys, ref values, length, comparison);
-            }
+            //public void IntroSort(ref TKey keys, ref TValue values, int length, Comparison<TKey> comparison)
+            //{
+            //    SC.IntroSort(ref keys, ref values, length, comparison);
+            //}
         }
 
 
         internal static class Default<TKey, TValue, TComparer>
             where TComparer : IComparer<TKey>
         {
-            internal static readonly IKeysValuesSorter<TKey, TValue, TComparer> Instance = CreateSorter();
+            internal static readonly IComparerKeysValuesSorter<TKey, TValue, TComparer> Instance = CreateSorter();
 
-            private static IKeysValuesSorter<TKey, TValue, TComparer> CreateSorter()
+            private static IComparerKeysValuesSorter<TKey, TValue, TComparer> CreateSorter()
             {
                 if (TypeTraits<TKey>.IsComparable)
                 {
@@ -64,7 +64,7 @@ namespace DotNetCross.Sorting
                         .MakeGenericType(new Type[] { typeof(TKey), typeof(TValue), typeof(TComparer) })
                         .GetTypeInfo().DeclaredConstructors.Where(ci => !ci.IsStatic).Single();
 
-                    return (IKeysValuesSorter<TKey, TValue, TComparer>)ctor.Invoke(EmptyObjects);
+                    return (IComparerKeysValuesSorter<TKey, TValue, TComparer>)ctor.Invoke(EmptyObjects);
                 }
                 else
                 {
@@ -74,7 +74,7 @@ namespace DotNetCross.Sorting
         }
 
         internal sealed class NonComparable<TKey, TValue, TComparer>
-            : IKeysValuesSorter<TKey, TValue, TComparer>
+            : IComparerKeysValuesSorter<TKey, TValue, TComparer>
             where TComparer : IComparer<TKey>
         {
             public void Sort(ref TKey keys, ref TValue values, int length, TComparer comparer)
@@ -108,7 +108,7 @@ namespace DotNetCross.Sorting
         }
 
         internal sealed class Comparable<TKey, TValue, TComparer>
-            : IKeysValuesSorter<TKey, TValue, TComparer>
+            : IComparerKeysValuesSorter<TKey, TValue, TComparer>
             where TKey : IComparable<TKey>
             where TComparer : IComparer<TKey>
         {

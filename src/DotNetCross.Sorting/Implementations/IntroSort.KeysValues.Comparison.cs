@@ -5,10 +5,10 @@ using static DotNetCross.Sorting.Common;
 
 namespace DotNetCross.Sorting
 {
-    internal static partial class KeysValuesSorter_Comparable
+    internal partial class KeysValuesSorter_Comparison<TKey, TValue>
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void IntroSort<TKey, TValue>(
+        public void IntroSort(
             ref TKey keys, ref TValue values, int length,
             Comparison<TKey> comparison)
         {
@@ -16,7 +16,7 @@ namespace DotNetCross.Sorting
             IntroSort(ref keys, ref values, length, depthLimit, comparison);
         }
 
-        private static void IntroSort<TKey, TValue>(
+        private static void IntroSort(
             ref TKey keys, ref TValue values,
             int length, int depthLimit,
             Comparison<TKey> comparison)
