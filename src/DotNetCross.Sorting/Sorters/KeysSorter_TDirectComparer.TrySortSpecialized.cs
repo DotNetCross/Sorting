@@ -103,15 +103,15 @@ namespace System
                 }
                 return true;
             }
-            // TODO: Specialize for string if necessary. What about the == null checks?
-            //else if (typeof(TKey) == typeof(string))
-            //{
-            //    ref var specificKeys = ref Unsafe.As<TKey, string>(ref keys);
-            //    var comparer = StringDirectComparer.CreateForCurrentCulture();
-            //    KeysSorter_DirectComparer<string, StringDirectComparer>
-            //      .IntroSort(ref specificKeys, length, comparer);
-            //    return true;
-            //}
+            // TODO: Specialize for string if necessary.
+            else if (typeof(TKey) == typeof(string))
+            {
+                ref var specificKeys = ref Unsafe.As<TKey, string>(ref keys);
+                var comparer = StringDirectComparer.CreateForCurrentCulture();
+                KeysSorter_TDirectComparer<string, StringDirectComparer>
+                  .IntroSort(ref specificKeys, length, comparer);
+                return true;
+            }
             else
             {
                 return false;
