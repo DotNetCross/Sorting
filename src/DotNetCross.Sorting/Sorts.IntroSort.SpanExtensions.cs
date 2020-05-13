@@ -3,12 +3,9 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-// Consolidated code
-//using SHK = System.SpanSortHelpersKeysAndOrValues;
-//using SHKV = System.SpanSortHelpersKeysAndOrValues;
 // Specialized for either only keys or keys and values and for comparable or not
-using SDC = System.KeysSorter_TDirectComparer;
-using SHKV = System.SpanSortHelpersKeysValues;
+using KSDC = DotNetCross.Sorting.KeysSorter_TDirectComparer;
+using KVSDC = DotNetCross.Sorting.KeysValuesSorter_TDirectComparer;
 
 namespace DotNetCross.Sorting
 {
@@ -32,7 +29,7 @@ namespace DotNetCross.Sorting
 
             // PERF: Try specialized here for optimal performance
             // Code-gen is weird unless used in loop outside
-            if (!SDC.TrySortSpecialized(
+            if (!KSDC.TrySortSpecialized(
                 ref MemoryMarshal.GetReference(keys),
                 length))
             {
@@ -94,9 +91,26 @@ namespace DotNetCross.Sorting
         /// element of the <see cref= "Span{TKey}"/>.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void IntroSort<TKey, TValue>(this Span<TKey> keys, Span<TValue> items)
+        public static void IntroSort<TKey, TValue>(this Span<TKey> keys, Span<TValue> values)
         {
-            SHKV.IntroSort(keys, items);
+            int length = keys.Length;
+            if (length != values.Length)
+                ThrowHelper.ThrowArgumentException_ItemsMustHaveSameLength();
+            if (length < 2)
+                return;
+
+            // PERF: Try specialized here for optimal performance
+            // Code-gen is weird unless used in loop outside
+            if (!KVSDC.TrySortSpecialized(
+                ref MemoryMarshal.GetReference(keys),
+                ref MemoryMarshal.GetReference(values),
+                length))
+            {
+                IntroKeysValuesSorters.ForStraight<TKey, TValue>.Instance(
+                    ref MemoryMarshal.GetReference(keys),
+                    ref MemoryMarshal.GetReference(values),
+                    length);
+            }
         }
 
         /// <summary>
@@ -108,10 +122,26 @@ namespace DotNetCross.Sorting
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void IntroSort<TKey, TValue, TComparer>(this Span<TKey> keys,
-           Span<TValue> items, TComparer comparer)
+           Span<TValue> values, TComparer comparer)
            where TComparer : IComparer<TKey>
         {
-            SHKV.IntroSort(keys, items, comparer);
+            if (TypeTraits<TKey>.IsComparerNullOrDefault(comparer))
+            {
+                IntroSort(keys, values);
+            }
+            else
+            {
+                int length = keys.Length;
+                if (length != values.Length)
+                    ThrowHelper.ThrowArgumentException_ItemsMustHaveSameLength();
+                if (length < 2)
+                    return;
+
+                IntroKeysValuesSorters.ForComparer<TKey, TValue, TComparer>.Instance(
+                    ref MemoryMarshal.GetReference(keys),
+                    ref MemoryMarshal.GetReference(values),
+                    length, comparer);
+            }
         }
 
         /// <summary>
@@ -123,12 +153,21 @@ namespace DotNetCross.Sorting
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void IntroSort<TKey, TValue>(this Span<TKey> keys,
-           Span<TValue> items, Comparison<TKey> comparison)
+           Span<TValue> values, Comparison<TKey> comparison)
         {
             if (comparison == null)
                 ThrowHelper.ThrowArgumentNullException(ExceptionArgument.comparison);
 
-            SHKV.IntroSort(keys, items, comparison);
+            int length = keys.Length;
+            if (length != values.Length)
+                ThrowHelper.ThrowArgumentException_ItemsMustHaveSameLength();
+            if (length < 2)
+                return;
+
+            IntroKeysValuesSorters.ForComparison<TKey, TValue>.Instance(
+                ref MemoryMarshal.GetReference(keys),
+                ref MemoryMarshal.GetReference(values),
+                length, comparison);
         }
     }
 }
