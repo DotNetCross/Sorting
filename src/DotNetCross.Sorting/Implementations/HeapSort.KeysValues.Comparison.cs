@@ -5,9 +5,9 @@ using static DotNetCross.Sorting.Swapper;
 
 namespace DotNetCross.Sorting
 {
-    internal static partial class ComparisonImpl
+    internal partial class KeysValuesSorter_Comparison<TKey, TValue>
     {
-        internal static void HeapSort<TKey, TValue>(
+        internal static void HeapSort(
             ref TKey keys, ref TValue values, int length,
             Comparison<TKey> comparison)
 
@@ -28,7 +28,7 @@ namespace DotNetCross.Sorting
             }
         }
 
-        private static void DownHeap<TKey, TValue>(
+        private static void DownHeap(
             ref TKey keys, ref TValue values, int i, int n, int lo,
             Comparison<TKey> comparison)
 

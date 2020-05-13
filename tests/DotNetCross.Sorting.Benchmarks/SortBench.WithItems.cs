@@ -3,12 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Code;
+using BenchmarkDotNet.Order;
 using BenchmarkDotNet.Running;
 using DotNetCross.Sorting.Sequences;
 
 namespace DotNetCross.Sorting.Benchmarks
 {
+    [Orderer(SummaryOrderPolicy.Method, MethodOrderPolicy.Alphabetical)]
     [Config(typeof(SortBenchConfig))]
+    [MemoryDiagnoser]
     public class SortBench<TKey, TValue>
         where TKey : IComparable<TKey>
     {

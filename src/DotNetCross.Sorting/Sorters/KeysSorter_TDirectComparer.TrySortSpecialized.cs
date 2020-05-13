@@ -1,9 +1,8 @@
 ﻿using System.Runtime.CompilerServices;
-using DotNetCross.Sorting;
 
-namespace System
+namespace DotNetCross.Sorting
 {
-    internal static class KeysSorter_TDirectComparer
+    internal static partial class KeysSorter_TDirectComparer
     {
         // https://github.com/dotnet/coreclr/blob/master/src/classlibnative/bcltype/arrayhelpers.cpp
 
