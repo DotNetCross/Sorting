@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-//using SC = DotNetCross.Sorting.KeysValuesSorter_Comparable;
+﻿using System.Collections.Generic;
 
 namespace DotNetCross.Sorting
 {

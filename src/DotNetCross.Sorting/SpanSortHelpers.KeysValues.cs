@@ -15,7 +15,7 @@ using S = System.SpanSortHelpersKeysValues;
 //using SC = DotNetCross.Sorting.KeysValuesSorter_Comparable;
 //using SIC = DotNetCross.Sorting.IComparableImpl;
 //using STC = DotNetCross.Sorting.KeysValuesSorter_TComparer;
-using SDC = System.SpanSortHelpersKeysValues_DirectComparer;
+using SDC = DotNetCross.Sorting.KeysValuesSorter_TDirectComparer;
 using DotNetCross.Sorting;
 
 namespace System

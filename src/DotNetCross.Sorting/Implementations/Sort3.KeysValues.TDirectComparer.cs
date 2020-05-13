@@ -5,13 +5,13 @@ using static DotNetCross.Sorting.Swapper;
 
 namespace DotNetCross.Sorting
 {
-    internal static partial class KeysValuesSorter_TDirectComparer
+    internal static partial class KeysValuesSorter_TDirectComparer<TKey, TValue, TComparer>
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static ref TKey Sort3<TKey, TValue, TComparer>(
+        internal static ref TKey Sort3(
             ref TKey keys, ref TValue values, int i0, int i1, int i2,
             TComparer comparer)
-            where TComparer : IDirectComparer<TKey>
+
         {
             ref var r0 = ref Unsafe.Add(ref keys, i0);
             ref var r1 = ref Unsafe.Add(ref keys, i1);

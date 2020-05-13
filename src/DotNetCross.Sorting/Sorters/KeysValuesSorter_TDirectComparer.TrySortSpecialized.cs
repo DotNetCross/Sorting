@@ -4,17 +4,13 @@
 
 using System.Runtime.CompilerServices;
 
-//#if !netstandard
-//using Internal.Runtime.CompilerServices;
-//#endif
+//using DotNetCross.Sorting;
+//using static DotNetCross.Sorting.KeysValuesSorter_TDirectComparer;
+//using static DotNetCross.Sorting.Swapper;
 
-using DotNetCross.Sorting;
-using static DotNetCross.Sorting.KeysValuesSorter_TDirectComparer;
-using static DotNetCross.Sorting.Swapper;
-
-namespace System
+namespace DotNetCross.Sorting
 {
-    internal static partial class SpanSortHelpersKeysValues_DirectComparer
+    internal static partial class KeysValuesSorter_TDirectComparer
     {
         // https://github.com/dotnet/coreclr/blob/master/src/classlibnative/bcltype/arrayhelpers.cpp
 

@@ -3,13 +3,13 @@ using System.Runtime.CompilerServices;
 
 namespace DotNetCross.Sorting
 {
-    internal static partial class KeysValuesSorter_TDirectComparer
+    internal static partial class KeysValuesSorter_TDirectComparer<TKey, TValue, TComparer>
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void InsertionSort<TKey, TValue, TComparer>(
+        internal static void InsertionSort(
             ref TKey keys, ref TValue values, int length,
             TComparer comparer)
-            where TComparer : IDirectComparer<TKey>
+
         {
             for (int i = 0; i < length - 1; ++i)
             {
