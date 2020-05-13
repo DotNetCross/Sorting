@@ -13,23 +13,26 @@ namespace DotNetCross.Sorting
             for (int i = 0; i < length - 1; ++i)
             {
                 int j = i;
-                //t = keys[i + 1];
-                var t = Unsafe.Add(ref keys, j + 1);
-                // TODO: Would be good to be able to update local ref here
-                if (j >= 0 && (t == null || t.CompareTo(Unsafe.Add(ref keys, j)) < 0))
+                ref var keysAtJ = ref Unsafe.Add(ref keys, j);
+                ref var keysAfterJ = ref Unsafe.Add(ref keysAtJ, 1);
+                ref var valuesAtJ = ref Unsafe.Add(ref values, j);
+                ref var valuesAfterJ = ref Unsafe.Add(ref valuesAtJ, 1);
+                var t = keysAfterJ;
+                var v = valuesAfterJ;
+                if (t == null || t.CompareTo(keysAtJ) < 0)
                 {
-                    var v = Unsafe.Add(ref values, j + 1);
                     do
                     {
-                        Unsafe.Add(ref keys, j + 1) = Unsafe.Add(ref keys, j);
-                        Unsafe.Add(ref values, j + 1) = Unsafe.Add(ref values, j);
-                        --j;
+                        keysAfterJ = keysAtJ;
+                        keysAfterJ = ref keysAtJ;
+                        keysAtJ = ref Unsafe.Subtract(ref keysAtJ, 1);
+                        valuesAfterJ = valuesAtJ;
+                        valuesAfterJ = ref valuesAtJ;
+                        valuesAtJ = ref Unsafe.Subtract(ref valuesAtJ, 1);
                     }
-                    while (j >= 0 && (t == null || t.CompareTo(Unsafe.Add(ref keys, j)) < 0));
-                    //while (j >= lo && (t == null || t.CompareTo(keys[j]) < 0))
-
-                    Unsafe.Add(ref keys, j + 1) = t;
-                    Unsafe.Add(ref values, j + 1) = v;
+                    while (--j >= 0 && (t == null || t.CompareTo(keysAtJ) < 0));
+                    keysAfterJ = t;
+                    valuesAfterJ = v;
                 }
             }
         }
