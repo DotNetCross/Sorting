@@ -85,7 +85,7 @@ namespace DotNetCross.Sorting
         /// <summary>
         /// Sorts a pair of spans 
         /// (one contains the keys <see cref="Span{TKey}"/> 
-        /// and the other contains the corresponding items <see cref="Span{TValue}"/>) 
+        /// and the other contains the corresponding values <see cref="Span{TValue}"/>) 
         /// based on the keys in the first <see cref= "Span{TKey}" /> 
         /// using the <see cref="IComparableImpl" /> implementation of each 
         /// element of the <see cref= "Span{TKey}"/>.
@@ -116,7 +116,7 @@ namespace DotNetCross.Sorting
         /// <summary>
         /// Sorts a pair of spans 
         /// (one contains the keys <see cref="Span{TKey}"/> 
-        /// and the other contains the corresponding items <see cref="Span{TValue}"/>) 
+        /// and the other contains the corresponding values <see cref="Span{TValue}"/>) 
         /// based on the keys in the first <see cref= "Span{TKey}" /> 
         /// using the <typeparamref name="TComparer" />.
         /// </summary>
@@ -147,7 +147,7 @@ namespace DotNetCross.Sorting
         /// <summary>
         /// Sorts a pair of spans 
         /// (one contains the keys <see cref="Span{TKey}"/> 
-        /// and the other contains the corresponding items <see cref="Span{TValue}"/>) 
+        /// and the other contains the corresponding values <see cref="Span{TValue}"/>) 
         /// based on the keys in the first <see cref= "Span{TKey}" /> 
         /// using the <see cref="Comparison{TKey}" />.
         /// </summary>
