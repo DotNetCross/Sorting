@@ -411,7 +411,7 @@ namespace DotNetCross.Sorting.Benchmarks
 
             // TODO: Refactor to switch/case and methods perhaps, less flexible though
             // TODO: Add argument parsing for this perhaps
-            var d = Debugger.IsAttached ? Do.Keys1 : Do.Focus;
+            var d = Debugger.IsAttached ? Do.Keys1 : Do.KeysValues1;
             if (d == Do.Focus)
             {
                 BenchmarkRunner.Run<Int32StringPartitionBench>();

@@ -125,18 +125,18 @@ namespace DotNetCross.Sorting.Benchmarks
             {
                 var keys = new Span<TKey>(_work, i, Length);
                 var values = new Span<TValue>(_workValues, i, Length);
-                DNX.PickPivotAndPartition(keys, values);
+                DNX.PickPivotAndPartitionNew(keys, values);
             }
         }
 
         [Benchmark]
-        public void DNX_N()
+        public void DNX_Org()
         {
             for (int i = 0; i <= _maxLength - Length; i += Length)
             {
                 var keys = new Span<TKey>(_work, i, Length);
                 var values = new Span<TValue>(_workValues, i, Length);
-                DNX.PickPivotAndPartitionNew(keys, values);
+                DNX.PickPivotAndPartition(keys, values);
             }
         }
 
@@ -252,7 +252,7 @@ namespace DotNetCross.Sorting.Benchmarks
                 return left;
             }
 
-            public static int PickPivotAndPartitionNew(
+            public unsafe static int PickPivotAndPartitionNew(
                 Span<TKey> keys, Span<TValue> values)
             {
                 //Debug.Assert(keys.Length >= Array.IntrosortSizeThreshold);
@@ -273,33 +273,72 @@ namespace DotNetCross.Sorting.Benchmarks
 
                 ref TKey keysLeft = ref keys[left];
                 ref TKey keysRight = ref keys[right];
-                while (left < right)
+                ref TKey zeroRef = ref keysLeft;
+                ref TKey nextToLastRef = ref keysRight;
+                while (Unsafe.IsAddressLessThan(ref keysLeft, ref keysRight))
                 {
                     if (pivot == null)
                     {
-                        while (left < (hi - 1) && keys[++left] == null) ;
-                        while (right > 0 && keys[--right] != null) ;
+                        while (Unsafe.IsAddressLessThan(ref keysLeft, ref keysRight) &&
+                               (keysLeft = ref Unsafe.Add(ref keysLeft, 1)) == null) ;
+                        while (Unsafe.IsAddressGreaterThan(ref keysRight, ref keysLeft) &&
+                               (keysRight = ref Unsafe.Add(ref keysRight, -1)) != null) ;
                     }
                     else
                     {
-                        do { ++left; keysLeft = ref Unsafe.Add(ref keysLeft, 1); }
-                        while (left < right && pivot.CompareTo(keysLeft) > 0);
-                        // Check if bad comparable/comparer
-                        if (left == right && pivot.CompareTo(keysLeft) > 0)
-                            ThrowHelper.ThrowArgumentException_BadComparable(typeof(TKey));
+                        while (Unsafe.IsAddressLessThan(ref keysLeft, ref nextToLastRef) && 
+                               pivot.CompareTo(keysLeft = ref Unsafe.Add(ref keysLeft, 1)) > 0) ;
+                        while (Unsafe.IsAddressGreaterThan(ref keysRight, ref zeroRef) && 
+                               pivot.CompareTo(keysRight = ref Unsafe.Add(ref keysRight, -1)) < 0) ;
 
-                        do { --right; keysRight = ref Unsafe.Add(ref keysRight, -1); }
-                        while (right > 0 && pivot.CompareTo(keysRight) < 0);
-                        // Check if bad comparable/comparer
-                        if (right == 0 && pivot.CompareTo(keysRight) < 0)
-                            ThrowHelper.ThrowArgumentException_BadComparable(typeof(TKey));
-
-                        //while (pivot.CompareTo(keys[++left]) > 0) ;
-                        //while (pivot.CompareTo(keys[--right]) < 0) ;
+                        //// PERF: For internal direct comparers the range checks are not needed
+                        ////       since we know they cannot be bogus i.e. pass the pivot without being false.
+                        //while (pivot.CompareTo(keysLeft = ref Unsafe.Add(ref keysLeft, 1)) > 0) ;
+                        //// Check if bad comparable/comparer
+                        //if (left == right && pivot.CompareTo(keysLeft) > 0)
+                        //    ThrowHelper.ThrowArgumentException_BadComparable(typeof(TKey));
+                        //while (comparer.LessThan(pivot, keysRight = ref Unsafe.Add(ref keysRight, -1))) ;
+                        //// Check if bad comparable/comparer
+                        //if (right == 0 && pivot.CompareTo(keysRight) < 0)
+                        //    ThrowHelper.ThrowArgumentException_BadComparable(typeof(TKey));
                     }
 
-                    if (left >= right)
+                    if (!Unsafe.IsAddressLessThan(ref keysLeft, ref keysRight))
+                    {
                         break;
+                    }
+                    //if (pivot == null)
+                    //{
+                    //    while (left < (hi - 1) && keys[++left] == null) ;
+                    //    while (right > 0 && keys[--right] != null) ;
+                    //}
+                    //else
+                    //{
+                    //    do { ++left; keysLeft = ref Unsafe.Add(ref keysLeft, 1); }
+                    //    while (left < right && pivot.CompareTo(keysLeft) > 0);
+                    //    // Check if bad comparable/comparer
+                    //    if (left == right && pivot.CompareTo(keysLeft) > 0)
+                    //        ThrowHelper.ThrowArgumentException_BadComparable(typeof(TKey));
+
+                    //    do { --right; keysRight = ref Unsafe.Add(ref keysRight, -1); }
+                    //    while (right > 0 && pivot.CompareTo(keysRight) < 0);
+                    //    // Check if bad comparable/comparer
+                    //    if (right == 0 && pivot.CompareTo(keysRight) < 0)
+                    //        ThrowHelper.ThrowArgumentException_BadComparable(typeof(TKey));
+
+                    //    //while (pivot.CompareTo(keys[++left]) > 0) ;
+                    //    //while (pivot.CompareTo(keys[--right]) < 0) ;
+                    //}
+
+                    //if (left >= right)
+                    //    break;
+
+                    left = (sizeof(IntPtr) == 4)
+                     ? (int)Unsafe.ByteOffset(ref zeroRef, ref keysLeft) / Unsafe.SizeOf<TKey>()
+                     : (int)((long)Unsafe.ByteOffset(ref zeroRef, ref keysLeft) / Unsafe.SizeOf<TKey>());
+                    right = (sizeof(IntPtr) == 4)
+                     ? (int)Unsafe.ByteOffset(ref zeroRef, ref keysRight) / Unsafe.SizeOf<TKey>()
+                     : (int)((long)Unsafe.ByteOffset(ref zeroRef, ref keysRight) / Unsafe.SizeOf<TKey>());
 
                     Swap(keys, values, left, right);
                 }
