@@ -271,6 +271,8 @@ namespace DotNetCross.Sorting.Benchmarks
                 Swap(keys, values, middle, hi - 1);
                 int left = 0, right = hi - 1;  // We already partitioned lo and hi and put the pivot in hi - 1.  And we pre-increment & decrement below.
 
+                ref TKey keysLeft = ref keys[left];
+                ref TKey keysRight = ref keys[right];
                 while (left < right)
                 {
                     if (pivot == null)
@@ -280,8 +282,20 @@ namespace DotNetCross.Sorting.Benchmarks
                     }
                     else
                     {
-                        while (pivot.CompareTo(keys[++left]) > 0) ;
-                        while (pivot.CompareTo(keys[--right]) < 0) ;
+                        do { ++left; keysLeft = ref Unsafe.Add(ref keysLeft, 1); }
+                        while (left < right && pivot.CompareTo(keysLeft) > 0);
+                        // Check if bad comparable/comparer
+                        if (left == right && pivot.CompareTo(keysLeft) > 0)
+                            ThrowHelper.ThrowArgumentException_BadComparable(typeof(TKey));
+
+                        do { --right; keysRight = ref Unsafe.Add(ref keysRight, -1); }
+                        while (right > 0 && pivot.CompareTo(keysRight) < 0);
+                        // Check if bad comparable/comparer
+                        if (right == 0 && pivot.CompareTo(keysRight) < 0)
+                            ThrowHelper.ThrowArgumentException_BadComparable(typeof(TKey));
+
+                        //while (pivot.CompareTo(keys[++left]) > 0) ;
+                        //while (pivot.CompareTo(keys[--right]) < 0) ;
                     }
 
                     if (left >= right)
