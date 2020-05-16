@@ -64,7 +64,7 @@ namespace DotNetCross.Sorting.Benchmarks
             Array.Copy(_filledValues, _workValues, _maxLength);
         }
 
-        [Benchmark(Baseline = true)]
+        //[Benchmark]
         public void CLR_Array_()
         {
             for (int i = 0; i <= _maxLength - Length; i += Length)
@@ -72,7 +72,7 @@ namespace DotNetCross.Sorting.Benchmarks
                 Array.Sort(_work, _workValues, i, Length);
             }
         }
-        [Benchmark]
+        //[Benchmark]
         public void CLR_Array_NullComparer()
         {
             for (int i = 0; i <= _maxLength - Length; i += Length)
@@ -89,7 +89,7 @@ namespace DotNetCross.Sorting.Benchmarks
             }
         }
 #if !NETCOREAPP3_1
-        [Benchmark]
+        [Benchmark(Baseline = true)]
         public void CLR_()
         {
             for (int i = 0; i <= _maxLength - Length; i += Length)

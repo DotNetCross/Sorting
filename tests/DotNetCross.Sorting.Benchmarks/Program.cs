@@ -299,7 +299,7 @@ namespace DotNetCross.Sorting.Benchmarks
     public class Int32StringSortBench : SortBench<int, string>
     {
         public Int32StringSortBench()
-            : base(maxLength: 2000000, new[] { 2, 3, 10, 100, 10000, 1000000 },
+            : base(maxLength: 2000000, new[] { 1000000 }, //2, 3, 10, 100, 10000, 1000000 },
                    SpanFillers.Default, i => i, i => i.ToString("D9"))
         { }
     }
@@ -411,7 +411,7 @@ namespace DotNetCross.Sorting.Benchmarks
 
             // TODO: Refactor to switch/case and methods perhaps, less flexible though
             // TODO: Add argument parsing for this perhaps
-            var d = Debugger.IsAttached ? Do.Keys1 : Do.Focus;
+            var d = Debugger.IsAttached ? Do.Keys1 : Do.KeysValues1;
             if (d == Do.Focus)
             {
                 //BenchmarkRunner.Run<Int32SortBench>();
@@ -420,14 +420,14 @@ namespace DotNetCross.Sorting.Benchmarks
                 //BenchmarkRunner.Run<ComparableClassInt32SortBench>();
                 //BenchmarkRunner.Run<StringSortBench>();
 
-                BenchmarkRunner.Run<Int32Int32SortBench>();
                 BenchmarkRunner.Run<Int32SingleSortBench>();
-                BenchmarkRunner.Run<SingleInt32SortBench>();
-                BenchmarkRunner.Run<SingleSingleSortBench>();
+                BenchmarkRunner.Run<Int32Int32SortBench>();
+                //BenchmarkRunner.Run<SingleInt32SortBench>();
+                //BenchmarkRunner.Run<SingleSingleSortBench>();
                 BenchmarkRunner.Run<Int32StringSortBench>();
-                BenchmarkRunner.Run<StringInt32SortBench>();
-                BenchmarkRunner.Run<ComparableClassInt32Int32SortBench>();
-                BenchmarkRunner.Run<ComparableStructInt32Int32SortBench>();
+                //BenchmarkRunner.Run<StringInt32SortBench>();
+                //BenchmarkRunner.Run<ComparableClassInt32Int32SortBench>();
+                //BenchmarkRunner.Run<ComparableStructInt32Int32SortBench>();
 
                 // Custom benchs as seen elsewhere
                 //BenchmarkRunner.Run<SortDictionary>();
@@ -524,11 +524,11 @@ namespace DotNetCross.Sorting.Benchmarks
             }
             else if (d == Do.KeysValues1)
             {
-                var sut = new SingleInt32SortBench();
+                var sut = new Int32StringSortBench();
                 //var sut = new ComparableClassInt32Int32SortBench();
                 //var sut = new StringInt32SortBench();
                 sut.Filler = new RandomSpanFiller(SpanFillers.RandomSeed);
-                sut.Length = 10000; // 1000000;
+                sut.Length = 1000000;
 
                 sut.GlobalSetup();
                 sut.IterationSetup();

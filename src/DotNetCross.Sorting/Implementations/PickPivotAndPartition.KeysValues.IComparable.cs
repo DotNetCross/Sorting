@@ -69,6 +69,23 @@ namespace DotNetCross.Sorting
                 var v = valuesLeft;
                 valuesLeft = valuesRight;
                 valuesRight = v;
+
+                //    while (left < nextToLast && comparison(Unsafe.Add(ref keys, ++left), pivot) < 0) ;
+                //    // Check if bad comparable/comparison
+                //    if (left == nextToLast && comparison(Unsafe.Add(ref keys, left), pivot) < 0)
+                //        ThrowHelper.ThrowArgumentException_BadComparer(comparison);
+
+                //    while (right > 0 && comparison(pivot, Unsafe.Add(ref keys, --right)) < 0) ;
+                //    // Check if bad comparable/comparison
+                //    if (right == 0 && comparison(pivot, Unsafe.Add(ref keys, right)) < 0)
+                //        ThrowHelper.ThrowArgumentException_BadComparer(comparison);
+                //}
+                //if (left >= right)
+                //    break;
+
+                //Swap(ref keys, left, right);
+                //Swap(ref values, left, right);
+
             }
             // Put pivot in the right location.
             right = nextToLast;
