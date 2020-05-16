@@ -17,14 +17,16 @@ namespace DotNetCross.Sorting.Benchmarks
     public class Int32StringPartitionBench : PartitionBench//<int, string>
     {
         public Int32StringPartitionBench()
-            : base(maxLength: 6*1000*1000, new[] { 1000000 }, //2, 3, 10, 100, 10000, 1000000 },
+            : base(maxLength: 10*1000*1000, new[] { 1000000 }, //2, 3, 10, 100, 10000, 1000000 },
                    SpanFillers.Default, i => i, i => i.ToString("D9"))
         { }
     }
 
     [Orderer(SummaryOrderPolicy.Method, MethodOrderPolicy.Alphabetical)]
-    [Config(typeof(SortBenchConfig))]
+    [Config(typeof(PartitionBenchConfig))]
     [MemoryDiagnoser]
+    [DisassemblyDiagnoser(maxDepth: 4, printSource: true, printInstructionAddresses: true,
+        exportHtml: true, exportCombinedDisassemblyReport: true, exportDiff: true)]
     public class PartitionBench//<TKey, TValue>
         //where TKey : IComparable<TKey>
     {
@@ -123,10 +125,21 @@ namespace DotNetCross.Sorting.Benchmarks
             {
                 var keys = new Span<TKey>(_work, i, Length);
                 var values = new Span<TValue>(_workValues, i, Length);
-                DNX.PickPivotAndPartition(ref MemoryMarshal.GetReference(keys), ref MemoryMarshal.GetReference(values),
-                    keys.Length);
+                DNX.PickPivotAndPartition(keys, values);
             }
         }
+
+        [Benchmark]
+        public void DNX_N()
+        {
+            for (int i = 0; i <= _maxLength - Length; i += Length)
+            {
+                var keys = new Span<TKey>(_work, i, Length);
+                var values = new Span<TValue>(_workValues, i, Length);
+                DNX.PickPivotAndPartitionNew(keys, values);
+            }
+        }
+
         //[Benchmark]
         public void DNX_NullComparer()
         {
@@ -162,10 +175,14 @@ namespace DotNetCross.Sorting.Benchmarks
 
         public static class DNX
         {
-            internal static int PickPivotAndPartition(
-                ref TKey keys, ref TValue values, int length)
+            //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+            // Had to reformulate signature since disassembly did not work
+            public static int PickPivotAndPartition(
+                Span<TKey> spanKeys, Span<TValue> spanValues)
             {
-
+                ref TKey keys = ref MemoryMarshal.GetReference(spanKeys);
+                ref TValue values = ref MemoryMarshal.GetReference(spanValues);
+                var length = spanKeys.Length;
                 Debug.Assert(length > 2);
                 //
                 // Compute median-of-three.  But also partition them, since we've done the comparison.
@@ -224,23 +241,6 @@ namespace DotNetCross.Sorting.Benchmarks
                     var v = valuesLeft;
                     valuesLeft = valuesRight;
                     valuesRight = v;
-
-                    //    while (left < nextToLast && comparison(Unsafe.Add(ref keys, ++left), pivot) < 0) ;
-                    //    // Check if bad comparable/comparison
-                    //    if (left == nextToLast && comparison(Unsafe.Add(ref keys, left), pivot) < 0)
-                    //        ThrowHelper.ThrowArgumentException_BadComparer(comparison);
-
-                    //    while (right > 0 && comparison(pivot, Unsafe.Add(ref keys, --right)) < 0) ;
-                    //    // Check if bad comparable/comparison
-                    //    if (right == 0 && comparison(pivot, Unsafe.Add(ref keys, right)) < 0)
-                    //        ThrowHelper.ThrowArgumentException_BadComparer(comparison);
-                    //}
-                    //if (left >= right)
-                    //    break;
-
-                    //Swap(ref keys, left, right);
-                    //Swap(ref values, left, right);
-
                 }
                 // Put pivot in the right location.
                 right = nextToLast;
@@ -250,6 +250,148 @@ namespace DotNetCross.Sorting.Benchmarks
                     Swap(ref values, left, right);
                 }
                 return left;
+            }
+
+            public static int PickPivotAndPartitionNew(
+                Span<TKey> keys, Span<TValue> values)
+            {
+                //Debug.Assert(keys.Length >= Array.IntrosortSizeThreshold);
+
+                int hi = keys.Length - 1;
+
+                // Compute median-of-three.  But also partition them, since we've done the comparison.
+                int middle = hi >> 1;
+
+                // Sort lo, mid and hi appropriately, then pick mid as the pivot.
+                Sort2(keys, values, 0, middle);  // swap the low with the mid point
+                Sort2(keys, values, 0, hi);   // swap the low with the high
+                Sort2(keys, values, middle, hi); // swap the middle with the high
+
+                TKey pivot = keys[middle];
+                Swap(keys, values, middle, hi - 1);
+                int left = 0, right = hi - 1;  // We already partitioned lo and hi and put the pivot in hi - 1.  And we pre-increment & decrement below.
+
+                while (left < right)
+                {
+                    if (pivot == null)
+                    {
+                        while (left < (hi - 1) && keys[++left] == null) ;
+                        while (right > 0 && keys[--right] != null) ;
+                    }
+                    else
+                    {
+                        while (pivot.CompareTo(keys[++left]) > 0) ;
+                        while (pivot.CompareTo(keys[--right]) < 0) ;
+                    }
+
+                    if (left >= right)
+                        break;
+
+                    Swap(keys, values, left, right);
+                }
+
+                // Put pivot in the right location.
+                if (left != hi - 1)
+                {
+                    Swap(keys, values, left, hi - 1);
+                }
+                return left;
+
+#if OLDPATH
+                ref TKey keys = ref MemoryMarshal.GetReference(keys);
+                ref TValue values = ref MemoryMarshal.GetReference(values);
+                var length = keys.Length;
+                Debug.Assert(length > 2);
+                //
+                // Compute median-of-three.  But also partition them, since we've done the comparison.
+                //
+                // Sort left, middle and right appropriately, then pick middle as the pivot.
+                int middle = (length - 1) >> 1;
+                ref TKey keysAtMiddle = ref Sort3(ref keys, ref values, 0, middle, length - 1);
+
+                //int hi = length - 1;
+                //int middle = hi >> 1;
+                //Sort2(ref keys, ref values, 0, middle);  // swap the low with the mid point
+                //Sort2(ref keys, ref values, 0, hi);   // swap the low with the high
+                //Sort2(ref keys, ref values, middle, hi); // swap the middle with the high
+                //ref var keysAtMiddle = ref Unsafe.Add(ref keys, middle);
+
+                TKey pivot = keysAtMiddle;
+
+                int left = 0;
+                int nextToLast = length - 2;
+                int right = nextToLast;
+                ref TKey keysLeft = ref Unsafe.Add(ref keys, left);
+                ref TKey keysRight = ref Unsafe.Add(ref keys, right);
+                // We already partitioned lo and hi and put the pivot in hi - 1.  
+                // And we pre-increment & decrement below.
+                Swap(ref keysAtMiddle, ref keysRight);
+                Swap(ref values, middle, right);
+
+                while (left < right)
+                {
+                    if (pivot == null)
+                    {
+                        do { ++left; keysLeft = ref Unsafe.Add(ref keysLeft, 1); }
+                        while (left < right && keysLeft == null);
+
+                        do { --right; keysRight = ref Unsafe.Add(ref keysRight, -1); }
+                        while (right > 0 && keysRight != null);
+                    }
+                    else
+                    {
+                        do { ++left; }
+                        //while (left < right && pivot.CompareTo(keysLeft) > 0);
+                        while (pivot.CompareTo(keysLeft = ref Unsafe.Add(ref keysLeft, 1)) > 0);
+                        // Check if bad comparable/comparer
+                        //if (left == right && pivot.CompareTo(keysLeft) > 0)
+                        //    ThrowHelper.ThrowArgumentException_BadComparable(typeof(TKey));
+
+                        do { --right; ; }
+                        //while (right > 0 && pivot.CompareTo(keysRight) < 0);
+                        while (pivot.CompareTo(keysRight = ref Unsafe.Add(ref keysRight, -1)) < 0);
+                        // Check if bad comparable/comparer
+                        //if (right == 0 && pivot.CompareTo(keysRight) < 0)
+                        //    ThrowHelper.ThrowArgumentException_BadComparable(typeof(TKey));
+
+                        //do { ++left; keysLeft = ref Unsafe.Add(ref keysLeft, 1); }
+                        ////while (left < right && pivot.CompareTo(keysLeft) > 0);
+                        //while (pivot.CompareTo(keysLeft) > 0) ;
+                        //// Check if bad comparable/comparer
+                        ////if (left == right && pivot.CompareTo(keysLeft) > 0)
+                        ////    ThrowHelper.ThrowArgumentException_BadComparable(typeof(TKey));
+
+                        //do { --right; keysRight = ref Unsafe.Add(ref keysRight, -1); }
+                        ////while (right > 0 && pivot.CompareTo(keysRight) < 0);
+                        //while (pivot.CompareTo(keysRight) < 0);
+                        //// Check if bad comparable/comparer
+                        ////if (right == 0 && pivot.CompareTo(keysRight) < 0)
+                        ////    ThrowHelper.ThrowArgumentException_BadComparable(typeof(TKey));
+                    }
+
+                    if (left >= right)
+                        break;
+
+                    // PERF: Swap manually inlined here for better code-gen
+                    var t = keysLeft;
+                    keysLeft = keysRight;
+                    keysRight = t;
+                    // PERF: Swap manually inlined here for better code-gen
+                    ref var valuesLeft = ref Unsafe.Add(ref values, left);
+                    ref var valuesRight = ref Unsafe.Add(ref values, right);
+                    var v = valuesLeft;
+                    valuesLeft = valuesRight;
+                    valuesRight = v;
+                }
+                // Put pivot in the right location.
+                right = nextToLast;
+                if (left != right)
+                {
+                    Swap(ref keys, left, right);
+                    Swap(ref values, left, right);
+                }
+                return left;
+#endif
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -350,6 +492,37 @@ namespace DotNetCross.Sorting.Benchmarks
                 }
             }
 
+            internal static void Sort2(Span<TKey> keys, Span<TValue> values, int i, int j)
+            {
+                Debug.Assert(i != j);
+
+                if (keys[i] != null && keys[i].CompareTo(keys[j]) > 0)
+                {
+                    TKey key = keys[i];
+                    keys[i] = keys[j];
+                    keys[j] = key;
+
+                    TValue value = values[i];
+                    values[i] = values[j];
+                    values[j] = value;
+                }
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private static void Swap(Span<TKey> keys, Span<TValue> values, int i, int j)
+            {
+                Debug.Assert(i != j);
+
+                TKey k = keys[i];
+                keys[i] = keys[j];
+                keys[j] = k;
+
+                TValue v = values[i];
+                values[i] = values[j];
+                values[j] = v;
+            }
+
+
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             internal static void Swap<T>(ref T items, int i, int j)
             {
@@ -394,7 +567,7 @@ namespace DotNetCross.Sorting.Benchmarks
             //    }
             //}
 
-            private static void SwapIfGreaterWithValues(Span<TKey> keys, Span<TValue> values, int i, int j)
+            internal static void SwapIfGreaterWithValues(Span<TKey> keys, Span<TValue> values, int i, int j)
             {
                 Debug.Assert(i != j);
 

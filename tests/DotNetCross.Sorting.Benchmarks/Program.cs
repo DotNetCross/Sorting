@@ -526,7 +526,7 @@ namespace DotNetCross.Sorting.Benchmarks
             }
             else if (d == Do.KeysValues1)
             {
-                var sut = new Int32StringSortBench();
+                var sut = new Int32StringPartitionBench();
                 //var sut = new ComparableClassInt32Int32SortBench();
                 //var sut = new StringInt32SortBench();
                 sut.Filler = new RandomSpanFiller(SpanFillers.RandomSeed);
@@ -541,7 +541,7 @@ namespace DotNetCross.Sorting.Benchmarks
                 //Console.WriteLine("Enter key...");
                 //Console.ReadKey();
 
-                for (int i = 0; i < 20; i++)
+                for (int i = 0; i < 40; i++)
                 {
                     sut.IterationSetup();
                     sut.DNX_();
