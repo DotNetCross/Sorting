@@ -17,7 +17,7 @@ namespace DotNetCross.Sorting.Benchmarks
     public class Int32StringPartitionBench : PartitionBench//<int, string>
     {
         public Int32StringPartitionBench()
-            : base(maxLength: 20*1000*1000, new[] { 1000000 }, //2, 3, 10, 100, 10000, 1000000 },
+            : base(maxLength: 6*1000*1000, new[] { 1000000 }, //2, 3, 10, 100, 10000, 1000000 },
                    SpanFillers.Default, i => i, i => i.ToString("D9"))
         { }
     }
