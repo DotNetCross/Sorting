@@ -411,20 +411,22 @@ namespace DotNetCross.Sorting.Benchmarks
 
             // TODO: Refactor to switch/case and methods perhaps, less flexible though
             // TODO: Add argument parsing for this perhaps
-            var d = Debugger.IsAttached ? Do.Keys1 : Do.KeysValues1;
+            var d = Debugger.IsAttached ? Do.Keys1 : Do.Focus;
             if (d == Do.Focus)
             {
+                BenchmarkRunner.Run<Int32StringPartitionBench>();
+
                 //BenchmarkRunner.Run<Int32SortBench>();
                 //BenchmarkRunner.Run<SingleSortBench>();
                 //BenchmarkRunner.Run<ComparableStructInt32SortBench>();
                 //BenchmarkRunner.Run<ComparableClassInt32SortBench>();
                 //BenchmarkRunner.Run<StringSortBench>();
 
-                BenchmarkRunner.Run<Int32SingleSortBench>();
-                BenchmarkRunner.Run<Int32Int32SortBench>();
+                //BenchmarkRunner.Run<Int32SingleSortBench>();
+                //BenchmarkRunner.Run<Int32Int32SortBench>();
                 //BenchmarkRunner.Run<SingleInt32SortBench>();
                 //BenchmarkRunner.Run<SingleSingleSortBench>();
-                BenchmarkRunner.Run<Int32StringSortBench>();
+                //BenchmarkRunner.Run<Int32StringSortBench>();
                 //BenchmarkRunner.Run<StringInt32SortBench>();
                 //BenchmarkRunner.Run<ComparableClassInt32Int32SortBench>();
                 //BenchmarkRunner.Run<ComparableStructInt32Int32SortBench>();

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Code;
 using BenchmarkDotNet.Order;
@@ -16,7 +17,7 @@ namespace DotNetCross.Sorting.Benchmarks
     public class Int32StringPartitionBench : PartitionBench//<int, string>
     {
         public Int32StringPartitionBench()
-            : base(maxLength: 2000000, new[] { 1000000 }, //2, 3, 10, 100, 10000, 1000000 },
+            : base(maxLength: 20*1000*1000, new[] { 1000000 }, //2, 3, 10, 100, 10000, 1000000 },
                    SpanFillers.Default, i => i, i => i.ToString("D9"))
         { }
     }
@@ -122,7 +123,8 @@ namespace DotNetCross.Sorting.Benchmarks
             {
                 var keys = new Span<TKey>(_work, i, Length);
                 var values = new Span<TValue>(_workValues, i, Length);
-                //.IntroSort();
+                DNX.PickPivotAndPartition(ref MemoryMarshal.GetReference(keys), ref MemoryMarshal.GetReference(values),
+                    keys.Length);
             }
         }
         //[Benchmark]
