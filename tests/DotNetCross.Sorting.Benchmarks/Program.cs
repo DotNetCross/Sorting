@@ -11,6 +11,17 @@ using DotNetCross.Sorting.Sequences;
 
 namespace DotNetCross.Sorting.Benchmarks
 {
+    unsafe class C<T>
+    {
+        public static void Log(T t) { }
+
+        void Use()
+        {
+            delegate*< T, void> ptr1 = &Log;
+            ptr1(default);
+        }
+    }
+
     public class Int32SortBench : SortBench<int>
     {
         public Int32SortBench()

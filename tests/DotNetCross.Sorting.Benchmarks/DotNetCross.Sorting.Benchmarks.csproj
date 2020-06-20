@@ -7,11 +7,8 @@
         The whole way of specifying target framework when building is messy from command line-->
     <!--<TargetFrameworks>netcoreapp3.1;netcoreapp5.0</TargetFrameworks>-->
     <!--<TargetFrameworks>netcoreapp2.0;net471</TargetFrameworks>-->
-    <DebugType>pdbonly</DebugType>
-    <DebugSymbols>true</DebugSymbols>
-    <LangVersion>8.0</LangVersion>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <TieredCompilation>false</TieredCompilation>
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>

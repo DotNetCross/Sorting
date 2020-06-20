@@ -1,7 +1,0 @@
-<!--https://github.com/Microsoft/msbuild/issues/2070-->
-<!--ISN'T WORKING!-->
-<Project>
-  <PropertyGroup>
-    <BaseIntermediateOutputPath>..\..\build\Obj_$(Configuration)</BaseIntermediateOutputPath>
-  </PropertyGroup>
-</Project>
