@@ -9,179 +9,108 @@ using BenchmarkDotNet.Running;
 
 namespace DotNetCross.Sorting.Benchmarks
 {
-    //public class SpeedupColumn : BaselineCustomColumn
-    //{
-    //    public string ColumnName => "Speedup";
+    // https://github.com/damageboy/VxSort/blob/research/Bench/Utils/SpeedupRatioColumn.cs
+    public class SpeedupRatioColumn : BaselineCustomColumn
+    {
+        public enum RatioMetric
+        {
+            Min,
+            Mean,
+            Median,
+        }
 
-    //    public string Legend => "Speedup";
+        public static readonly IColumn SpeedupOfMin = new SpeedupRatioColumn(RatioMetric.Min);
+        public static readonly IColumn SpeedupOfMean = new SpeedupRatioColumn(RatioMetric.Mean);
+        public static readonly IColumn SpeedupOfMedian = new SpeedupRatioColumn(RatioMetric.Median);
 
+        public RatioMetric Metric { get; }
 
+        private SpeedupRatioColumn(RatioMetric metric)
+        {
+            Metric = metric;
+        }
 
-    //    public override string GetValue(Summary summary, BenchmarkCase benchmarkCase, Statistics baseline, IReadOnlyDictionary<string, Metric> baselineMetrics,
-    //        Statistics current, IReadOnlyDictionary<string, Metric> currentMetrics, bool isBaseline)
-    //    {
-    //        var ratio = GetRatioStatistics(current, baseline);
-    //        if (ratio == null)
-    //            return "NA";
+        public override string Id => nameof(SpeedupRatioColumn) + "." + Metric;
 
-    //        var cultureInfo = summary.GetCultureInfo();
-    //        switch (Metric)
-    //        {
-    //            case RatioMetric.Mean:
-    //                return IsNonBaselinesPrecise(summary, baseline, benchmarkCase) ? ratio.Mean.ToString("N3", cultureInfo) : ratio.Mean.ToString("N2", cultureInfo);
-    //            case RatioMetric.StdDev:
-    //                return ratio.StandardDeviation.ToString("N2", cultureInfo);
-    //            default:
-    //                throw new NotSupportedException();
-    //        }
-    //    }
+        public override string ColumnName
+        {
+            get
+            {
+                return Metric switch
+                {
+                    RatioMetric.Mean => "SpeedupMean",
+                    RatioMetric.Min => "SpeedupMin",
+                    RatioMetric.Median => "SpeedupMedian",
+                    _ => throw new NotSupportedException()
+                };
+            }
+        }
 
-    //    public bool IsDefault(Summary summary, BenchmarkCase benchmark) => false;
-    //    public string GetValue(Summary summary, BenchmarkCase benchmarkCase, SummaryStyle style) //=> GetValue(summary, benchmark);
-    //    {
-    //        //var valueOfN = (int)benchmarkCase.Parameters.Items.Single(p => p.Name == "N").Value;
-    //        var ratio = string.Join(",", summary[benchmarkCase].Metrics.Select(p => $"{p.Key}:{p.Value}"));
-    //        Console.WriteLine("// " + ratio);
-    //        return ratio;
-    //        //var ratio = summary[benchmarkCase].Metrics[Ratio.Metric.ToString()];
-    //        //return ratio.Value.ToString();
-    //        //return timePerN.ToTimeStr(benchmarkCase.Config.Encoding, TimeUnit.GetBestTimeUnit(timePerN));
-    //    }
-    //    public string GetValue(Summary summary, BenchmarkCase benchmark)
-    //    { 
-    //        return string.Empty; 
-    //    }
+        public override string GetValue(Summary summary, BenchmarkCase benchmarkCase, Statistics baseline,
+            IReadOnlyDictionary<string, Metric> baselineMetric, Statistics current,
+            IReadOnlyDictionary<string, Metric> currentMetric, bool isBaseline)
+        {
+            var ratio = GetRatioStatistics(current, baseline);
+            if (ratio == null)
+                return "NA";
 
-    //    public string Id => nameof(SpeedupColumn);
-    //    public int PriorityInCategory => 0;
-    //    public bool IsAvailable(Summary summary) => true;
-    //    public bool AlwaysShow => true;
-    //    public ColumnCategory Category => ColumnCategory.Custom;
-    //    public bool IsNumeric => true;
-    //    public UnitType UnitType => UnitType.Dimensionless;
-    //    public override string ToString() => ColumnName;
+            var cultureInfo = summary.GetCultureInfo();
+            return Metric switch
+            {
+                RatioMetric.Mean => IsNonBaselinesPrecise(summary, baseline, benchmarkCase)
+                    ? ratio.Mean.ToString("N3", cultureInfo)
+                    : ratio.Mean.ToString("N2", cultureInfo),
+                RatioMetric.Min => IsNonBaselinesPrecise(summary, baseline, benchmarkCase)
+                    ? ratio.Min.ToString("N3", cultureInfo)
+                    : ratio.Min.ToString("N2", cultureInfo),
+                RatioMetric.Median => IsNonBaselinesPrecise(summary, baseline, benchmarkCase)
+                    ? ratio.Median.ToString("N3", cultureInfo)
+                    : ratio.Median.ToString("N2", cultureInfo),
+                _ => throw new NotSupportedException()
+            };
+        }
 
+        private static bool IsNonBaselinesPrecise(Summary summary, Statistics baselineStat, BenchmarkCase benchmarkCase)
+        {
+            string logicalGroupKey = summary.GetLogicalGroupKey(benchmarkCase);
+            var nonBaselines = summary.GetNonBaselines(logicalGroupKey);
+            return nonBaselines.Any(x => GetRatioStatistics(summary[x].ResultStatistics, baselineStat)?.Mean < 0.01);
+        }
 
-    //    public static readonly BaselineRatioColumn Ratio = (BaselineRatioColumn)BaselineRatioColumn.RatioMean;
-    //}
+        //[CanBeNull]
+        //private static Statistics GetRatioStatistics([CanBeNull] Statistics current, [CanBeNull] Statistics baseline)
+        private static Statistics GetRatioStatistics(Statistics current, Statistics baseline)
+        {
+            if (current == null || current.N < 1)
+                return null;
+            if (baseline == null || baseline.N < 1)
+                return null;
+            try
+            {
+                return Statistics.Divide(baseline, current);
+            }
+            catch (DivideByZeroException)
+            {
+                return null;
+            }
+        }
 
+        public override int PriorityInCategory => (int)Metric;
+        public override bool IsNumeric => true;
+        public override UnitType UnitType => UnitType.Dimensionless;
 
-    //public class BaselineScaledColumn : IColumn
-    //{
-    //    public enum DiffKind
-    //    {
-    //        Mean,
-    //        StdDev,
-    //        WelchTTestPValue
-    //    }
-
-    //    public static readonly IColumn Scaled = new BaselineScaledColumn(DiffKind.Mean);
-    //    public static readonly IColumn ScaledStdDev = new BaselineScaledColumn(DiffKind.StdDev);
-    //    public static readonly IColumn WelchTTestPValue = new BaselineScaledColumn(DiffKind.WelchTTestPValue);
-
-    //    public DiffKind Kind { get; }
-
-    //    private BaselineScaledColumn(DiffKind kind)
-    //    {
-    //        Kind = kind;
-    //    }
-
-    //    public string Id => nameof(BaselineScaledColumn) + "." + Kind;
-
-    //    public string ColumnName
-    //    {
-    //        get
-    //        {
-    //            switch (Kind)
-    //            {
-    //                case DiffKind.Mean:
-    //                    return "Scaled";
-    //                case DiffKind.StdDev:
-    //                    return "ScaledSD";
-    //                case DiffKind.WelchTTestPValue:
-    //                    return "t-test p-value";
-    //                default:
-    //                    throw new NotSupportedException();
-    //            }
-    //        }
-    //    }
-
-    //    public string GetValue(Summary summary, Benchmark benchmark)
-    //    {
-    //        string logicalGroupKey = summary.GetLogicalGroupKey(benchmark);
-    //        var baseline = summary.Benchmarks
-    //            .Where(b => summary.GetLogicalGroupKey(b) == logicalGroupKey)
-    //            .FirstOrDefault(b => b.IsBaseline());
-    //        bool invalidResults = baseline == null ||
-    //                             summary[baseline] == null ||
-    //                             summary[baseline].ResultStatistics == null ||
-    //                             !summary[baseline].ResultStatistics.CanBeInverted() ||
-    //                             summary[benchmark] == null ||
-    //                             summary[benchmark].ResultStatistics == null;
-
-    //        if (invalidResults)
-    //            return "?";
-
-    //        var baselineStat = summary[baseline].ResultStatistics;
-    //        var targetStat = summary[benchmark].ResultStatistics;
-
-    //        double mean = benchmark.IsBaseline() ? 1 : Statistics.DivMean(targetStat, baselineStat);
-    //        double stdDev = benchmark.IsBaseline() ? 0 : Math.Sqrt(Statistics.DivVariance(targetStat, baselineStat));
-
-    //        switch (Kind)
-    //        {
-    //            case DiffKind.Mean:
-    //                return IsNonBaselinesPrecise(summary, baselineStat, benchmark) ? mean.ToStr("N3") : mean.ToStr("N2");
-    //            case DiffKind.StdDev:
-    //                return stdDev.ToStr("N2");
-    //            case DiffKind.WelchTTestPValue:
-    //                {
-    //                    if (baselineStat.N < 2 || targetStat.N < 2)
-    //                        return "NA";
-    //                    double pvalue = WelchTTest.Calc(baselineStat, targetStat).PValue;
-    //                    return pvalue > 0.0001 || pvalue < 1e-9 ? pvalue.ToStr("N4") : pvalue.ToStr("e2");
-    //                }
-    //            default:
-    //                throw new NotSupportedException();
-    //        }
-    //    }
-
-    //    public bool IsNonBaselinesPrecise(Summary summary, Statistics baselineStat, Benchmark benchmark)
-    //    {
-    //        string logicalGroupKey = summary.GetLogicalGroupKey(benchmark);
-    //        var nonBaselines = summary.Benchmarks
-    //                    .Where(b => summary.GetLogicalGroupKey(b) == logicalGroupKey)
-    //                    .Where(b => !b.IsBaseline());
-
-    //        return nonBaselines.Any(x => Statistics.DivMean(summary[x].ResultStatistics, baselineStat) < 0.01);
-    //    }
-
-    //    public bool IsAvailable(Summary summary) => summary.Benchmarks.Any(b => b.IsBaseline());
-    //    public bool AlwaysShow => true;
-    //    public ColumnCategory Category => ColumnCategory.Baseline;
-    //    public int PriorityInCategory => (int)Kind;
-    //    public bool IsNumeric => true;
-    //    public UnitType UnitType => UnitType.Dimensionless;
-    //    public string GetValue(Summary summary, Benchmark benchmark, ISummaryStyle style) => GetValue(summary, benchmark);
-    //    public override string ToString() => ColumnName;
-    //    public bool IsDefault(Summary summary, Benchmark benchmark) => false;
-
-    //    public string Legend
-    //    {
-    //        get
-    //        {
-    //            switch (Kind)
-    //            {
-    //                case DiffKind.Mean:
-    //                    return "Mean(CurrentBenchmark) / Mean(BaselineBenchmark)";
-    //                case DiffKind.StdDev:
-    //                    return "Standard deviation of ratio of distibution of [CurrentBenchmark] and [BaselineBenchmark]";
-    //                case DiffKind.WelchTTestPValue:
-    //                    return "p-value for Welch's t-test of [CurrentbBenchmark] and [BaselineBenchmark]";
-    //                default:
-    //                    throw new ArgumentOutOfRangeException(nameof(Kind));
-    //            }
-    //        }
-    //    }
-    //}
+        public override string Legend
+        {
+            get
+            {
+                return Metric switch
+                {
+                    RatioMetric.Min => "Speedup of the minimum execution times ([Current]/[Baseline])",
+                    RatioMetric.Mean => "Speedup of the mean execution times ([Current]/[Baseline])",
+                    RatioMetric.Median => "Speedup of the median execution times ([Current]/[Baseline])",
+                    _ => throw new ArgumentOutOfRangeException(nameof(Metric))
+                };
+            }
+        }
+    }
 }

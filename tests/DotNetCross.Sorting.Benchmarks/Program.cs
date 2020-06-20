@@ -425,11 +425,11 @@ namespace DotNetCross.Sorting.Benchmarks
             var d = Debugger.IsAttached ? Do.Keys1 : Do.Focus;
             if (d == Do.Focus)
             {
-                BenchmarkRunner.Run<Int32StringPartitionBench>();
+                //BenchmarkRunner.Run<Int32StringPartitionBench>();
 
                 //BenchmarkRunner.Run<Int32SortBench>();
                 //BenchmarkRunner.Run<SingleSortBench>();
-                //BenchmarkRunner.Run<ComparableStructInt32SortBench>();
+                BenchmarkRunner.Run<ComparableStructInt32SortBench>();
                 //BenchmarkRunner.Run<ComparableClassInt32SortBench>();
                 //BenchmarkRunner.Run<StringSortBench>();
 
@@ -490,7 +490,8 @@ namespace DotNetCross.Sorting.Benchmarks
             else if (d == Do.Keys1)
             {
                 //var sut = new ComparableClassInt32SortBench();
-                var sut = new StringSortBench();
+                var sut = new ComparableStructInt32SortBench();
+                //var sut = new StringSortBench();
                 sut.Filler = new RandomSpanFiller(SpanFillers.RandomSeed);
                 sut.Length = 10000; // 1000000;
                 sut.GlobalSetup();

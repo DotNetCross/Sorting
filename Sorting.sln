@@ -15,6 +15,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "root", "root", "{71067AB5-F
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
 		bench-dnc-50.ps1 = bench-dnc-50.ps1
+		bench.ps1 = bench.ps1
 		Directory.Build.props = Directory.Build.props
 		icon.png = icon.png
 		icon.svg = icon.svg
