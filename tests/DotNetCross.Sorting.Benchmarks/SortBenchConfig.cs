@@ -26,10 +26,11 @@ namespace DotNetCross.Sorting.Benchmarks
                     .WithToolchain(BenchmarkDotNet.Toolchains.InProcess.NoEmit.InProcessNoEmitToolchain.Instance)
                     );
             }
+            AddColumn(SpeedupRatioColumn.SpeedupOfMedian);
             //Add(new SpeedupColumn());
             //Add(DisassemblyDiagnoser.Create(
             //    new DisassemblyDiagnoserConfig(printAsm: true, printSource: true, recursiveDepth: 3)));
-           
+
             //Add(DisassemblyDiagnoser.Create(
             //    new DisassemblyDiagnoserConfig(printAsm: true, printPrologAndEpilog: true, printSource: true, recursiveDepth: 3)));
 

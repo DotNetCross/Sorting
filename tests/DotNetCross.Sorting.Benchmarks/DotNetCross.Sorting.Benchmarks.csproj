@@ -2,11 +2,13 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>netcoreapp5.0</TargetFrameworks>
+    <TargetFramework>net5.0</TargetFramework>
     <!--Simply can't get the below working with GitHub CI since can't have multiple SDKs installed.
         The whole way of specifying target framework when building is messy from command line-->
     <!--<TargetFrameworks>netcoreapp3.1;netcoreapp5.0</TargetFrameworks>-->
     <!--<TargetFrameworks>netcoreapp2.0;net471</TargetFrameworks>-->
+    <!--Need to specify platform target as otherwise F5 will start as 32-bit-->
+    <PlatformTarget>x64</PlatformTarget>
     <TieredCompilation>false</TieredCompilation>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
