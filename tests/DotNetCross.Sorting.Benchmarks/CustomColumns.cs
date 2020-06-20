@@ -166,7 +166,8 @@ namespace DotNetCross.Sorting.Benchmarks
 
         public string GetValue(Summary summary, BenchmarkCase benchmarkCase, SummaryStyle style)
         {
-            var valueOfN = benchmarkCase?.Parameters?.Items.SingleOrDefault(p => p.Name == "N")?.Value;
+            //var valueOfN = benchmarkCase?.Parameters?.Items.SingleOrDefault(p => p.Name == "N")?.Value;
+            var valueOfN = benchmarkCase?.Parameters?.Items.SingleOrDefault(p => p.Name == "Length")?.Value;
             var mean = summary[benchmarkCase]?.ResultStatistics.Mean;
             if (valueOfN == null || mean == null)
                 return "N/A";
