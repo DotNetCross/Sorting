@@ -29,7 +29,7 @@ TODO: Older runtime JITs cannot inline methods with `calli` calls
 
 https://github.com/dotnet/runtime/issues/37904
 
-https://sharplab.io/#v2:EYLgxg9gTgpgtADwGwBYA0AXEBDAzgWwB8ABAJgEYBYAKGIAYACY8gOgCUBXAOwwEt8YLAMIR8AB14AbGFADKMgG68wMXAG4a9BrIAW2KGIAy2YO258BG6jQDaAKV4YA4jC4zlACgwBPMTAgAZh68PACUoQC6mgDMDLgw2NIAJkykDEIAPAAqAHwMAO46MjAMWQwgDACSIuL6JtLZOTQA3jQM7UyxzEgMIRjpomL6MOQeskNcjQwA1jDeuGilDBihDAC8eYaquFl6XKOz8zZ0EYsrDAD8DOTlDHRWbR3EXeQ9fQO1sKRjE1OHC0tzhsGFtcDs9t9/sdTstVlcbhV7jRHu0bABZGAYHQQJKVcSSDwYrE4vFiSQAeTEfAgXFwLAAggBzRmwMG8BQwSpcSQhEKMyIozpMV4MYAQCCSEHbXbYfYeMrSAIYRZlKC8Rk6FaC1rUDp63oBBheXz+IJZVZrNbLE2BDzMOjhQX6p4AdgYAUS8QeuudTDdiowwkGwyyEA8ao15wydyseoAvsifaiidjcfjCZjU6SKVTeDS6UyWdt2ZzubyuPyokmhd1ReLJaDwbLvgqYEqVQwI5rQtqna6GAGg58YKHw+ruwxo0jqwnq4L0ZmSemU0uyZTqbSGczWbgS1yeVw+QLq89hT0xRKpWCZVxovKB23lUsu1rqzrfX6H0qh0NYKOX6sU6XMsUAcCUFQepIXqCrOcZAA=
+https://sharplab.io/#v2:EYLgxg9gTgpgtADwGwBYA0AXEBDAzgWwB8ABAJgEYBYAKGIAYACY8gOgCUBXAOwwEt8YLAMIR8AB14AbGFADKMgG68wMXAG4a9BrIAW2KGIAy2YO258BG6jQDaAKV4YA4jC4zlACgwBPMTAgAZh68PACUoQC6mgDMDLgw2NIAJkykDEIAPAAqAHwMAO46MjAMWQwgDACSIuL6JtLZOTQA3jQM7UyxzEgMIRjpomL6MOQeskNcjQwA1jDeuGilDBihDAC8eYaquFl6XKOz8zZ0EYsrDAD8DOTlDHRWbR3EXeQ9fQO1sKRjE1OHC0tzhsGFtcDs9t9/sdTstVlcbhV7jRHu1nkxXr0eB8hrBoj9sJNcjM5gCykDNttdgS8VCTmc4ddbkjrNQOp10W8sTUcTAUPjCXl/osyatgbSIsJBsMshAvKsMndLozEQ9WR0bABZGAYHQQJKVcSSDxanV6g1iSQAeTEfAgXFwLAAggBzZ2wMG8BQwSpcSQhELOyIo9ndBjACAQSQgyl7UZlaQBDDChhQXjOnQrYOtNVs9q8AIMLy+fxBLKitbLYuBDzMOjhYO5p4AdgYAUS8VVjdRLYTGElnxgMo8qfT5wVzLZAF9kTmGJrtbr9YbjQuzYbrbb7U7Xe7cJ7vb7/VxA1FZ2jQ+HI9GwVSuN94zBE8mRxnQlmG82GL3+zyhy+x3cVhTsGwbzqaS4Wiu4HmlaNq8HaDoum62z7j6fpcAGQZni8PSXlGoLgtSHgPk+Sz/m+s7Zl2TA9o+fbctKsrkQw45KhgUAcCUFRtpIHbBtO1CTkAA==
 
 ```csharp
 using System;
@@ -42,6 +42,10 @@ public sealed class C<T> where T : IComparable<T>
     public static int Compare1(Span<T> keys, T t) => LessThan1(keys[0], t) ? 1 : 0;
 
     public static int Compare2(Span<T> keys, T t) => LessThan2(keys[0], t) ? 1 : 0;
+
+    public static int Compare3(Span<T> keys, T t) => LessThan3(keys[0], t) ? 1 : 0;
+
+    public static int Compare4(Span<T> keys, T t) => keys[0].CompareTo(t) < 0 ? 1 : 0;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool LessThan1(T left, T right)
@@ -117,6 +121,39 @@ C`1[[System.Int32, System.Private.CoreLib]].Compare2(System.Span`1<Int32>, Int32
     L0023: ret
     L0024: call 0x00007ff8aa8af9f0
     L0029: int3
+
+C`1[[System.Int32, System.Private.CoreLib]].Compare3(System.Span`1<Int32>, Int32)
+    L0000: sub rsp, 0x28
+    L0004: cmp dword ptr [rcx+8], 0
+    L0008: jbe short L0024
+    L000a: mov rax, [rcx]
+    L000d: mov eax, [rax]
+    L000f: cmp eax, edx
+    L0011: jl short L001a
+    L0013: xor eax, eax
+    L0015: add rsp, 0x28
+    L0019: ret
+    L001a: mov eax, 1
+    L001f: add rsp, 0x28
+    L0023: ret
+    L0024: call 0x00007ff8aa8af9f0
+    L0029: int3
+
+C`1[[System.Int32, System.Private.CoreLib]].Compare4(System.Span`1<Int32>, Int32)
+    L0000: sub rsp, 0x28
+    L0004: cmp dword ptr [rcx+8], 0
+    L0008: jbe short L0022
+    L000a: mov rax, [rcx]
+    L000d: cmp [rax], edx
+    L000f: jl short L0018
+    L0011: xor eax, eax
+    L0013: add rsp, 0x28
+    L0017: ret
+    L0018: mov eax, 1
+    L001d: add rsp, 0x28
+    L0021: ret
+    L0022: call 0x00007ff8aa8af9f0
+    L0027: int3
 
 C`1[[System.Int32, System.Private.CoreLib]].LessThan1(Int32, Int32)
     L0000: cmp ecx, edx
