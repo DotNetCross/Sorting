@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Update="Microsoft.Net.Compilers.Toolset" Version="3.8.0-1.20320.1" IsImplicitlyDefined="true" PrivateAssets="all">
+    <PackageReference Update="Microsoft.Net.Compilers.Toolset" Version="3.8.0" IsImplicitlyDefined="true" PrivateAssets="all">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
