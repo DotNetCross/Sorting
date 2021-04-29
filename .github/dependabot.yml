@@ -1,0 +1,14 @@
+version: 2
+updates:
+- package-ecosystem: nuget
+  directory: "/"
+  schedule:
+    interval: daily
+  open-pull-requests-limit: 10
+  ignore:
+  - dependency-name: Microsoft.NET.Test.Sdk
+    versions:
+    - 16.8.3
+  - dependency-name: Microsoft.Net.Compilers.Toolset
+    versions:
+    - 3.8.0
